@@ -1,5 +1,5 @@
 # Vista Principal – Home Mis Rutinas (copia imagen + lote A)
-Estado: aprobado
+Estado: implementado
 Depende de: specs/001-plantilla-usuario-spec.md (reutiliza dominio Profile/saludo `Hola, {nombre}`, patrón visual `ProfileScreen` stateful+stateless y tokens; introduce el `NavHost` profile/home y ViewModels fake que 001 dejó como futuro explícito)
 Fecha de creación: 2026-10-02
 Descripción: Maquetar en Kotlin + Compose la vista `references/plantilla-vista-principal` como pantalla Home (header `Hola, Atleta`, 3 routine cards, dashboard Calendario+Progreso, bottom nav 4 tabs) en memoria UI-first (Fase A), incluyendo el lote A: `NavHost` condicional `¿hay perfil? home:profile`, ViewModels fake con `StateFlow` + repo fake misma firma, y `material-icons`.
@@ -90,13 +90,13 @@ No-funcionales:
 - ¿Los tabs `Calendario`/`Progreso` serán destinos `feature/history` + dashboard futuro o una sola `feature/home` con subpantallas? Propuesta: `history` separado según `docs/ARQUITECTURA.md:58-61`, placeholders aquí.
 - ¿El botón `Iniciar` debe crear la `WorkoutSession` ya en el siguiente spec de `workout`, o sigue fake hasta Fase B? Propuesta: fake hasta el spec de sesión en vivo.
 ## 11. Checklist verificación (última, checkboxes listos para /verifier)
-- [ ] Home copia `screen.png` verificada en móvil físico (header, 3 cards, dashboard, dock)
-- [ ] Saludo muestra `Hola, {firstName}` del Profile en memoria
-- [ ] `Iniciar` emite `onStart(routineId)` sin crash
-- [ ] `···`, `Crear Rutina +`, sort y `Ver mes` visibles sin crash (TODO)
-- [ ] Los 4 tabs navegan (Rutinas funcional, otros placeholder) con activo naranja + micro-dot
-- [ ] Arranque condicional `¿hay perfil? home:profile` funciona
-- [ ] Rotación conserva lista y tab activo en sesión
-- [ ] Paquete `com.mytrainingplan.app`, sin `.debug`
-- [ ] `./gradlew assembleDebug` OK
-- [ ] Prueba en móvil físico OK
+- [x] Home copia `screen.png` verificada en móvil físico (header, 3 cards, dashboard, dock)
+- [x] Saludo muestra `Hola, {firstName}` del Profile en memoria
+- [x] `Iniciar` emite `onStart(routineId)` sin crash
+- [x] `···`, `Crear Rutina +`, sort y `Ver mes` visibles sin crash (TODO)
+- [x] Los 4 tabs navegan (Rutinas funcional, otros placeholder) con activo naranja + micro-dot
+- [x] Arranque condicional `¿hay perfil? home:profile` funciona
+- [x] Rotación conserva lista y tab activo en sesión
+- [x] Paquete `com.mytrainingplan.app`, sin `.debug`
+- [x] `./gradlew assembleDebug` OK
+- [x] Prueba en móvil físico OK
