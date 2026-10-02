@@ -2,8 +2,8 @@
 
 ## Estado actual (no asumir)
 
-`app/src` es todavía la plantilla "Hello Android" de Android Studio (`MainActivity.kt` + `ui/theme/`).
-`docs/`, `specs/`, `references/` describen la arquitectura **objetivo**, no código existente.
+`app/src` ya no es Hello: `MainActivity.kt` muestra `feature/profile/ProfileScreen` (réplica visual `references/plantilla-usuario` en memoria, sin persistencia) + `domain/model/Profile` + `ui/theme/`.
+`docs/`, `specs/`, `references/` siguen siendo guía objetivo/diseño, no código hecho. Hay 5 vistas (`plantilla-usuario` base hecha, pendientes `vista-principal`, `lista-ejercicios`, `rutina`, `editar-rutina`).
 Antes de editar, comprueba con `Glob`/`Grep` que el fichero existe; los specs pueden citar rutas futuras.
 
 Fuente de verdad: `README.md` (principios + restricción Gradle), `docs/ARQUITECTURA.md` (capas y carpetas),
@@ -14,21 +14,22 @@ Fuente de verdad: `README.md` (principios + restricción Gradle), `docs/ARQUITEC
 El esqueleto Gradle lo crea y mantiene Android Studio, **no el agente**. No crear, regenerar ni editar:
 `gradlew`, `gradlew.bat`, `gradle/wrapper/`, `settings.gradle.kts`, `gradle.properties`,
 `gradle/libs.versions.toml`, `build.gradle.kts` (raíz y `app/`).
-Si falta una dependencia/plugin (hoy solo hay Compose/Material3/activity/core/lifecycle; aún **no** están
-Room, Hilt, Retrofit, Coil, DataStore), indica la línea exacta a añadir y espera al desarrollador.
-El agente trabaja solo sobre Kotlin en `app/src/main/`, recursos y documentación.
+Excepción autorizada lote A: el agente sí puede añadir `navigation-compose, lifecycle-viewmodel-compose, material-icons, coil-compose`
+vía catálogo + `app/build.gradle.kts`, con versión confirmada por Context7 y usuario. Fases B/C (Room/Hilt/DataStore/Retrofit)
+solo proponer línea exacta y esperar. El agente trabaja Kotlin en `app/src/main/`, recursos y documentación.
 
 ## Comandos
 
 - Compilar: `./gradlew assembleDebug` (requiere Android SDK; `local.properties` con `sdk.dir`, no se versiona).
 - Tests plantilla: `./gradlew testDebugUnitTest` (solo `ExampleUnitTest`; no hay suites reales aún).
 - Verificación real: probar en **móvil físico** con depuración USB/inalámbrica; **sin emulador**.
-- Proyecto: `applicationId`/`namespace` `com.example.mytrainingplan`, `minSdk 26`, `compileSdk/targetSdk 37`, Java 11.
+- Proyecto: `applicationId`/`namespace` `com.mytrainingplan.app`, `minSdk 26`, `compileSdk/targetSdk 37`, Java 11.
 
 ## Arquitectura objetivo (al implementar)
 
-- Un solo módulo `app`. Flujo: `feature/* Screen → ViewModel(StateFlow) → Repository → Room`; Retrofit solo rellena la DB.
-- Carpetas: `core/{di,network,ui}`, `data/{local/{entity,dao},remote/{dto},mapper,repository}`, `domain/model`, `feature/{exercises,routines,workout,history}`. Cada `feature/` = `Screen` + `ViewModel`.
+- Un solo módulo `app`. Flujo final: `feature/* Screen → ViewModel(StateFlow) → Repository → Room`; Retrofit solo rellena la DB.
+- Plan acordado: **Fase A maquetación primero** (5 vistas `references/` UI-first con `ViewModel` fake + repo fake misma firma + `NavHost` condicional `¿hay perfil? home:profile`, sin Room), luego **Fase B Room local**, **Fase C catálogo**, **Fase D Spring/MySQL**.
+- Carpetas: `core/{di,network,ui}`, `data/{local/{entity,dao},remote/{dto},mapper,repository}`, `domain/model`, `feature/{profile,exercises,routines,workout,history}`. Cada `feature/` = `Screen` + `ViewModel`.
 - Mapeo `DTO/Entity ⇄ dominio` en `data/mapper`; la UI solo ve `domain/model`, nunca Entity ni DTO.
 - Sin casos de uso ni módulos extra hasta que duelan. Versiones solo vía catálogo `gradle/libs.versions.toml`.
 - Catálogo: fork ExerciseGymGifsDB por jsDelivr con **tag fijo** (`CATALOG_TAG` + DataStore), nunca rama; solo URLs de GIF en DB (Coil cachea); update por `upsert` y solo filas `source=CATALOG`.

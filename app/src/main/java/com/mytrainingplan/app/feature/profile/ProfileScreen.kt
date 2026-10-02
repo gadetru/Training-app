@@ -1,4 +1,4 @@
-package com.example.mytrainingplan.feature.profile
+package com.mytrainingplan.app.feature.profile
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -41,9 +41,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.mytrainingplan.domain.model.Profile
-import com.example.mytrainingplan.domain.model.TrainingGoal
-import com.example.mytrainingplan.domain.model.TrainingLevel
+import com.mytrainingplan.app.domain.model.Profile
+import com.mytrainingplan.app.domain.model.TrainingGoal
+import com.mytrainingplan.app.domain.model.TrainingLevel
 
 // Tokens references/plantilla-usuario/DESIGN.md + code.html
 private val Bg = Color(0xFF111316)

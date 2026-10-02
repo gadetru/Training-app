@@ -1,4 +1,4 @@
-package com.example.mytrainingplan
+package com.mytrainingplan.app
 
 import org.junit.Test
 

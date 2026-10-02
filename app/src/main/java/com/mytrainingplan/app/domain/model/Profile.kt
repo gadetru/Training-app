@@ -1,4 +1,4 @@
-package com.example.mytrainingplan.domain.model
+package com.mytrainingplan.app.domain.model
 
 /**
  * Perfil de atleta (Paso 1 spec 001).

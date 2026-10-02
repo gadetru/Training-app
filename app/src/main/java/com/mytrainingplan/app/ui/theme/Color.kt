@@ -1,4 +1,4 @@
-package com.example.mytrainingplan.ui.theme
+package com.mytrainingplan.app.ui.theme
 
 import androidx.compose.ui.graphics.Color
 

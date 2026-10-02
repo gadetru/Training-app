@@ -1,4 +1,4 @@
-package com.example.mytrainingplan
+package com.mytrainingplan.app
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -10,8 +10,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import com.example.mytrainingplan.feature.profile.ProfileScreen
-import com.example.mytrainingplan.ui.theme.MyTrainingPlanTheme
+import com.mytrainingplan.app.feature.profile.ProfileScreen
+import com.mytrainingplan.app.ui.theme.MyTrainingPlanTheme
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {

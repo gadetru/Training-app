@@ -4,13 +4,13 @@ plugins {
 }
 
 android {
-    namespace = "com.example.mytrainingplan"
+    namespace = "com.mytrainingplan.app"
     compileSdk {
         version = release(37)
     }
 
     defaultConfig {
-        applicationId = "com.example.mytrainingplan"
+        applicationId = "com.mytrainingplan.app"
         minSdk = 26
         targetSdk = 37
         versionCode = 1
@@ -39,6 +39,10 @@ dependencies {
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.compose.material3)
+    implementation(libs.androidx.compose.material.icons.core)
+    implementation(libs.androidx.lifecycle.viewmodel.compose)
+    implementation(libs.androidx.navigation.compose)
+    implementation(libs.coil.compose)
     implementation(libs.androidx.compose.ui)
     implementation(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.compose.ui.tooling.preview)
