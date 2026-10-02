@@ -1,0 +1,430 @@
+<!DOCTYPE html><html class="dark" lang="es" style=""><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Crear Rutina - Kinetic Obsidian</title>
+<!-- Google Fonts: Outfit, Space Grotesk, Plus Jakarta Sans -->
+<link href="https://fonts.googleapis.com" rel="preconnect">
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&amp;family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;family=Space+Grotesk:wght@500;600;700&amp;display=swap" rel="stylesheet">
+<!-- Material Symbols Outlined -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<!-- Tailwind CSS v3 -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Tailwind Configuration -->
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+            "outline": "#ab897d",
+            "error": "#ffb4ab",
+            "inverse-on-surface": "#2f3034",
+            "primary": "#ffb599",
+            "surface-tint": "#ffb599",
+            "on-secondary": "#283500",
+            "surface-container": "#1e2023",
+            "surface-container-highest": "#333538",
+            "on-error-container": "#ffdad6",
+            "primary-container": "#ff5e00",
+            "on-tertiary-container": "#003138",
+            "on-primary-fixed": "#370e00",
+            "secondary-container": "#c3f400",
+            "secondary": "#ffffff",
+            "on-surface": "#e2e2e6",
+            "surface-container-low": "#1a1c1f",
+            "tertiary-fixed-dim": "#00daf3",
+            "error-container": "#93000a",
+            "tertiary-fixed": "#9cf0ff",
+            "primary-fixed": "#ffdbce",
+            "surface-container-high": "#282a2d",
+            "surface": "#111316",
+            "secondary-fixed-dim": "#abd600",
+            "on-tertiary": "#00363d",
+            "on-primary": "#5a1c00",
+            "on-secondary-container": "#556d00",
+            "on-secondary-fixed": "#161e00",
+            "on-error": "#690005",
+            "on-surface-variant": "#e4bfb1",
+            "on-primary-fixed-variant": "#7f2b00",
+            "background": "#111316",
+            "secondary-fixed": "#c3f400",
+            "outline-variant": "#5b4137",
+            "surface-variant": "#333538",
+            "surface-container-lowest": "#0c0e11",
+            "on-tertiary-fixed-variant": "#004f58",
+            "primary-fixed-dim": "#ffb599",
+            "on-primary-container": "#531900",
+            "tertiary": "#00daf3",
+            "tertiary-container": "#00a2b5",
+            "inverse-primary": "#a63b00",
+            "on-background": "#e2e2e6",
+            "surface-dim": "#111316",
+            "inverse-surface": "#e2e2e6",
+            "surface-bright": "#37393d",
+            "on-tertiary-fixed": "#001f24",
+            "on-secondary-fixed-variant": "#3c4d00"
+          },
+          "borderRadius": {
+            "DEFAULT": "0.25rem",
+            "lg": "0.5rem",
+            "xl": "0.75rem",
+            "full": "9999px"
+          },
+          "spacing": {
+            "space-xl": "2rem",
+            "margin": "1.25rem",
+            "space-lg": "1.5rem",
+            "gutter": "1rem",
+            "space-md": "1rem",
+            "space-sm": "0.5rem",
+            "space-xs": "0.25rem"
+          },
+          "fontFamily": {
+            "headline-md": ["Outfit"],
+            "metric-display": ["Space Grotesk"],
+            "label-lg": ["Space Grotesk"],
+            "body-sm": ["Plus Jakarta Sans"],
+            "label-sm": ["Space Grotesk"],
+            "headline-lg": ["Outfit"],
+            "label-md": ["Space Grotesk"],
+            "body-lg": ["Plus Jakarta Sans"],
+            "display-lg": ["Outfit"],
+            "body-md": ["Plus Jakarta Sans"],
+            "headline-lg-mobile": ["Outfit"],
+            "headline-sm": ["Outfit"]
+          },
+          "fontSize": {
+            "headline-md": ["22px", { "lineHeight": "28px", "fontWeight": "600" }],
+            "metric-display": ["32px", { "lineHeight": "36px", "letterSpacing": "-0.04em", "fontWeight": "700" }],
+            "label-lg": ["14px", { "lineHeight": "18px", "letterSpacing": "0.04em", "fontWeight": "700" }],
+            "body-sm": ["12px", { "lineHeight": "16px", "fontWeight": "400" }],
+            "label-sm": ["10px", { "lineHeight": "12px", "letterSpacing": "0.08em", "fontWeight": "600" }],
+            "headline-lg": ["30px", { "lineHeight": "38px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+            "label-md": ["12px", { "lineHeight": "16px", "letterSpacing": "0.06em", "fontWeight": "600" }],
+            "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+            "display-lg": ["40px", { "lineHeight": "48px", "letterSpacing": "-0.03em", "fontWeight": "800" }],
+            "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+            "headline-lg-mobile": ["26px", { "lineHeight": "32px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+            "headline-sm": ["18px", { "lineHeight": "24px", "fontWeight": "600" }]
+          }
+        },
+      },
+    }
+  </script>
+<style>
+    /* Custom scrollbar suppression for horizontal category feed */
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+  </style>
+</head>
+<body class="bg-surface text-on-surface antialiased selection:bg-primary-container selection:text-on-primary-container min-h-screen flex justify-center">
+<!-- Mobile Viewport Container (Tactical Obsidian Canvas) -->
+<div class="w-full max-w-md bg-surface flex flex-col min-h-screen relative pb-32">
+<!-- TOP UTILITY APP BAR (TASK-FOCUSED FLOW: SUPPRESSES GLOBAL BOTTOM NAV) -->
+<header class="sticky top-0 z-40 bg-surface/95 backdrop-blur-md px-margin py-space-sm flex items-center justify-between shadow-sm">
+<button aria-label="Volver atrás" class="flex items-center justify-center w-10 h-10 rounded-full bg-surface-container-low hover:bg-surface-container active:scale-95 transition-all text-on-surface" type="button">
+<span class="material-symbols-outlined text-[22px]">arrow_back</span>
+</button>
+<div class="flex items-center space-x-2">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-surface-container-low text-primary-container border border-outline-variant/30">
+<span class="w-1.5 h-1.5 rounded-full bg-primary-container animate-pulse"></span>
+<span class="font-label-sm text-label-sm">MODO EDICIÓN</span>
+</span>
+</div>
+<button class="bg-primary-container text-on-primary-container font-label-md text-label-md px-4 py-2 rounded-full font-bold shadow-md shadow-primary-container/20 active:scale-95 transition-transform" type="button">
+        Guardar
+      </button>
+</header>
+<!-- MAIN EDITABLE CANVAS -->
+<main class="px-margin flex-1 flex flex-col pt-space-xs">
+<!-- SECTION 1: ROUTINE TITLE, DURATION & TAGS -->
+<section class="mt-2 mb-4 bg-surface-container-low rounded-xl p-4 border border-surface-container-high/60">
+<div class="flex items-start justify-between gap-2">
+<div class="flex-1">
+<div class="flex items-center gap-2 group cursor-pointer">
+<input class="bg-transparent border-0 border-b border-dashed border-outline-variant/50 focus:border-primary-container focus:ring-0 p-0 font-headline-md text-headline-md text-on-surface font-bold w-full focus:outline-none" placeholder="Nombre de la Rutina" type="text" value="Pierna &amp; Glúteos Hipertrofia">
+<span class="material-symbols-outlined text-outline-variant text-[18px]">edit</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant/80 mt-1 flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[15px] text-primary-container">timer</span>
+<span class="">3 ejercicios configurados</span>
+<span class="text-outline-variant">•</span>
+<span class="">~45 min estimados</span>
+</p>
+</div>
+</div>
+<!-- Routine Metadata Chips -->
+<div class="flex flex-wrap items-center gap-1.5 mt-3 pt-3 border-t border-surface-container-high/40">
+<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-surface-container-high text-on-surface font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-[13px] text-secondary-fixed">bolt</span>
+            Hipertrofia
+          </span>
+<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-surface-container-high text-on-surface font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-[13px] text-tertiary">tune</span>
+            RPE 8-9
+          </span>
+<button class="inline-flex items-center gap-1 px-2 py-1 rounded-lg border border-dashed border-outline-variant/60 text-outline-variant hover:text-on-surface font-label-sm text-label-sm active:scale-95 transition-transform" type="button">
+<span class="material-symbols-outlined text-[13px]">add</span>
+            Etiqueta
+          </button>
+</div>
+</section>
+<!-- SECTION 2: MUSCLE GROUP SELECTOR (HORIZONTAL CHIPS) -->
+<section class="mb-4">
+<div class="flex items-center justify-between mb-2">
+<h2 class="font-label-lg text-label-lg text-on-surface tracking-wide">Filtrar por Zona</h2>
+<span class="font-label-sm text-label-sm text-outline-variant">Catálogo Pro</span>
+</div>
+<div class="flex items-center gap-2 overflow-x-auto no-scrollbar py-1">
+<!-- Chip: Todos -->
+<button class="shrink-0 px-3.5 py-2 rounded-xl font-label-md text-label-md bg-surface-container-low text-on-surface-variant hover:text-on-surface transition-all flex items-center gap-1.5 active:scale-95" type="button">
+<span class="material-symbols-outlined text-[16px]">grid_view</span>
+            Todos
+          </button>
+<!-- Chip: Pierna (Activo) -->
+<button class="shrink-0 px-3.5 py-2 rounded-xl font-label-md text-label-md bg-primary-container text-on-primary-container font-bold transition-all flex items-center gap-1.5 shadow-lg shadow-primary-container/25 active:scale-95" type="button">
+<span class="material-symbols-outlined text-[16px]">directions_run</span>
+            Pierna
+          </button>
+<!-- Chip: Pecho -->
+<button class="shrink-0 px-3.5 py-2 rounded-xl font-label-md text-label-md bg-surface-container-low text-on-surface-variant hover:text-on-surface transition-all flex items-center gap-1.5 active:scale-95" type="button">
+<span class="material-symbols-outlined text-[16px]">fitness_center</span>
+            Pecho
+          </button>
+<!-- Chip: Espalda -->
+<button class="shrink-0 px-3.5 py-2 rounded-xl font-label-md text-label-md bg-surface-container-low text-on-surface-variant hover:text-on-surface transition-all flex items-center gap-1.5 active:scale-95" type="button">
+<span class="material-symbols-outlined text-[16px]">accessibility_new</span>
+            Espalda
+          </button>
+<!-- Chip: Hombros -->
+<button class="shrink-0 px-3.5 py-2 rounded-xl font-label-md text-label-md bg-surface-container-low text-on-surface-variant hover:text-on-surface transition-all flex items-center gap-1.5 active:scale-95" type="button">
+<span class="material-symbols-outlined text-[16px]">sports_kabaddi</span>
+            Hombros
+          </button>
+<!-- Chip: Core -->
+<button class="shrink-0 px-3.5 py-2 rounded-xl font-label-md text-label-md bg-surface-container-low text-on-surface-variant hover:text-on-surface transition-all flex items-center gap-1.5 active:scale-95" type="button">
+<span class="material-symbols-outlined text-[16px]">shield</span>
+            Core
+          </button>
+</div>
+</section><div class="mb-4"><button class="w-full py-3.5 px-4 rounded-xl border-2 border-dashed border-primary-container/40 hover:border-primary-container bg-surface-container-low hover:bg-surface-container text-primary-container font-headline-sm text-[16px] font-bold flex items-center justify-center gap-2 active:scale-98 transition-all shadow-md" type="button"><span class="material-symbols-outlined text-[20px]">add_circle</span>+ Añadir Nuevo Ejercicio a la Rutina</button></div>
+<!-- SECTION 3: SEARCH BAR & ACTIVE SELECTOR MODAL -->
+<section class="mb-4">
+<!-- Search Input -->
+
+<!-- Exercise Preview Card / Biomechanical Badge -->
+
+</section>
+<!-- SECTION 4: DETAILED SET CONFIGURATION (EXERCISE 1 - EXPANDED) -->
+<section class="mb-5 bg-surface-container-low rounded-xl border border-surface-container-high overflow-hidden shadow-lg shadow-black/40">
+<!-- Exercise Item Header -->
+<div class="p-3.5 bg-surface-container-high/40 flex items-center justify-between border-b border-surface-container-high/60">
+<div class="flex items-center gap-2.5">
+<span class="w-6 h-6 rounded-md bg-primary-container text-on-primary-container font-metric-display text-[12px] flex items-center justify-center font-bold">1</span>
+<div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface font-semibold leading-tight">Sentadilla Trasera con Barra</h3>
+<span class="font-body-sm text-body-sm text-outline-variant">Pierna Compuesto • Descanso sugerido: 90s</span>
+</div>
+</div>
+<div class="flex items-center gap-1">
+<button aria-label="Mover hacia arriba o abajo" class="p-1.5 text-outline-variant hover:text-on-surface active:scale-95" type="button">
+<span class="material-symbols-outlined text-[20px]">drag_handle</span>
+</button>
+<button aria-label="Eliminar ejercicio de la rutina" class="p-1.5 text-error/80 hover:text-error active:scale-95" type="button">
+<span class="material-symbols-outlined text-[20px]">delete</span>
+</button>
+</div>
+</div>
+<!-- Sets Table Matrix -->
+<div class="p-3">
+<div class="grid grid-cols-12 gap-1.5 px-1 pb-2 text-outline-variant font-label-sm text-label-sm text-center items-center">
+<span class="col-span-2 text-left">SERIE</span>
+<span class="col-span-3">RIR</span>
+<span class="col-span-3">KG</span>
+<span class="col-span-2">REPS</span>
+<span class="col-span-2 text-right">ACC</span>
+</div>
+<!-- Set 1 (Calentamiento) -->
+<div class="grid grid-cols-12 gap-1.5 items-center bg-surface py-1.5 px-2 rounded-lg mb-1.5 border border-surface-container-high/40">
+<div class="col-span-2 flex items-center gap-1">
+<span class="w-5 h-5 rounded-full bg-surface-container-high text-on-surface font-label-sm text-label-sm flex items-center justify-center font-bold">1</span>
+</div>
+<div class="col-span-3">
+<select class="w-full bg-surface-container-high text-[11px] font-label-sm text-on-surface-variant rounded-md py-1 px-1 border-0 focus:ring-1 focus:ring-primary-container focus:outline-none"><option selected="" class="">Warm-up</option><option class="">4</option><option class="">3</option><option class="">2</option><option class="">1</option><option class="">0 (Fallo)</option></select>
+</div>
+<div class="col-span-3">
+<input class="w-full text-center bg-surface-container-high rounded-md py-1 px-1 text-on-surface font-metric-display text-[13px] border-0 focus:ring-1 focus:ring-primary-container focus:outline-none font-bold" type="text" value="60">
+</div>
+<div class="col-span-2">
+<input class="w-full text-center bg-surface-container-high rounded-md py-1 px-1 text-on-surface font-metric-display text-[13px] border-0 focus:ring-1 focus:ring-primary-container focus:outline-none font-bold" type="text" value="12">
+</div>
+<div class="col-span-2 flex justify-end">
+<button aria-label="Eliminar serie" class="text-outline-variant hover:text-error p-1" type="button">
+<span class="material-symbols-outlined text-[16px]">close</span>
+</button>
+</div>
+</div>
+<!-- Set 2 (Normal) -->
+<div class="grid grid-cols-12 gap-1.5 items-center bg-surface py-1.5 px-2 rounded-lg mb-1.5 border border-surface-container-high/40">
+<div class="col-span-2 flex items-center gap-1">
+<span class="w-5 h-5 rounded-full bg-surface-container-high text-on-surface font-label-sm text-label-sm flex items-center justify-center font-bold">2</span>
+</div>
+<div class="col-span-3">
+<select class="w-full bg-surface-container-high text-[11px] font-label-sm text-on-surface rounded-md py-1 px-1 border-0 focus:ring-1 focus:ring-primary-container focus:outline-none"><option class="">Warm-up</option><option class="">4</option><option selected="" class="">3</option><option class="">2</option><option class="">1</option><option class="">0 (Fallo)</option></select>
+</div>
+<div class="col-span-3">
+<input class="w-full text-center bg-surface-container-high rounded-md py-1 px-1 text-on-surface font-metric-display text-[13px] border-0 focus:ring-1 focus:ring-primary-container focus:outline-none font-bold" type="text" value="90">
+</div>
+<div class="col-span-2">
+<input class="w-full text-center bg-surface-container-high rounded-md py-1 px-1 text-on-surface font-metric-display text-[13px] border-0 focus:ring-1 focus:ring-primary-container focus:outline-none font-bold" type="text" value="10">
+</div>
+<div class="col-span-2 flex justify-end">
+<button aria-label="Eliminar serie" class="text-outline-variant hover:text-error p-1" type="button">
+<span class="material-symbols-outlined text-[16px]">close</span>
+</button>
+</div>
+</div>
+<!-- Set 3 (Normal) -->
+<div class="grid grid-cols-12 gap-1.5 items-center bg-surface py-1.5 px-2 rounded-lg mb-1.5 border border-surface-container-high/40">
+<div class="col-span-2 flex items-center gap-1">
+<span class="w-5 h-5 rounded-full bg-surface-container-high text-on-surface font-label-sm text-label-sm flex items-center justify-center font-bold">3</span>
+</div>
+<div class="col-span-3">
+<select class="w-full bg-surface-container-high text-[11px] font-label-sm text-on-surface rounded-md py-1 px-1 border-0 focus:ring-1 focus:ring-primary-container focus:outline-none"><option class="">Warm-up</option><option class="">4</option><option class="">3</option><option selected="" class="">2</option><option class="">1</option><option class="">0 (Fallo)</option></select>
+</div>
+<div class="col-span-3">
+<input class="w-full text-center bg-surface-container-high rounded-md py-1 px-1 text-on-surface font-metric-display text-[13px] border-0 focus:ring-1 focus:ring-primary-container focus:outline-none font-bold" type="text" value="100">
+</div>
+<div class="col-span-2">
+<input class="w-full text-center bg-surface-container-high rounded-md py-1 px-1 text-on-surface font-metric-display text-[13px] border-0 focus:ring-1 focus:ring-primary-container focus:outline-none font-bold" type="text" value="8">
+</div>
+<div class="col-span-2 flex justify-end">
+<button aria-label="Eliminar serie" class="text-outline-variant hover:text-error p-1" type="button">
+<span class="material-symbols-outlined text-[16px]">close</span>
+</button>
+</div>
+</div>
+<!-- Set 4 (Al Fallo) -->
+<div class="grid grid-cols-12 gap-1.5 items-center bg-surface py-1.5 px-2 rounded-lg border border-primary-container/40 relative">
+<div class="col-span-2 flex items-center gap-1">
+<span class="w-5 h-5 rounded-full bg-primary-container text-on-primary-container font-label-sm text-label-sm flex items-center justify-center font-bold">4</span>
+</div>
+<div class="col-span-3">
+<select class="w-full bg-surface-container-high text-[11px] font-label-sm text-primary font-semibold rounded-md py-1 px-1 border-0 focus:ring-1 focus:ring-primary-container focus:outline-none"><option class="">Warm-up</option><option class="">4</option><option class="">3</option><option class="">2</option><option class="">1</option><option selected="" class="">0 (Fallo 🔥)</option></select>
+</div>
+<div class="col-span-3">
+<input class="w-full text-center bg-surface-container-high rounded-md py-1 px-1 text-on-surface font-metric-display text-[13px] border-0 focus:ring-1 focus:ring-primary-container focus:outline-none font-bold" type="text" value="105">
+</div>
+<div class="col-span-2">
+<input class="w-full text-center bg-surface-container-high rounded-md py-1 px-1 text-on-surface font-metric-display text-[13px] border-0 focus:ring-1 focus:ring-primary-container focus:outline-none font-bold" type="text" value="6">
+</div>
+<div class="col-span-2 flex justify-end">
+<button aria-label="Eliminar serie" class="text-outline-variant hover:text-error p-1" type="button">
+<span class="material-symbols-outlined text-[16px]">close</span>
+</button>
+</div>
+</div>
+<!-- Micro Quick-actions underneath set table -->
+<div class="grid grid-cols-3 gap-2 mt-3 pt-2 border-t border-surface-container-high/50">
+<button class="py-2 px-1 rounded-lg bg-surface hover:bg-surface-container text-on-surface font-label-sm text-label-sm flex items-center justify-center gap-1 border border-surface-container-high active:scale-95 transition-transform" type="button">
+<span class="material-symbols-outlined text-[15px] text-primary-container">add</span>
+<span class="">Añadir Serie</span>
+</button>
+<button class="py-2 px-1 rounded-lg bg-surface hover:bg-surface-container text-on-surface font-label-sm text-label-sm flex items-center justify-center gap-1 border border-surface-container-high active:scale-95 transition-transform" type="button">
+<span class="material-symbols-outlined text-[15px] text-secondary-fixed">content_copy</span>
+<span class="">Duplicar</span>
+</button>
+<button class="py-2 px-1 rounded-lg bg-surface hover:bg-surface-container text-on-surface font-label-sm text-label-sm flex items-center justify-center gap-1 border border-surface-container-high active:scale-95 transition-transform" type="button">
+<span class="material-symbols-outlined text-[15px] text-tertiary">pace</span>
+<span class="">90s Pausa</span>
+</button>
+</div>
+</div>
+</section>
+<!-- SECTION 5: COLLAPSED EXERCISES ALREADY IN THE ROUTINE -->
+<section class="mb-5 space-y-2.5">
+<div class="flex items-center justify-between mb-1 px-1">
+<span class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider font-semibold">Otros Ejercicios Añadidos</span>
+<span class="font-label-sm text-label-sm text-outline-variant">2 colapsados</span>
+</div>
+<!-- Exercise 2: Prensa Inclinada 45° (Compact Card) -->
+<div class="p-3 bg-surface-container-low rounded-xl border border-surface-container-high/60 flex items-center justify-between hover:border-outline-variant transition-colors group cursor-pointer">
+<div class="flex items-center gap-3">
+<span class="w-6 h-6 rounded-md bg-surface-container-high text-on-surface font-metric-display text-[12px] flex items-center justify-center font-bold">2</span>
+<div>
+<h4 class="font-headline-sm text-[16px] text-on-surface font-semibold group-hover:text-primary-container transition-colors">Prensa Inclinada 45°</h4>
+<p class="font-body-sm text-body-sm text-on-surface-variant flex items-center gap-2 mt-0.5">
+<span class="">3 series configuradas</span>
+<span class="text-outline-variant">•</span>
+<span class="font-bold text-on-surface">120 kg</span>
+<span class="text-outline-variant">•</span>
+<span class="">90s descanso</span>
+</p>
+</div>
+</div>
+<div class="flex items-center gap-2">
+<button aria-label="Expandir ejercicio" class="w-8 h-8 rounded-lg bg-surface flex items-center justify-center text-outline-variant group-hover:text-on-surface" type="button">
+<span class="material-symbols-outlined text-[18px]">expand_more</span>
+</button>
+</div>
+</div>
+<!-- Exercise 3: Extensiones de Cuádriceps (Compact Card) -->
+<div class="p-3 bg-surface-container-low rounded-xl border border-surface-container-high/60 flex items-center justify-between hover:border-outline-variant transition-colors group cursor-pointer">
+<div class="flex items-center gap-3">
+<span class="w-6 h-6 rounded-md bg-surface-container-high text-on-surface font-metric-display text-[12px] flex items-center justify-center font-bold">3</span>
+<div>
+<h4 class="font-headline-sm text-[16px] text-on-surface font-semibold group-hover:text-primary-container transition-colors">Extensiones de Cuádriceps</h4>
+<p class="font-body-sm text-body-sm text-on-surface-variant flex items-center gap-2 mt-0.5">
+<span class="">3 series configuradas</span>
+<span class="text-outline-variant">•</span>
+<span class="font-bold text-on-surface">45 kg</span>
+<span class="text-outline-variant">•</span>
+<span class="">60s descanso</span>
+</p>
+</div>
+</div>
+<div class="flex items-center gap-2">
+<button aria-label="Expandir ejercicio" class="w-8 h-8 rounded-lg bg-surface flex items-center justify-center text-outline-variant group-hover:text-on-surface" type="button">
+<span class="material-symbols-outlined text-[18px]">expand_more</span>
+</button>
+</div>
+</div>
+<!-- Prominent "+ Añadir Nuevo Ejercicio" Button -->
+
+</section>
+</main>
+<!-- SECTION 6: FIXED ACTION FOOTER DOCK (TASK SUMMARY & FINAL CTA) -->
+<!-- Note: BottomNavBar is intentionally suppressed per hierarchy protocol (focused transactional workout creator journey) -->
+<footer class="fixed bottom-0 left-0 w-full flex justify-center z-50 pointer-events-none">
+<div class="w-full max-w-md p-4 bg-gradient-to-t from-surface via-surface/95 to-transparent pointer-events-auto">
+<div class="bg-surface-container-low/95 backdrop-blur-xl border border-surface-container-high/80 rounded-2xl p-3 shadow-2xl shadow-black">
+<!-- Quick Routine Metric Telemetry -->
+<div class="flex items-center justify-between px-2 pb-2.5 mb-2 border-b border-surface-container-high/50">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px] text-primary-container">data_saver_on</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant font-medium">3 ejercicios • 10 series totales</span>
+</div>
+<div class="flex items-center gap-1 font-label-sm text-label-sm text-secondary-fixed">
+<span class="material-symbols-outlined text-[14px]">schedule</span>
+<span class="">~42 min</span>
+</div>
+</div>
+<!-- Primary Submit Action -->
+<button class="w-full py-3.5 px-6 rounded-xl bg-primary-container text-on-primary-container font-label-lg text-label-lg font-bold flex items-center justify-center gap-2 shadow-lg shadow-primary-container/30 active:scale-95 hover:opacity-95 transition-all" type="button">
+<span class="material-symbols-outlined text-[20px]">check_circle</span>
+            Finalizar y Guardar Rutina
+          </button>
+</div>
+</div>
+</footer>
+</div>
+
+
+</body></html>

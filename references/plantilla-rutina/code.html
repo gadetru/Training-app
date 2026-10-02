@@ -1,0 +1,488 @@
+<!DOCTYPE html><html class="dark" lang="es" style=""><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport">
+<title>Sesión Activa - Torso: Fuerza &amp; Hipertrofia</title>
+<!-- Google Fonts: Space Grotesk, Plus Jakarta Sans, Outfit -->
+<link href="https://fonts.googleapis.com" rel="preconnect">
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&amp;family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;family=Space+Grotesk:wght@600;700&amp;display=swap" rel="stylesheet">
+<!-- Material Symbols Outlined -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<!-- Tailwind CSS v3 -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+            "on-surface-variant": "#e4bfb1",
+            "surface-container-lowest": "#0c0e11",
+            "surface-container-highest": "#333538",
+            "inverse-surface": "#e2e2e6",
+            "on-tertiary": "#00363d",
+            "tertiary": "#00daf3",
+            "surface-container-high": "#282a2d",
+            "secondary": "#ffffff",
+            "on-secondary-fixed": "#161e00",
+            "on-background": "#e2e2e6",
+            "primary": "#ffb599",
+            "on-tertiary-container": "#003138",
+            "secondary-container": "#c3f400",
+            "outline": "#ab897d",
+            "primary-fixed": "#ffdbce",
+            "error-container": "#93000a",
+            "background": "#111316",
+            "on-secondary-fixed-variant": "#3c4d00",
+            "primary-fixed-dim": "#ffb599",
+            "on-tertiary-fixed": "#001f24",
+            "secondary-fixed": "#c3f400",
+            "tertiary-fixed-dim": "#00daf3",
+            "tertiary-container": "#00a2b5",
+            "surface-container-low": "#1a1c1f",
+            "on-secondary-container": "#556d00",
+            "on-secondary": "#283500",
+            "inverse-primary": "#a63b00",
+            "on-surface": "#e2e2e6",
+            "primary-container": "#ff5e00",
+            "on-primary-container": "#531900",
+            "error": "#ffb4ab",
+            "on-primary-fixed": "#370e00",
+            "on-tertiary-fixed-variant": "#004f58",
+            "surface-bright": "#37393d",
+            "outline-variant": "#5b4137",
+            "on-primary": "#5a1c00",
+            "surface": "#111316",
+            "on-error": "#690005",
+            "secondary-fixed-dim": "#abd600",
+            "inverse-on-surface": "#2f3034",
+            "tertiary-fixed": "#9cf0ff",
+            "surface-variant": "#333538",
+            "surface-dim": "#111316",
+            "on-error-container": "#ffdad6",
+            "surface-container": "#1e2023",
+            "surface-tint": "#ffb599",
+            "on-primary-fixed-variant": "#7f2b00"
+          },
+          "borderRadius": {
+            "DEFAULT": "0.25rem",
+            "lg": "0.5rem",
+            "xl": "0.75rem",
+            "full": "9999px"
+          },
+          "spacing": {
+            "space-xl": "2rem",
+            "space-lg": "1.5rem",
+            "space-sm": "0.5rem",
+            "margin": "1.25rem",
+            "space-xs": "0.25rem",
+            "space-md": "1rem",
+            "gutter": "1rem"
+          },
+          "fontFamily": {
+            "metric-display": ["Space Grotesk"],
+            "body-md": ["Plus Jakarta Sans"],
+            "headline-sm": ["Outfit"],
+            "label-sm": ["Space Grotesk"],
+            "body-sm": ["Plus Jakarta Sans"],
+            "display-lg": ["Outfit"],
+            "headline-lg-mobile": ["Outfit"],
+            "body-lg": ["Plus Jakarta Sans"],
+            "headline-md": ["Outfit"],
+            "label-md": ["Space Grotesk"],
+            "label-lg": ["Space Grotesk"],
+            "headline-lg": ["Outfit"]
+          },
+          "fontSize": {
+            "metric-display": ["32px", { "lineHeight": "36px", "letterSpacing": "-0.04em", "fontWeight": "700" }],
+            "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+            "headline-sm": ["18px", { "lineHeight": "24px", "fontWeight": "600" }],
+            "label-sm": ["10px", { "lineHeight": "12px", "letterSpacing": "0.08em", "fontWeight": "600" }],
+            "body-sm": ["12px", { "lineHeight": "16px", "fontWeight": "400" }],
+            "display-lg": ["40px", { "lineHeight": "48px", "letterSpacing": "-0.03em", "fontWeight": "800" }],
+            "headline-lg-mobile": ["26px", { "lineHeight": "32px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+            "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+            "headline-md": ["22px", { "lineHeight": "28px", "fontWeight": "600" }],
+            "label-md": ["12px", { "lineHeight": "16px", "letterSpacing": "0.06em", "fontWeight": "600" }],
+            "label-lg": ["14px", { "lineHeight": "18px", "letterSpacing": "0.04em", "fontWeight": "700" }],
+            "headline-lg": ["30px", { "lineHeight": "38px", "letterSpacing": "-0.02em", "fontWeight": "700" }]
+          }
+        }
+      }
+    }
+  </script>
+<style>
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      display: inline-block;
+      vertical-align: middle;
+      line-height: 1;
+    }
+    .material-symbols-outlined.fill-icon {
+      font-variation-settings: 'FILL' 1;
+    }
+    /* Hide scrollbars for slick mobile look */
+    ::-webkit-scrollbar {
+      display: none;
+    }
+    * {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+  </style>
+</head>
+<body class="bg-background text-on-surface antialiased select-none min-h-screen flex flex-col justify-between selection:bg-primary-container selection:text-on-primary-container">
+<!-- ==================== HEADER SUPERIOR: SESIÓN ACTIVA ==================== -->
+<header class="sticky top-0 z-40 bg-surface/95 backdrop-blur-md px-5 pt-3 pb-3 flex flex-col gap-3 shadow-md shadow-black/40">
+<div class="flex items-center justify-between">
+<!-- Minimizar / Volver -->
+<button class="w-10 h-10 rounded-full bg-surface-container-low border border-surface-container-highest flex items-center justify-center text-on-surface active:scale-95 transition-transform">
+<span class="material-symbols-outlined text-[20px]">expand_more</span>
+</button>
+<!-- Cronómetro de Sesión Activo -->
+<div class="flex items-center gap-2 bg-surface-container-lowest/80 px-3.5 py-1.5 rounded-full border border-primary-container/30 shadow-inner">
+<span class="relative flex h-2 w-2">
+<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary-container opacity-75"></span>
+<span class="relative inline-flex rounded-full h-2 w-2 bg-primary-container"></span>
+</span>
+<span class="material-symbols-outlined text-primary-container text-[18px]">timer</span>
+<span class="font-label-lg text-label-lg font-bold text-on-surface tracking-wider">28:45</span>
+</div>
+<!-- Ajustes de Rutina -->
+<div class="flex items-center gap-1">
+<button class="w-10 h-10 rounded-full bg-surface-container-low border border-surface-container-highest flex items-center justify-center text-on-surface active:scale-95 transition-transform">
+<span class="material-symbols-outlined text-[20px]">more_vert</span>
+</button>
+</div>
+</div>
+<!-- Título y Banner de Descanso en vivo -->
+<div class="flex flex-col gap-1.5">
+<div class="flex items-center justify-between">
+<div>
+<span class="font-label-sm text-label-sm text-primary-container tracking-wider uppercase">Entrenamiento Activo</span>
+<h1 class="font-headline-md text-headline-md font-bold text-on-surface tracking-tight leading-tight">Torso - Fuerza &amp; Hipertrofia</h1>
+</div>
+</div>
+<!-- Temporizador de descanso flotante dinámico -->
+<div class="mt-1 bg-surface-container-low border border-surface-container-highest/80 rounded-xl p-2.5 flex items-center justify-between shadow-lg">
+<div class="flex items-center gap-2.5">
+<div class="w-8 h-8 rounded-lg bg-surface-container flex items-center justify-center text-secondary-fixed">
+<span class="material-symbols-outlined text-[18px]">hourglass_top</span>
+</div>
+<div>
+<div class="flex items-center gap-1.5">
+<span class="font-body-sm text-body-sm text-on-surface-variant">Descanso Activo:</span>
+<span class="font-label-md text-label-md text-secondary-fixed font-bold">01:15</span>
+</div>
+<!-- Barra de progreso descanso -->
+<div class="w-32 sm:w-44 bg-surface-container-highest h-1.5 rounded-full overflow-hidden mt-1">
+<div class="bg-secondary-fixed h-full rounded-full transition-all duration-300" style="width: 58%;"></div>
+</div>
+</div>
+</div>
+<div class="flex items-center gap-1"><button class="px-2 py-1 bg-surface-container hover:bg-surface-container-high rounded text-on-surface font-label-sm text-label-sm border border-surface-container-highest active:scale-95 transition-transform">-10s</button><button class="px-2 py-1 bg-surface-container hover:bg-surface-container-high rounded text-on-surface font-label-sm text-label-sm border border-surface-container-highest active:scale-95 transition-transform">+10s</button><button class="px-2 py-1 bg-surface-container hover:bg-surface-container-high rounded text-on-surface-variant font-label-sm text-label-sm border border-surface-container-highest active:scale-95 transition-transform">Saltar</button></div>
+</div>
+</div>
+</header>
+<!-- ==================== CONTENIDO PRINCIPAL ==================== -->
+<main class="flex-1 px-5 pt-3 pb-32 space-y-4">
+<!-- Indicador de Progreso Global & Acción rápida -->
+<div class="bg-surface-container-low rounded-xl p-3.5 border border-surface-container-highest flex flex-col gap-2">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="font-label-md text-label-md font-bold text-on-surface">Ejercicio 2 de 6</span>
+<span class="inline-block w-1 h-1 rounded-full bg-surface-container-highest"></span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">45% completado</span>
+</div>
+<button class="flex items-center gap-1 text-primary-container font-label-md text-label-md font-bold active:scale-95 transition-transform">
+<span class="material-symbols-outlined text-[16px]">add</span>
+<span class="">Añadir Ejercicio</span>
+</button>
+</div>
+<!-- Barra de progreso de la rutina completa -->
+<div class="w-full bg-surface-container-highest h-2 rounded-full overflow-hidden flex">
+<div class="bg-primary-container h-full rounded-full transition-all duration-500" style="width: 45%;"></div>
+</div>
+</div>
+<!-- LISTA DE EJERCICIOS ACORDEÓN -->
+<div class="space-y-3">
+<!-- ==================== EJERCICIO 1 (COMPLETADO / COLAPSADO) ==================== -->
+<div class="bg-surface-container-low rounded-xl border border-surface-container-highest p-4 flex items-center justify-between opacity-85 transition-opacity hover:opacity-100">
+<div class="flex items-center gap-3">
+<div class="w-9 h-9 rounded-lg bg-surface-container flex items-center justify-center text-secondary-fixed">
+<span class="material-symbols-outlined fill-icon text-[20px]" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+<div>
+<div class="flex items-center gap-2">
+<h3 class="font-headline-sm text-headline-sm font-bold text-on-surface">1. Press de Banca Plano</h3>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">4 de 4 series completadas • 85 kg máx</p>
+</div>
+</div>
+<button class="w-8 h-8 rounded-full bg-surface-container flex items-center justify-center text-on-surface-variant hover:text-on-surface transition-colors">
+<span class="material-symbols-outlined text-[20px]">keyboard_arrow_down</span>
+</button>
+</div>
+<!-- ==================== EJERCICIO 2 (ACTIVO Y EXPANDIDO) ==================== -->
+<div class="bg-surface-container-low rounded-2xl border-2 border-primary-container/40 p-4 shadow-xl shadow-black/50 relative overflow-hidden">
+<!-- Glow ambiental sutil superior -->
+<div class="absolute -top-12 -right-12 w-32 h-32 bg-primary-container/10 rounded-full blur-2xl pointer-events-none"></div>
+<!-- Encabezado del ejercicio activo -->
+<div class="flex items-start justify-between pb-3 border-b border-surface-container-highest">
+<div class="flex items-center gap-3">
+<div class="w-11 h-11 rounded-xl bg-surface-container border border-primary-container/30 flex items-center justify-center text-primary-container">
+<span class="material-symbols-outlined text-[24px]">fitness_center</span>
+</div>
+<div>
+<div class="flex items-center gap-2">
+<h2 class="font-headline-sm text-headline-sm font-bold text-on-surface">2. Press Militar con Barra</h2>
+</div>
+<div class="flex items-center gap-2 mt-1">
+<span class="px-2 py-0.5 rounded bg-surface-container-high text-primary font-label-sm text-label-sm font-semibold border border-outline-variant/30">
+                  Enfoque: Hombro &amp; Tríceps
+                </span>
+<span class="text-on-surface-variant font-body-sm text-body-sm">• RPE 8.5</span>
+</div>
+</div>
+</div>
+<div class="flex items-center gap-1">
+<button class="w-8 h-8 rounded-lg bg-surface-container flex items-center justify-center text-on-surface-variant hover:text-on-surface active:scale-95 transition-transform" title="Historial o notas">
+<span class="material-symbols-outlined text-[18px]">edit_note</span>
+</button>
+<button class="w-8 h-8 rounded-lg bg-surface-container flex items-center justify-center text-on-surface-variant hover:text-on-surface active:scale-95 transition-transform">
+<span class="material-symbols-outlined text-[18px]">more_horiz</span>
+</button>
+</div>
+</div>
+<!-- TABLA DE SERIES PROGRAMADAS -->
+<div class="mt-3 overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="font-label-sm text-label-sm text-on-surface-variant border-b border-surface-container-highest/60 pb-1">
+<th class="py-2 px-1 text-center w-8">SET</th>
+<th class="py-2 px-2 text-left">OBJETIVO</th>
+<th class="py-2 px-2 text-center">KG</th>
+<th class="py-2 px-2 text-center">REPS</th>
+<th class="py-2 px-1 text-center">PAUSA</th>
+<th class="py-2 px-1 text-center w-12">ESTADO</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-surface-container-highest/30">
+<!-- Fila 1: Completada -->
+<tr class="font-body-sm text-body-sm text-on-surface-variant">
+<td class="py-2.5 px-1 text-center">
+<span class="w-5 h-5 inline-flex items-center justify-center rounded bg-surface-container text-on-surface-variant font-label-sm text-label-sm font-bold">1</span>
+</td>
+<td class="py-2.5 px-2">
+<span class="text-on-surface-variant">40 kg x 12</span>
+</td>
+<td class="py-2.5 px-2 text-center font-metric-display text-[14px] text-on-surface">40</td>
+<td class="py-2.5 px-2 text-center font-metric-display text-[14px] text-on-surface">12</td>
+<td class="py-2.5 px-1 text-center text-[11px] text-on-surface-variant">60s</td>
+<td class="py-2.5 px-1 text-center">
+<div class="w-8 h-8 mx-auto rounded-lg bg-secondary-fixed/20 text-secondary-fixed flex items-center justify-center">
+<span class="material-symbols-outlined text-[18px]" style="font-variation-settings: 'FILL' 1;">check</span>
+</div>
+</td>
+</tr>
+<!-- Fila 2: Completada -->
+<tr class="font-body-sm text-body-sm text-on-surface-variant">
+<td class="py-2.5 px-1 text-center">
+<span class="w-5 h-5 inline-flex items-center justify-center rounded bg-surface-container text-on-surface-variant font-label-sm text-label-sm font-bold">2</span>
+</td>
+<td class="py-2.5 px-2">
+<span class="text-on-surface-variant">60 kg x 10</span>
+</td>
+<td class="py-2.5 px-2 text-center font-metric-display text-[14px] text-on-surface">60</td>
+<td class="py-2.5 px-2 text-center font-metric-display text-[14px] text-on-surface">10</td>
+<td class="py-2.5 px-1 text-center text-[11px] text-on-surface-variant">90s</td>
+<td class="py-2.5 px-1 text-center">
+<div class="w-8 h-8 mx-auto rounded-lg bg-secondary-fixed/20 text-secondary-fixed flex items-center justify-center">
+<span class="material-symbols-outlined text-[18px]" style="font-variation-settings: 'FILL' 1;">check</span>
+</div>
+</td>
+</tr>
+<!-- Fila 3: SERIE ACTIVA ACTUALMENTE -->
+<tr class="bg-surface-container-high/90 rounded-xl relative">
+<td class="py-3 px-1 text-center">
+<span class="w-6 h-6 inline-flex items-center justify-center rounded-md bg-primary-container text-on-primary-container font-label-md text-label-md font-bold shadow-md">3</span>
+</td>
+<td class="py-3 px-2">
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-primary font-bold">ACTIVA</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">70 kg x 8</span>
+</div>
+</td>
+<td class="py-3 px-1 text-center"><button class="inline-flex items-center justify-center gap-1.5 bg-surface-container-lowest border border-surface-container-highest rounded-lg px-2.5 py-1.5 shadow-inner active:scale-95 transition-transform"><span class="font-metric-display text-[16px] text-on-surface font-bold">70</span><div class="flex flex-col text-on-surface-variant"><span class="material-symbols-outlined text-[10px] leading-none">keyboard_arrow_up</span><span class="material-symbols-outlined text-[10px] leading-none">keyboard_arrow_down</span></div></button></td>
+<td class="py-3 px-1 text-center"><button class="inline-flex items-center justify-center gap-1.5 bg-surface-container-lowest border border-surface-container-highest rounded-lg px-2.5 py-1.5 shadow-inner active:scale-95 transition-transform"><span class="font-metric-display text-[16px] text-on-surface font-bold">8</span><div class="flex flex-col text-on-surface-variant"><span class="material-symbols-outlined text-[10px] leading-none">keyboard_arrow_up</span><span class="material-symbols-outlined text-[10px] leading-none">keyboard_arrow_down</span></div></button></td>
+<td class="py-3 px-1 text-center font-label-sm text-label-sm text-on-surface-variant">90s</td>
+<td class="py-3 px-1 text-center">
+<!-- Botón registrar serie activa -->
+<button class="w-9 h-9 mx-auto rounded-lg bg-primary-container text-on-primary-container font-bold flex items-center justify-center shadow-lg shadow-primary-container/30 active:scale-90 transition-transform">
+<span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">done</span>
+</button>
+</td>
+</tr>
+<!-- Fila 4: Pendiente -->
+<tr class="font-body-sm text-body-sm text-on-surface-variant/70">
+<td class="py-2.5 px-1 text-center">
+<span class="w-5 h-5 inline-flex items-center justify-center rounded bg-surface-container text-on-surface-variant/60 font-label-sm text-label-sm font-bold">4</span>
+</td>
+<td class="py-2.5 px-2">
+<span class="">70 kg x 8</span>
+</td>
+<td class="py-2.5 px-2 text-center font-metric-display text-[14px]">70</td>
+<td class="py-2.5 px-2 text-center font-metric-display text-[14px]">8</td>
+<td class="py-2.5 px-1 text-center text-[11px]">90s</td>
+<td class="py-2.5 px-1 text-center">
+<div class="w-8 h-8 mx-auto rounded-lg bg-surface-container border border-surface-container-highest text-surface-container-highest flex items-center justify-center">
+<span class="material-symbols-outlined text-[16px]">check</span>
+</div>
+</td>
+</tr>
+<!-- Fila 5: Drop Set Pendiente -->
+<tr class="font-body-sm text-body-sm text-on-surface-variant/70">
+<td class="py-2.5 px-1 text-center">
+<span class="w-5 h-5 inline-flex items-center justify-center rounded bg-surface-container text-primary font-label-sm text-label-sm font-bold" title="Drop Set">D</span>
+</td>
+<td class="py-2.5 px-2">
+<div class="flex items-center gap-1">
+<span class="">65 kg x 8</span>
+<span class="text-[9px] px-1 py-0.2 bg-primary/20 text-primary rounded">DROP</span>
+</div>
+</td>
+<td class="py-2.5 px-2 text-center font-metric-display text-[14px]">65</td>
+<td class="py-2.5 px-2 text-center font-metric-display text-[14px]">8</td>
+<td class="py-2.5 px-1 text-center text-[11px]">90s</td>
+<td class="py-2.5 px-1 text-center">
+<div class="w-8 h-8 mx-auto rounded-lg bg-surface-container border border-surface-container-highest text-surface-container-highest flex items-center justify-center">
+<span class="material-symbols-outlined text-[16px]">check</span>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Acciones de Series y Selector de Tipos -->
+<div class="flex items-center justify-between pt-3 mt-2 border-t border-surface-container-highest/60">
+<div class="flex items-center gap-2">
+<button class="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-surface-container hover:bg-surface-container-high border border-surface-container-highest text-on-surface font-label-sm text-label-sm active:scale-95 transition-transform">
+<span class="material-symbols-outlined text-[16px]">add</span>
+<span class="">Añadir Serie</span>
+</button>
+<button class="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-surface-container hover:bg-surface-container-high border border-surface-container-highest text-on-surface-variant font-label-sm text-label-sm active:scale-95 transition-transform">
+<span class="material-symbols-outlined text-[16px]">remove</span>
+</button>
+</div>
+<div class="flex items-center gap-1.5 text-on-surface-variant">
+<span class="font-label-sm text-label-sm">Tipo:</span>
+<button class="px-2 py-0.5 rounded bg-surface-container text-primary font-label-sm text-label-sm border border-outline-variant/40">
+              Normal
+            </button>
+</div>
+</div>
+</div>
+<!-- ==================== EJERCICIO 3 (CONTRAÍDO) ==================== -->
+<div class="bg-surface-container-low rounded-xl border border-surface-container-highest p-4 flex items-center justify-between active:scale-[0.99] transition-transform">
+<div class="flex items-center gap-3">
+<div class="w-9 h-9 rounded-lg bg-surface-container flex items-center justify-center text-on-surface-variant">
+<span class="font-label-md text-label-md font-bold">3</span>
+</div>
+<div>
+<h3 class="font-headline-sm text-headline-sm font-bold text-on-surface">3. Remo con Barra T-Bar</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant">4 series programadas • Espalda media</p>
+</div>
+</div>
+<button class="w-8 h-8 rounded-full bg-surface-container flex items-center justify-center text-on-surface-variant hover:text-on-surface transition-colors">
+<span class="material-symbols-outlined text-[20px]">keyboard_arrow_down</span>
+</button>
+</div>
+<!-- ==================== EJERCICIO 4 (CONTRAÍDO) ==================== -->
+<div class="bg-surface-container-low rounded-xl border border-surface-container-highest p-4 flex items-center justify-between active:scale-[0.99] transition-transform">
+<div class="flex items-center gap-3">
+<div class="w-9 h-9 rounded-lg bg-surface-container flex items-center justify-center text-on-surface-variant">
+<span class="font-label-md text-label-md font-bold">4</span>
+</div>
+<div>
+<h3 class="font-headline-sm text-headline-sm font-bold text-on-surface">4. Fondos en Paralelas (Lastrados)</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant">3 series programadas • Pecho &amp; Tríceps</p>
+</div>
+</div>
+<button class="w-8 h-8 rounded-full bg-surface-container flex items-center justify-center text-on-surface-variant hover:text-on-surface transition-colors">
+<span class="material-symbols-outlined text-[20px]">keyboard_arrow_down</span>
+</button>
+</div>
+<!-- ==================== EJERCICIO 5 (CONTRAÍDO) ==================== -->
+<div class="bg-surface-container-low rounded-xl border border-surface-container-highest p-4 flex items-center justify-between active:scale-[0.99] transition-transform">
+<div class="flex items-center gap-3">
+<div class="w-9 h-9 rounded-lg bg-surface-container flex items-center justify-center text-on-surface-variant">
+<span class="font-label-md text-label-md font-bold">5</span>
+</div>
+<div>
+<h3 class="font-headline-sm text-headline-sm font-bold text-on-surface">5. Elevaciones Laterales Mancuerna</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant">4 series programadas • Deltoides lateral</p>
+</div>
+</div>
+<button class="w-8 h-8 rounded-full bg-surface-container flex items-center justify-center text-on-surface-variant hover:text-on-surface transition-colors">
+<span class="material-symbols-outlined text-[20px]">keyboard_arrow_down</span>
+</button>
+</div>
+<!-- ==================== EJERCICIO 6 (CONTRAÍDO) ==================== -->
+<div class="bg-surface-container-low rounded-xl border border-surface-container-highest p-4 flex items-center justify-between active:scale-[0.99] transition-transform">
+<div class="flex items-center gap-3">
+<div class="w-9 h-9 rounded-lg bg-surface-container flex items-center justify-center text-on-surface-variant">
+<span class="font-label-md text-label-md font-bold">6</span>
+</div>
+<div>
+<h3 class="font-headline-sm text-headline-sm font-bold text-on-surface">6. Face Pulls en Polea</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant">3 series programadas • Deltoides posterior</p>
+</div>
+</div>
+<button class="w-8 h-8 rounded-full bg-surface-container flex items-center justify-center text-on-surface-variant hover:text-on-surface transition-colors">
+<span class="material-symbols-outlined text-[20px]">keyboard_arrow_down</span>
+</button>
+</div>
+</div>
+<!-- Acciones secundarias de rutina -->
+<div class="pt-2 flex justify-center">
+<button class="text-error font-label-md text-label-md flex items-center gap-1.5 py-2 px-4 rounded-xl hover:bg-error-container/20 transition-colors">
+<span class="material-symbols-outlined text-[18px]">cancel</span>
+<span class="">Descartar Entrenamiento</span>
+</button>
+</div>
+</main>
+<!-- ==================== BARRA FLOTANTE INFERIOR FIJA: SESSION BAR ==================== -->
+<aside class="fixed bottom-0 left-0 w-full z-50 px-4 pb-6 pt-3 bg-surface-container/90 backdrop-blur-md shadow-2xl shadow-black/90">
+<div class="max-w-md mx-auto flex items-center justify-between gap-3">
+<!-- Pausar Entrenamiento -->
+<button class="h-12 px-4 rounded-full bg-surface-container-high border border-surface-container-highest flex items-center justify-center gap-2 text-on-surface font-label-md text-label-md font-bold active:scale-95 transition-transform hover:bg-surface-bright">
+<span class="material-symbols-outlined text-[20px]">pause</span>
+<span class="hidden sm:inline">Pausar</span>
+</button>
+<!-- Finalizar y Guardar (CTA Principal de alto impacto) -->
+<button class="h-12 flex-1 rounded-full bg-primary-container text-on-primary-container font-label-lg text-label-lg font-bold flex items-center justify-center gap-2 shadow-lg shadow-primary-container/40 active:scale-95 transition-transform">
+<span class="material-symbols-outlined text-[22px]" style="font-variation-settings: 'FILL' 1;">flag</span>
+<span class="">Finalizar y Guardar</span>
+</button>
+<!-- Minimizar / Segundo plano -->
+<button class="h-12 w-12 rounded-full bg-surface-container-high border border-surface-container-highest flex items-center justify-center text-on-surface-variant hover:text-on-surface active:scale-95 transition-transform" title="Minimizar sesión">
+<span class="material-symbols-outlined text-[20px]">picture_in_picture_alt</span>
+</button>
+</div>
+</aside>
+<!-- Script ligero para interactividad de check en la serie activa -->
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+      // Toggle simple para la serie activa
+      const finishBtn = document.querySelector('button[title="Minimizar sesión"]');
+      if (finishBtn) {
+        finishBtn.addEventListener('click', () => {
+          console.log('Sesión en background');
+        });
+      }
+    });
+  </script>
+
+
+</body></html>
