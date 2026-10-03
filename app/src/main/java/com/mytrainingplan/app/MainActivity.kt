@@ -8,7 +8,10 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
@@ -17,6 +20,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.mytrainingplan.app.domain.model.Profile
+import com.mytrainingplan.app.feature.exercises.ExercisePickerSheet
 import com.mytrainingplan.app.feature.home.BottomDock
 import com.mytrainingplan.app.feature.home.CalendarPlaceholder
 import com.mytrainingplan.app.feature.home.HomeScreen
@@ -56,10 +60,20 @@ fun TrainingNav() {
     }
     NavHost(navController = navController, startDestination = startDestination) {
         composable(ROUTE_HOME) {
+            // Estado hoisted del selector (spec 003): vive sobre `home`, sin ruta nueva.
+            var showExercisePicker by remember { mutableStateOf(false) }
             HomeScreen(
                 selectedTab = HomeTab.RUTINAS,
-                onTabSelected = { navController.navigateToTab(it) }
+                onTabSelected = { navController.navigateToTab(it) },
+                onCreate = { showExercisePicker = true }
             )
+            if (showExercisePicker) {
+                ExercisePickerSheet(
+                    // TODO spec editar-rutina: consumir los ids en el constructor.
+                    onConfirm = { showExercisePicker = false },
+                    onDismiss = { showExercisePicker = false }
+                )
+            }
         }
         composable(ROUTE_CALENDAR) {
             TabShell(
