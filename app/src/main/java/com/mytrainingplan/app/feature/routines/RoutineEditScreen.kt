@@ -36,6 +36,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -66,6 +69,7 @@ import com.mytrainingplan.app.domain.model.RoutineExercise
 import com.mytrainingplan.app.domain.model.RoutineExerciseUi
 import com.mytrainingplan.app.domain.model.RoutineMuscleLabels
 import com.mytrainingplan.app.domain.model.SetType
+import com.mytrainingplan.app.feature.exercises.ExercisePickerSheet
 
 // Tokens references/plantilla-editar-rutina/DESIGN.md + patrón HomeScreen (002).
 // Tipografías de sistema en Fase A (Outfit/Plus Jakarta/Space Grotesk van en Futuros).
@@ -116,8 +120,6 @@ private fun Modifier.dashedBorder(
 fun RoutineEditScreen(
     routineId: String? = null,
     viewModel: RoutineEditViewModel = viewModel(),
-    // TODO paso 5: el sheet del 003 se anida aquí; el botón aún no abre nada.
-    onAddClick: () -> Unit = {},
     onSaved: () -> Unit = {},
     onBack: () -> Unit = {}
 ) {
@@ -125,11 +127,14 @@ fun RoutineEditScreen(
     LaunchedEffect(routineId) { viewModel.openRoutine(routineId) }
     // Salir atrás sin guardar descarta el borrador (sin rutina fantasma).
     BackHandler { viewModel.onDiscard(onBack) }
+    // Sheet del 003 anidado: solo se abre desde el botón de añadir; su estado
+    // vive hoisted en esta Screen y el 003 no se toca por dentro.
+    var showPicker by rememberSaveable { mutableStateOf(false) }
     RoutineEditContent(
         uiState = uiState,
         onNameChange = viewModel::onNameChange,
         onDurationChange = viewModel::onDurationChange,
-        onAddClick = onAddClick,
+        onAddClick = { showPicker = true },
         onToggleExpanded = viewModel::onToggleExpanded,
         onDeleteExercise = viewModel::onDeleteExercise,
         onSetFieldChange = viewModel::onSetFieldChange,
@@ -139,6 +144,17 @@ fun RoutineEditScreen(
         onSave = { viewModel.onSave(onSaved) },
         onBack = { viewModel.onDiscard(onBack) }
     )
+    if (showPicker) {
+        ExercisePickerSheet(
+            // Cada id confirmado nace con 1 serie vacía (repo paso 2).
+            onConfirm = { ids ->
+                showPicker = false
+                viewModel.onAddExercises(ids)
+            },
+            // Cerrar/X descarta sin añadir y sin crash.
+            onDismiss = { showPicker = false }
+        )
+    }
 }
 
 @Composable
