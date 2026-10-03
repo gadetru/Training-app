@@ -2,7 +2,10 @@
 
 App Android para planificar rutinas y registrar entrenos de fuerza. Funciona sin conexión, no lleva anuncios y está pensada para controlar al detalle cada serie.
 
-> **Estado:** en diseño. Todavía no hay código; este README y los documentos de `docs/` fijan las decisiones de partida.
+> **Estado:** Fase A (maquetación UI-first en memoria, sin Room ni persistencia). 2 de 5 vistas hechas:
+> perfil de atleta (`plantilla-usuario`) y home (`vista-principal` con `NavHost` condicional
+> `¿hay perfil? home:profile`, verificada en móvil físico). Pendientes: `lista-ejercicios`, `rutina`, `editar-rutina`.
+> Este README y `docs/` fijan las decisiones de partida; `specs/002-vista-principal-spec.md` ya está implementado.
 
 ## Principios
 
@@ -52,6 +55,20 @@ App Android para planificar rutinas y registrar entrenos de fuerza. Funciona sin
 - Git y GitHub.
 - Gradle Wrapper (`gradlew`), que fija la versión de Gradle del proyecto.
 
+## Estado actual (Fase A)
+
+UI-first en memoria, sin Room: cada pantalla es `Screen` (stateful + stateless) + `ViewModel` con `StateFlow` +
+repositorio fake con la misma firma que tendrá el repositorio real. La UI solo ve `domain/model`.
+
+| Vista | Estado |
+|---|---|
+| Perfil de atleta (`feature/profile`, `domain/model/Profile`) | Hecha (`specs/001-plantilla-usuario-spec.md`) |
+| Home Mis Rutinas (`feature/home`, `domain/model/Home.kt`, `FakeHomeRepository`) + `NavHost` condicional + dock de 4 tabs | Hecha y verificada (`specs/002-vista-principal-spec.md`) |
+| Lista de ejercicios, rutina, editar rutina | Pendientes |
+
+Desviación conocida: `material-icons-core` solo trae 49 iconos, así que el dock usa fallbacks
+(`List`/`DateRange`/`Star`/`Person`); la fidelidad exacta a los iconos del diseño exigiría `material-icons-extended`.
+
 ## MVP (Fase 1)
 
 1. Ver el catálogo de ejercicios y filtrarlo por músculo y equipamiento.
@@ -63,6 +80,8 @@ App Android para planificar rutinas y registrar entrenos de fuerza. Funciona sin
 7. Historial de sesiones.
 
 Quedan **fuera del MVP**: cuentas de usuario, sincronización, gráficas de progreso, cronómetro con la pantalla bloqueada, accesorios reutilizables (gomas predefinidas).
+
+Del MVP, la Home ya cubre parcial: ver rutinas y punto de entrada a sesión (registrar series va en `rutina`/`editar-rutina`).
 
 ## Fases
 
@@ -80,14 +99,22 @@ Quedan **fuera del MVP**: cuentas de usuario, sincronización, gráficas de prog
 ## Compilar y ejecutar
 
 Requisitos: Android Studio, Android SDK y un móvil con **depuración USB** (o inalámbrica) activada.
+El SDK se apunta en `local.properties` con `sdk.dir` (no se versiona).
+
+- Compilar: `./gradlew assembleDebug`
+- Tests: `./gradlew testDebugUnitTest` (de momento solo `ExampleUnitTest`, sin suites reales)
+- Verificación real: probar en **móvil físico**, sin emulador.
+- Proyecto: `applicationId`/`namespace` `com.mytrainingplan.app`, `minSdk 26`, `compileSdk`/`targetSdk 37`, Java 11.
 
 ## Importante!
 
 **Archivos de configuración de Gradle:** el esqueleto del proyecto (Gradle, el wrapper y las versiones de 
 plugins y librerías) lo crea y mantiene Android Studio, no el agente. No crear, regenerar ni modificar por tu cuenta 
 `gradlew`, `gradlew.bat`, la carpeta `gradle/wrapper/`, `settings.gradle.kts`, `gradle.properties`,
-`gradle/libs.versions.toml` ni los `build.gradle.kts` (el de la raíz y el de `app`). Si una tarea necesita una dependencia
-o un plugin nuevo, indícalo y propón la línea exacta a añadir, pero no la escribas en esos archivos: las versiones las confirma
+`gradle/libs.versions.toml` ni los `build.gradle.kts` (el de la raíz y el de `app`). Excepción ya consumida
+(lote A): `navigation-compose, lifecycle-viewmodel-compose, material-icons-core, coil-compose` están declarados
+(`app/build.gradle.kts`) y en uso salvo Coil (picker de foto pendiente). Si una tarea necesita otra dependencia
+o plugin nuevo, indícalo y propón la línea exacta a añadir, pero no la escribas en esos archivos: las versiones las confirma
 el desarrollador desde la documentación oficial o desde Android Studio. El agente trabaja únicamente sobre el código Kotlin,
 los recursos y la documentación.
 
