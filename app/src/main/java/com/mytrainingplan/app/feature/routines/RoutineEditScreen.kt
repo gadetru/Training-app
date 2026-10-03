@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -30,17 +31,23 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.CornerRadius
@@ -51,9 +58,12 @@ import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.painter.ColorPainter
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -172,6 +182,9 @@ fun RoutineEditContent(
     onSave: () -> Unit = {},
     onBack: () -> Unit = {}
 ) {
+    // Modal de nombre: se abre desde el lápiz (o el propio título); overlay
+    // sobre el constructor, que conserva su posición/scroll al cerrar.
+    var showNameDialog by rememberSaveable { mutableStateOf(false) }
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -193,7 +206,7 @@ fun RoutineEditContent(
             ) {
                 MetaCard(
                     name = uiState.name,
-                    onNameChange = onNameChange,
+                    onEditNameClick = { showNameDialog = true },
                     exerciseCount = uiState.exercises.size,
                     durationMin = uiState.durationMin,
                     onDurationChange = onDurationChange,
@@ -226,6 +239,16 @@ fun RoutineEditContent(
             onSave = onSave,
             modifier = Modifier.align(Alignment.BottomCenter)
         )
+        if (showNameDialog) {
+            NameDialog(
+                currentName = uiState.name,
+                onAccept = {
+                    showNameDialog = false
+                    onNameChange(it)
+                },
+                onDismiss = { showNameDialog = false }
+            )
+        }
     }
 }
 
@@ -286,7 +309,7 @@ private fun EditHeader(
 @Composable
 private fun MetaCard(
     name: String,
-    onNameChange: (String) -> Unit,
+    onEditNameClick: () -> Unit,
     exerciseCount: Int,
     durationMin: Int,
     onDurationChange: (Int) -> Unit,
@@ -300,33 +323,35 @@ private fun MetaCard(
             .border(1.dp, BorderSubtle, RoundedCornerShape(16.dp))
             .padding(16.dp)
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            BasicTextField(
-                value = name,
-                onValueChange = onNameChange,
-                singleLine = true,
-                textStyle = TextStyle(
-                    color = TextPrimary,
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold
-                ),
-                modifier = Modifier.weight(1f),
-                decorationBox = { inner ->
-                    Box {
-                        if (name.isEmpty()) {
-                            Text(
-                                "Nombre de la Rutina",
-                                color = TextMuted,
-                                fontSize = 20.sp,
-                                fontWeight = FontWeight.Bold
-                            )
-                        }
-                        inner()
-                    }
-                }
+        // Título de solo lectura: el lápiz (y el propio título) abren el modal.
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable(onClick = onEditNameClick),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                if (name.isEmpty()) "Nombre de la Rutina" else name,
+                color = if (name.isEmpty()) TextMuted else TextPrimary,
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.weight(1f)
             )
             Spacer(Modifier.width(8.dp))
-            Icon(Icons.Filled.Edit, contentDescription = null, tint = TextMuted, modifier = Modifier.size(18.dp))
+            // Lápiz con hit target >= 48dp: abre el modal de nombre.
+            Box(
+                modifier = Modifier
+                    .size(48.dp)
+                    .clip(RoundedCornerShape(999.dp))
+                    .background(Card2)
+                    .border(1.dp, BorderSubtle, RoundedCornerShape(999.dp))
+                    .clickable(onClick = onEditNameClick),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(Icons.Filled.Edit, contentDescription = "Editar nombre", tint = Orange)
+            }
         }
         Spacer(Modifier.height(6.dp))
         Text(
@@ -389,9 +414,98 @@ private fun MetaCard(
     }
 }
 
+/**
+ * Modal de nombre de rutina: se abre desde el lápiz, edita en estado local
+ * (sin tocar el repo por tecla) y solo al Aceptar emite el nombre recortado.
+ * Cancelar, X, atrás o tap fuera descartan sin cambios. Aceptar deshabilitado
+ * en vacío para no borrar el nombre sin querer.
+ */
 @Composable
-private fun AddExerciseButton(onClick: () -> Unit) {
-    Row(
+private fun NameDialog(
+    currentName: String,
+    onAccept: (String) -> Unit,
+    onDismiss: () -> Unit
+) {
+    var field by remember {
+        mutableStateOf(
+            TextFieldValue(currentName, selection = TextRange(0, currentName.length))
+        )
+    }
+    val focusRequester = remember { FocusRequester() }
+    val canAccept = field.text.isNotBlank()
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        containerColor = Card,
+        shape = RoundedCornerShape(16.dp),
+        title = {
+            Text(
+                "Nombre de la rutina",
+                color = TextPrimary,
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold
+            )
+        },
+        text = {
+            TextField(
+                value = field,
+                onValueChange = { field = it },
+                singleLine = true,
+                placeholder = { Text("Ej. Pierna & Glúteos", color = TextMuted, fontSize = 14.sp) },
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                keyboardActions = KeyboardActions(
+                    onDone = { if (canAccept) onAccept(field.text.trim()) }
+                ),
+                colors = TextFieldDefaults.colors(
+                    focusedContainerColor = InputBg,
+                    unfocusedContainerColor = InputBg,
+                    focusedIndicatorColor = Color.Transparent,
+                    unfocusedIndicatorColor = Color.Transparent,
+                    cursorColor = Orange,
+                    focusedTextColor = TextPrimary,
+                    unfocusedTextColor = TextPrimary
+                ),
+                shape = RoundedCornerShape(12.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .focusRequester(focusRequester)
+            )
+        },
+        dismissButton = {
+            Row(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(999.dp))
+                    .background(CardHigh)
+                    .border(1.dp, BorderSubtle, RoundedCornerShape(999.dp))
+                    .clickable(onClick = onDismiss)
+                    .padding(horizontal = 16.dp, vertical = 10.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text("Cancelar", color = TextPrimary, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+            }
+        },
+        confirmButton = {
+            Row(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(999.dp))
+                    .background(if (canAccept) Orange else CardHigh)
+                    .clickable(enabled = canAccept, onClick = { onAccept(field.text.trim()) })
+                    .padding(horizontal = 16.dp, vertical = 10.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    "Aceptar",
+                    color = if (canAccept) OnOrange else TextMuted,
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+        }
+    )
+    LaunchedEffect(Unit) { focusRequester.requestFocus() }
+}
+
+@Composable
+private fun AddExerciseButton(onClick: () -> Unit) {    Row(
         modifier = Modifier
             .fillMaxWidth()
             .dashedBorder(color = Orange.copy(alpha = 0.5f))
