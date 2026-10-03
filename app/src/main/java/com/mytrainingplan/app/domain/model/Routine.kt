@@ -14,11 +14,11 @@ package com.mytrainingplan.app.domain.model
  * - `handEdited` es solo estado de pantalla (qué celdas tocó el usuario),
  *   jamás se persiste (ni siquiera en el fake).
  */
-enum class SetType {
-    WARMUP,
-    NORMAL,
-    FAILURE
-}
+/**
+ * Intensidad RIR por serie (referencia `plantilla-editar-rutina/code.html`):
+ * `null` = calentamiento (W), `0` = al fallo, `n > 0` = RIR n.
+ * Un solo nullable cubre los 3 casos y mapea directo a una columna Room en Fase B.
+ */
 
 data class Routine(
     /** UUID generado en cliente. */
@@ -54,7 +54,8 @@ data class PlannedSet(
     /** Descanso de ESTA serie (nunca global del ejercicio). */
     val restSeconds: Int = 90,
     val loadNote: String? = null,
-    val setType: SetType = SetType.NORMAL,
+    /** RIR de ESTA serie: `null` calentamiento, `0` al fallo, `n` RIR n. */
+    val rir: Int? = null,
     val updatedAt: Long = 0L,
     val deleted: Boolean = false
 )

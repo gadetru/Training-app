@@ -101,15 +101,15 @@ No-funcionales:
 - ¿Descanso por defecto de la serie vacía (90 s) o configurable en ajustes? Propuesta: 90 s fijo en Fase A.
 ## 11. Checklist verificación (última, checkboxes listos para /verifier)
 - [ ] Constructor copia `screen.png` verificada en móvil físico (cabecera, tags, acordeón, matriz, botón, footer)
-- [ ] `Crear Rutina +` abre el constructor vacío sin abrir el sheet
-- [ ] `+ Añadir Nuevo Ejercicio` abre el sheet; `Listo (N)` añade 1 serie vacía por ejercicio
-- [ ] Cerrar/X del sheet no añade nada y no crashea
-- [ ] Editar celda propaga a siguientes no editadas; la editada a mano no se sobrescribe
-- [ ] Tipo de serie (calentamiento/normal/al fallo) cambia por fila sin crash
-- [ ] `Añadir Serie` copia valores de la 1ª; eliminar ejercicio no crashea
-- [ ] `Finalizar y Guardar Rutina` vuelve a Home con la rutina en el feed
-- [ ] Salir atrás sin guardar descarta sin rutina fantasma y sin crash
-- [ ] Rotación conserva título, duración, ejercicios, series y ediciones en sesión
-- [ ] Paquete `com.mytrainingplan.app`, sin `.debug`
-- [ ] `./gradlew assembleDebug` OK
+- [x] `Crear Rutina +` abre el constructor vacío sin abrir el sheet
+- [x] `+ Añadir Nuevo Ejercicio` abre el sheet; `Listo (N)` añade 1 serie vacía por ejercicio
+- [x] Cerrar/X del sheet no añade nada y no crashea
+- [x] Editar celda propaga a siguientes no editadas; la editada a mano no se sobrescribe
+- [x] Tipo de serie (calentamiento/normal/al fallo) cambia por fila sin crash
+- [x] `Añadir Serie` copia valores de la 1ª; eliminar ejercicio no crashea
+- [x] `Finalizar y Guardar Rutina` vuelve a Home con la rutina en el feed
+- [x] Salir atrás sin guardar descarta sin rutina fantasma y sin crash
+- [x] Rotación conserva título, duración, ejercicios, series y ediciones en sesión
+- [x] Paquete `com.mytrainingplan.app`, sin `.debug`
+- [x] `./gradlew assembleDebug` OK
 - [ ] Prueba en móvil físico OK
