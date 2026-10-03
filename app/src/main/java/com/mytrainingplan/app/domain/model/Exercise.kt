@@ -38,6 +38,42 @@ data class Exercise(
 )
 
 /**
+ * Grupos ES de la fila de chips de músculo → slugs API (spec 003 §4).
+ * La clave es la que guarda [ExercisesUiState.selectedMuscle] (null = `Todos`).
+ */
+object MuscleGroups {
+    val GROUPS: Map<String, Set<String>> = mapOf(
+        "pierna" to setOf("quads", "hamstrings", "glutes", "calves", "abductors", "adductors"),
+        "pecho" to setOf("pectorals"),
+        "espalda" to setOf("lats", "traps", "upper-back", "spine"),
+        "hombros" to setOf("delts"),
+        "core" to setOf("abs"),
+        "brazo" to setOf("biceps", "triceps", "forearms")
+    )
+
+    fun slugsFor(key: String?): Set<String> =
+        key?.let { GROUPS[it] ?: setOf(it) } ?: emptySet()
+}
+
+/**
+ * Grupos ES de la fila de chips de equipamiento → valores API (spec 003 §4).
+ * `maquina` cubre `machine` + `lever` (palanca); null = `Todos`.
+ */
+object EquipmentGroups {
+    val GROUPS: Map<String, Set<String>> = mapOf(
+        "barra" to setOf("barbell"),
+        "mancuernas" to setOf("dumbbell"),
+        "maquina" to setOf("machine", "lever"),
+        "corporal" to setOf("bodyweight"),
+        "polea" to setOf("cable"),
+        "banda" to setOf("band")
+    )
+
+    fun slugsFor(key: String?): Set<String> =
+        key?.let { GROUPS[it] ?: setOf(it) } ?: emptySet()
+}
+
+/**
  * Filtro en memoria (Fase A). En Fase B/C el repositorio real
  * mantendrá esta misma firma.
  */
@@ -63,11 +99,11 @@ data class ExercisesUiState(
     val selectedCount: Int
         get() = selectedIds.size
 
-    /** Vista como [ExerciseFilter] para el repositorio. */
+    /** Vista como [ExerciseFilter] para el repositorio (expande grupos ES). */
     val filter: ExerciseFilter
         get() = ExerciseFilter(
             query = query,
-            muscles = selectedMuscle?.let { setOf(it) } ?: emptySet(),
-            equipment = selectedEquipment?.let { setOf(it) } ?: emptySet()
+            muscles = MuscleGroups.slugsFor(selectedMuscle),
+            equipment = EquipmentGroups.slugsFor(selectedEquipment)
         )
 }

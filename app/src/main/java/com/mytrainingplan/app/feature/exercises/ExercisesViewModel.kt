@@ -4,8 +4,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mytrainingplan.app.data.repository.ExerciseRepository
 import com.mytrainingplan.app.data.repository.FakeExerciseRepository
+import com.mytrainingplan.app.domain.model.EquipmentGroups
 import com.mytrainingplan.app.domain.model.ExerciseFilter
 import com.mytrainingplan.app.domain.model.ExercisesUiState
+import com.mytrainingplan.app.domain.model.MuscleGroups
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -53,8 +55,8 @@ class ExercisesViewModel(
         .flatMapLatest { s ->
             val filter = ExerciseFilter(
                 query = s.query,
-                muscles = s.muscle?.let { setOf(it) } ?: emptySet(),
-                equipment = s.equipment?.let { setOf(it) } ?: emptySet()
+                muscles = MuscleGroups.slugsFor(s.muscle),
+                equipment = EquipmentGroups.slugsFor(s.equipment)
             )
             repository.observeExercises(filter).map { results ->
                 ExercisesUiState(
