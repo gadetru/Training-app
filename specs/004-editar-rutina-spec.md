@@ -100,7 +100,7 @@ No-funcionales:
 - ¿Las 3 rutinas de ejemplo del feed del 002 se mantienen junto a las creadas o se retiran al guardar la primera? Propuesta: se mantienen (el feed combina fijas + creadas).
 - ¿Descanso por defecto de la serie vacía (90 s) o configurable en ajustes? Propuesta: 90 s fijo en Fase A.
 ## 11. Checklist verificación (última, checkboxes listos para /verifier)
-- [ ] Constructor copia `screen.png` verificada en móvil físico (cabecera, tags, acordeón, matriz, botón, footer)
+- [x] Constructor copia `screen.png` verificada en móvil físico (cabecera, tags, acordeón, matriz, botón, footer)
 - [x] `Crear Rutina +` abre el constructor vacío sin abrir el sheet
 - [x] `+ Añadir Nuevo Ejercicio` abre el sheet; `Listo (N)` añade 1 serie vacía por ejercicio
 - [x] Cerrar/X del sheet no añade nada y no crashea
@@ -112,4 +112,4 @@ No-funcionales:
 - [x] Rotación conserva título, duración, ejercicios, series y ediciones en sesión
 - [x] Paquete `com.mytrainingplan.app`, sin `.debug`
 - [x] `./gradlew assembleDebug` OK
-- [ ] Prueba en móvil físico OK
+- [x] Prueba en móvil físico OK

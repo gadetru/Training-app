@@ -56,3 +56,13 @@ solo proponer línea exacta y esperar. El agente trabaja Kotlin en `app/src/main
 ## Distribución
 
 Mismo `applicationId` siempre; misma keystore (fuera del repo, con copia externa); subir `versionCode` por versión; cambio de esquema Room = subir versión DB + migración o se pierden datos.
+
+## Edge-to-edge (obligatorio en cada vista)
+
+La app usa `enableEdgeToEdge()` (`MainActivity.kt`): el contenido dibuja por debajo de las barras del sistema, que son una capa del sistema por encima (verificado contra docs oficiales vía Context7). Reglas:
+
+- Toda cabecera superior lleva `statusBarsPadding()` (con el fondo extendido, para que la zona de estado quede del color de la vista).
+- Todo dock/CTA inferior fijo lleva `navigationBarsPadding()` (conservando su margen visual de 16dp).
+- Prohibido compensar con dp fijos extra que imiten la altura de las barras.
+- Excepciones que ya gestionan insets solas (no tocar): `ModalBottomSheet` y diálogos de Material3; contenido centrado sin elementos pegados a los bordes.
+- Checklist para futuras vistas: probar en móvil físico con navegación por gestos y (si se puede) con 3 botones; arriba nada bajo hora/cobertura/batería, abajo nada bajo la barra del sistema.
