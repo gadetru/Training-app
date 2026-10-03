@@ -1,14 +1,16 @@
-<!DOCTYPE html><html class="dark" lang="es" style=""><head>
-<meta charset="utf-8">
-<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport">
+<!DOCTYPE html>
+
+<html class="dark" lang="es" style=""><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport"/>
 <title>Sesión Activa - Torso: Fuerza &amp; Hipertrofia</title>
 <!-- Google Fonts: Space Grotesk, Plus Jakarta Sans, Outfit -->
-<link href="https://fonts.googleapis.com" rel="preconnect">
-<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
-<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&amp;family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;family=Space+Grotesk:wght@600;700&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&amp;family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;family=Space+Grotesk:wght@600;700&amp;display=swap" rel="stylesheet"/>
 <!-- Material Symbols Outlined -->
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
 <!-- Tailwind CSS v3 -->
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <script id="tailwind-config">
@@ -165,7 +167,6 @@
 </div>
 </div>
 <!-- Temporizador de descanso flotante dinámico -->
-
 </div>
 </header>
 <!-- ==================== CONTENIDO PRINCIPAL ==================== -->
@@ -302,9 +303,7 @@
 <td class="py-3 px-1 text-center font-label-sm text-label-sm text-on-surface-variant">90s</td>
 <td class="py-3 px-1 text-center">
 <!-- Botón registrar serie activa -->
-<button class="w-9 h-9 mx-auto rounded-lg bg-primary-container text-on-primary-container font-bold flex items-center justify-center shadow-lg shadow-primary-container/30 active:scale-90 transition-transform">
-<span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">done</span>
-</button>
+<div class="w-9 h-9 mx-auto rounded-lg bg-secondary-fixed text-on-secondary-fixed font-bold flex items-center justify-center shadow-lg shadow-secondary-fixed/30"><span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">check</span></div>
 </td>
 </tr>
 <!-- Fila 4: Pendiente -->
@@ -466,8 +465,4 @@
       }
     });
   </script>
-
-
-
-
-</body></html>
+<div class="fixed inset-0 z-50 flex flex-col justify-end sm:justify-center items-center bg-black/75 backdrop-blur-md px-4 pb-6 pt-10 sm:p-6 transition-all duration-300" id="rest-timer-modal"><div class="w-full max-w-md bg-surface-container-low/95 border border-surface-container-highest/80 rounded-3xl p-6 shadow-2xl shadow-black/80 flex flex-col items-center relative overflow-hidden backdrop-blur-xl"><div class="absolute -top-16 -right-16 w-40 h-40 bg-secondary-fixed/15 rounded-full blur-3xl pointer-events-none"></div><div class="absolute -bottom-16 -left-16 w-40 h-40 bg-primary-container/15 rounded-full blur-3xl pointer-events-none"></div><div class="w-12 h-1 rounded-full bg-surface-container-highest mx-auto mb-4 sm:hidden opacity-60"></div><div class="w-full flex items-center justify-between mb-4"><div class="flex items-center gap-2"><span class="w-8 h-8 rounded-lg bg-secondary-fixed/20 text-secondary-fixed flex items-center justify-center"><span class="material-symbols-outlined text-[20px]">hourglass_top</span></span><div><span class="font-label-sm text-label-sm text-secondary-fixed font-bold tracking-wider uppercase block">Descanso Activo</span><p class="font-body-sm text-body-sm text-on-surface-variant">Serie 3 completada • Press Militar</p></div></div><button class="w-9 h-9 rounded-full bg-surface-container hover:bg-surface-container-high border border-surface-container-highest flex items-center justify-center text-on-surface-variant hover:text-on-surface active:scale-95 transition-transform" title="Minimizar a barra"><span class="material-symbols-outlined text-[20px]">expand_more</span></button></div><div class="relative my-4 flex items-center justify-center"><div class="relative w-52 h-52 flex items-center justify-center"><svg class="w-full h-full -rotate-90 transform" viewbox="0 0 120 120"><circle class="text-surface-container-highest" cx="60" cy="60" fill="none" r="52" stroke="currentColor" stroke-width="6"></circle><circle class="text-secondary-fixed" cx="60" cy="60" fill="none" r="52" stroke="currentColor" stroke-dasharray="326.7" stroke-dashoffset="137.2" stroke-linecap="round" stroke-width="6"></circle></svg><div class="absolute flex flex-col items-center justify-center text-center"><span class="font-metric-display text-[44px] font-bold text-on-surface tracking-tight leading-none">01:15</span><span class="font-label-sm text-label-sm text-on-surface-variant mt-1.5 uppercase tracking-wider">Tiempo Restante</span></div></div></div><div class="flex items-center justify-center gap-2.5 w-full mb-6"><button class="flex-1 py-2 px-3 rounded-xl bg-surface-container hover:bg-surface-container-high border border-surface-container-highest text-on-surface font-label-md text-label-md font-bold active:scale-95 transition-all text-center">-10s</button><button class="flex-1 py-2 px-3 rounded-xl bg-surface-container hover:bg-surface-container-high border border-surface-container-highest text-on-surface font-label-md text-label-md font-bold active:scale-95 transition-all text-center">+10s</button><button class="flex-1 py-2 px-3 rounded-xl bg-surface-container hover:bg-surface-container-high border border-primary-container/40 text-primary font-label-md text-label-md font-bold active:scale-95 transition-all text-center">+30s</button></div><div class="w-full flex items-center gap-2 text-on-surface-variant/70 text-[11px] justify-center mb-5"><span class="material-symbols-outlined text-[15px] text-secondary-fixed">vibration</span><span>Sonará alarma y vibrará al llegar a 00:00</span></div><div class="w-full flex items-center gap-3"><button class="flex-1 h-12 rounded-xl bg-secondary-fixed text-on-secondary-fixed font-label-lg text-label-lg font-bold flex items-center justify-center gap-2 shadow-lg shadow-secondary-fixed/20 active:scale-95 transition-transform"><span class="material-symbols-outlined text-[20px]">skip_next</span><span>Saltar Descanso</span></button><button class="h-12 px-4 rounded-xl bg-surface-container hover:bg-error-container/20 hover:text-error border border-surface-container-highest text-on-surface-variant font-label-md text-label-md font-semibold flex items-center justify-center gap-1.5 active:scale-95 transition-all"><span class="material-symbols-outlined text-[18px]">close</span><span class="hidden sm:inline">Cancelar</span></button></div></div></div></body></html>

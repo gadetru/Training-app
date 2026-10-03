@@ -1,5 +1,5 @@
 # Constructor de Rutina – Crear/Editar (recablea el sheet de ejercicios)
-Estado: aprobado
+Estado: implementado
 Depende de: specs/003-lista-ejercicios-spec.md (reutiliza `ExercisePickerSheet` + `ExercisesViewModel` + `FakeExerciseRepository`; recablea su apertura provisional desde `Crear Rutina +`) y specs/002-vista-principal-spec.md (`NavHost` de `MainActivity`, patrón stateful+stateless, tokens locales)
 Fecha de creación: 2026-10-03
 Descripción: Maquetar en Kotlin + Compose la vista `references/plantilla-editar-rutina` como constructor de rutina en memoria (título, duración, tags auto por músculo, acordeón de ejercicios con matriz de series y tipos calentamiento/normal/al fallo, `+ Añadir Nuevo Ejercicio a la Rutina`, footer `Finalizar y Guardar Rutina`), abierto desde `Crear Rutina +` de la Home en ruta nueva, con el sheet del 003 anidado solo desde el botón de añadir. Sin Room, sin persistencia real (Fase A).
@@ -100,16 +100,16 @@ No-funcionales:
 - ¿Las 3 rutinas de ejemplo del feed del 002 se mantienen junto a las creadas o se retiran al guardar la primera? Propuesta: se mantienen (el feed combina fijas + creadas).
 - ¿Descanso por defecto de la serie vacía (90 s) o configurable en ajustes? Propuesta: 90 s fijo en Fase A.
 ## 11. Checklist verificación (última, checkboxes listos para /verifier)
-- [ ] Constructor copia `screen.png` verificada en móvil físico (cabecera, tags, acordeón, matriz, botón, footer)
-- [ ] `Crear Rutina +` abre el constructor vacío sin abrir el sheet
-- [ ] `+ Añadir Nuevo Ejercicio` abre el sheet; `Listo (N)` añade 1 serie vacía por ejercicio
-- [ ] Cerrar/X del sheet no añade nada y no crashea
-- [ ] Editar celda propaga a siguientes no editadas; la editada a mano no se sobrescribe
-- [ ] Tipo de serie (calentamiento/normal/al fallo) cambia por fila sin crash
-- [ ] `Añadir Serie` copia valores de la 1ª; eliminar ejercicio no crashea
-- [ ] `Finalizar y Guardar Rutina` vuelve a Home con la rutina en el feed
-- [ ] Salir atrás sin guardar descarta sin rutina fantasma y sin crash
-- [ ] Rotación conserva título, duración, ejercicios, series y ediciones en sesión
-- [ ] Paquete `com.mytrainingplan.app`, sin `.debug`
-- [ ] `./gradlew assembleDebug` OK
-- [ ] Prueba en móvil físico OK
+- [x] Constructor copia `screen.png` verificada en móvil físico (cabecera, tags, acordeón, matriz, botón, footer)
+- [x] `Crear Rutina +` abre el constructor vacío sin abrir el sheet
+- [x] `+ Añadir Nuevo Ejercicio` abre el sheet; `Listo (N)` añade 1 serie vacía por ejercicio
+- [x] Cerrar/X del sheet no añade nada y no crashea
+- [x] Editar celda propaga a siguientes no editadas; la editada a mano no se sobrescribe
+- [x] Tipo de serie (calentamiento/normal/al fallo) cambia por fila sin crash
+- [x] `Añadir Serie` copia valores de la 1ª; eliminar ejercicio no crashea
+- [x] `Finalizar y Guardar Rutina` vuelve a Home con la rutina en el feed
+- [x] Salir atrás sin guardar descarta sin rutina fantasma y sin crash
+- [x] Rotación conserva título, duración, ejercicios, series y ediciones en sesión
+- [x] Paquete `com.mytrainingplan.app`, sin `.debug`
+- [x] `./gradlew assembleDebug` OK
+- [x] Prueba en móvil físico OK

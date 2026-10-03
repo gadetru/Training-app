@@ -4,7 +4,6 @@ import com.mytrainingplan.app.domain.model.Exercise
 import com.mytrainingplan.app.domain.model.PlannedSet
 import com.mytrainingplan.app.domain.model.Routine
 import com.mytrainingplan.app.domain.model.RoutineExercise
-import com.mytrainingplan.app.domain.model.SetType
 import java.util.UUID
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -62,7 +61,7 @@ interface RoutineRepository {
         weightKg: Double,
         restSeconds: Int,
         loadNote: String?,
-        setType: SetType
+        rir: Int?
     )
 
     /** Nueva serie copiando los valores de la 1ª. */
@@ -162,7 +161,7 @@ class FakeRoutineRepository(
         weightKg: Double,
         restSeconds: Int,
         loadNote: String?,
-        setType: SetType
+        rir: Int?
     ) {
         if (!ensureDraftForItem(routineExerciseId)) return
         mutateItem(routineExerciseId) { detail ->
@@ -174,7 +173,7 @@ class FakeRoutineRepository(
                             weightKg = weightKg,
                             restSeconds = restSeconds,
                             loadNote = loadNote,
-                            setType = setType
+                            rir = rir
                         )
                     } else {
                         set
@@ -282,7 +281,7 @@ class FakeRoutineRepository(
     }
 
     companion object {
-        /** Serie vacía por defecto: corporal, 90 s, tipo normal. */
+        /** Serie vacía por defecto: corporal, 90 s, calentamiento (como la 1ª de la referencia). */
         private fun emptyPlannedSet(routineExerciseId: String, number: Int): PlannedSet =
             PlannedSet(
                 id = UUID.randomUUID().toString(),
@@ -292,7 +291,7 @@ class FakeRoutineRepository(
                 weightKg = 0.0,
                 restSeconds = 90,
                 loadNote = null,
-                setType = SetType.NORMAL
+                rir = null
             )
 
         /** Store compartido en memoria para Fase A sin DI. */

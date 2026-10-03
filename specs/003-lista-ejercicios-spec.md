@@ -1,5 +1,5 @@
 # Lista de Ejercicios – Selector Bottom-Sheet (copia imagen + GIFs reales)
-Estado: aprobado
+Estado: implementado
 Depende de: specs/002-vista-principal-spec.md (reutiliza el `NavHost` de `MainActivity`, los tokens locales, el patrón stateful+stateless y el esquema fake-con-firma-futura; el CTA `Crear Rutina +` que aquí se cablea lo dejó como TODO el 002)
 Fecha de creación: 2026-10-03
 Descripción: Maquetar en Kotlin + Compose la vista `references/plantilla-lista-ejercicios` como bottom-sheet selector reutilizable de ejercicios (buscador, chips de músculo y equipamiento, filas con thumbnail GIF real vía Coil, `Añadir/Añadido`, pie `Listo (N)`), abierto desde `Crear Rutina +` de la Home, con datos en memoria de forma idéntica al fork `gadetru/ExerciseGymGifsDB`. Sin Room, sin descarga JSON, sin persistencia (Fase A).
@@ -100,15 +100,15 @@ No-funcionales:
 - ¿Los chips de músculo ES deben cubrir los 19 músculos API o basta el subconjunto principal (Pierna/Pecho/Espalda/Hombros/Core/Brazo)? Propuesta: subconjunto principal + `Todos`.
 - ¿El sheet debe pre-seleccionar algo al abrir (p. ej. chip `Pierna` como en `code.html:187,194`) o abrir sin filtros? Propuesta: sin filtros (estado neutro reutilizable).
 ## 11. Checklist verificación (última, checkboxes listos para /verifier)
-- [ ] Sheet copia `screen.png` verificada en móvil físico (header, search, chips, filas, pie)
-- [ ] Buscador filtra en vivo sin crash
-- [ ] Chip de músculo filtra por ese grupo (`Todos` restaura)
-- [ ] Chip de equipamiento combina con músculo y texto
-- [ ] `Añadir`/`Añadido` alterna por fila y actualiza el contador del pie
-- [ ] `Listo (N)` emite `onConfirm(ids)` sin crash
-- [ ] Cerrar/X descarta sin emitir y sin crash
-- [ ] GIFs Coil visibles con red; placeholder/error local sin red, sin crash
-- [ ] Rotación conserva query, filtros y selección en sesión
-- [ ] Paquete `com.mytrainingplan.app`, sin `.debug`
-- [ ] `./gradlew assembleDebug` OK
-- [ ] Prueba en móvil físico OK
+- [x] Sheet copia `screen.png` verificada en móvil físico (header, search, chips, filas, pie)
+- [x] Buscador filtra en vivo sin crash
+- [x] Chip de músculo filtra por ese grupo (`Todos` restaura)
+- [x] Chip de equipamiento combina con músculo y texto
+- [x] `Añadir`/`Añadido` alterna por fila y actualiza el contador del pie
+- [x] `Listo (N)` emite `onConfirm(ids)` sin crash
+- [x] Cerrar/X descarta sin emitir y sin crash
+- [x] GIFs Coil visibles con red; placeholder/error local sin red, sin crash
+- [x] Rotación conserva query, filtros y selección en sesión
+- [x] Paquete `com.mytrainingplan.app`, sin `.debug`
+- [x] `./gradlew assembleDebug` OK
+- [x] Prueba en móvil físico OK

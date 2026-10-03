@@ -12,8 +12,10 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -32,6 +34,8 @@ import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
@@ -78,7 +82,6 @@ import com.mytrainingplan.app.domain.model.RoutineEditUiState
 import com.mytrainingplan.app.domain.model.RoutineExercise
 import com.mytrainingplan.app.domain.model.RoutineExerciseUi
 import com.mytrainingplan.app.domain.model.RoutineMuscleLabels
-import com.mytrainingplan.app.domain.model.SetType
 import com.mytrainingplan.app.feature.exercises.ExercisePickerSheet
 
 // Tokens references/plantilla-editar-rutina/DESIGN.md + patrón HomeScreen (002).
@@ -95,12 +98,6 @@ private val TextMuted = Color(0xFF8B95A5)
 private val BorderSubtle = Color(0xFF282E37)
 private val InputBg = Color(0xFF0C0E11)
 private val ErrorRed = Color(0xFFFF8A80)
-
-private fun SetType.label(): String = when (this) {
-    SetType.WARMUP -> "Calent."
-    SetType.NORMAL -> "Normal"
-    SetType.FAILURE -> "Al fallo"
-}
 
 private fun formatWeight(weightKg: Double): String =
     if (weightKg % 1.0 == 0.0) weightKg.toInt().toString() else weightKg.toString()
@@ -148,7 +145,7 @@ fun RoutineEditScreen(
         onToggleExpanded = viewModel::onToggleExpanded,
         onDeleteExercise = viewModel::onDeleteExercise,
         onSetFieldChange = viewModel::onSetFieldChange,
-        onSetTypeChange = viewModel::onSetTypeChange,
+        onRirChange = viewModel::onRirChange,
         onAddSet = viewModel::onAddSet,
         onDeleteSet = viewModel::onDeleteSet,
         onSave = { viewModel.onSave(onSaved) },
@@ -176,7 +173,7 @@ fun RoutineEditContent(
     onToggleExpanded: (String) -> Unit = {},
     onDeleteExercise: (String) -> Unit = {},
     onSetFieldChange: (String, String, SetField, String) -> Unit = { _, _, _, _ -> },
-    onSetTypeChange: (String, String, SetType) -> Unit = { _, _, _ -> },
+    onRirChange: (String, String, Int?) -> Unit = { _, _, _ -> },
     onAddSet: (String) -> Unit = {},
     onDeleteSet: (String, String) -> Unit = { _, _ -> },
     onSave: () -> Unit = {},
@@ -222,8 +219,8 @@ fun RoutineEditContent(
                         onSetFieldChange = { setId, field, raw ->
                             onSetFieldChange(item.routineExercise.id, setId, field, raw)
                         },
-                        onSetTypeChange = { setId, type ->
-                            onSetTypeChange(item.routineExercise.id, setId, type)
+                        onRirChange = { setId, rir ->
+                            onRirChange(item.routineExercise.id, setId, rir)
                         },
                         onAddSet = { onAddSet(item.routineExercise.id) },
                         onDeleteSet = { setId -> onDeleteSet(item.routineExercise.id, setId) }
@@ -262,6 +259,7 @@ private fun EditHeader(
         modifier = Modifier
             .fillMaxWidth()
             .background(Bg)
+            .statusBarsPadding()
             .padding(horizontal = 20.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -534,7 +532,7 @@ private fun ExerciseAccordion(
     onToggleExpanded: () -> Unit,
     onDeleteExercise: () -> Unit,
     onSetFieldChange: (String, SetField, String) -> Unit,
-    onSetTypeChange: (String, SetType) -> Unit,
+    onRirChange: (String, Int?) -> Unit,
     onAddSet: () -> Unit,
     onDeleteSet: (String) -> Unit
 ) {
@@ -545,7 +543,7 @@ private fun ExerciseAccordion(
             onToggleExpanded = onToggleExpanded,
             onDeleteExercise = onDeleteExercise,
             onSetFieldChange = onSetFieldChange,
-            onSetTypeChange = onSetTypeChange,
+            onRirChange = onRirChange,
             onAddSet = onAddSet,
             onDeleteSet = onDeleteSet
         )
@@ -566,7 +564,7 @@ private fun ExpandedExerciseCard(
     onToggleExpanded: () -> Unit,
     onDeleteExercise: () -> Unit,
     onSetFieldChange: (String, SetField, String) -> Unit,
-    onSetTypeChange: (String, SetType) -> Unit,
+    onRirChange: (String, Int?) -> Unit,
     onAddSet: () -> Unit,
     onDeleteSet: (String) -> Unit
 ) {
@@ -667,18 +665,17 @@ private fun ExpandedExerciseCard(
             item.sets.forEach { set ->
                 SetRow(
                     setNumber = set.setNumber,
-                    repsText = set.targetReps.toString(),
-                    onRepsChange = { onSetFieldChange(set.id, SetField.TARGET_REPS, it) },
+                    rir = set.rir,
+                    onRirChange = { onRirChange(set.id, it) },
                     weightText = formatWeight(set.weightKg),
                     onWeightChange = { onSetFieldChange(set.id, SetField.WEIGHT_KG, it) },
+                    repsText = set.targetReps.toString(),
+                    onRepsChange = { onSetFieldChange(set.id, SetField.TARGET_REPS, it) },
                     restText = set.restSeconds.toString(),
                     onRestChange = { onSetFieldChange(set.id, SetField.REST_SECONDS, it) },
-                    selectedType = set.setType,
-                    onTypeChange = { onSetTypeChange(set.id, it) },
                     noteText = set.loadNote.orEmpty(),
                     onNoteChange = { onSetFieldChange(set.id, SetField.LOAD_NOTE, it) },
-                    onDelete = { onDeleteSet(set.id) },
-                    highlightFailure = set.setType == SetType.FAILURE
+                    onDelete = { onDeleteSet(set.id) }
                 )
                 Spacer(Modifier.height(8.dp))
             }
@@ -716,14 +713,16 @@ private fun SetsHeaderRow() {
             fontWeight = FontWeight.SemiBold,
             modifier = Modifier.width(44.dp)
         )
+        Spacer(Modifier.width(6.dp))
         Text(
-            "REPS",
+            "RIR",
             color = TextMuted,
             fontSize = 10.sp,
             fontWeight = FontWeight.SemiBold,
             textAlign = TextAlign.Center,
-            modifier = Modifier.weight(1f)
+            modifier = Modifier.width(54.dp)
         )
+        Spacer(Modifier.width(6.dp))
         Text(
             "KG",
             color = TextMuted,
@@ -732,6 +731,16 @@ private fun SetsHeaderRow() {
             textAlign = TextAlign.Center,
             modifier = Modifier.weight(1f)
         )
+        Spacer(Modifier.width(6.dp))
+        Text(
+            "REPS",
+            color = TextMuted,
+            fontSize = 10.sp,
+            fontWeight = FontWeight.SemiBold,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.weight(1f)
+        )
+        Spacer(Modifier.width(6.dp))
         Text(
             "DESC",
             color = TextMuted,
@@ -744,22 +753,94 @@ private fun SetsHeaderRow() {
     }
 }
 
+/** Opciones RIR de la referencia: calentamiento, 5..1, 0 = fallo. */
+private val RIR_OPTIONS: List<Int?> = listOf(null, 5, 4, 3, 2, 1, 0)
+
+private fun rirLabel(rir: Int?): String = if (rir == null) "W" else "$rir"
+
+private fun rirOptionLabel(rir: Int?): String = when (rir) {
+    null -> "W · Calentamiento"
+    0 -> "0 · Fallo"
+    else -> "RIR $rir"
+}
+
+/**
+ * Cuadrado RIR de la referencia: muestra `W` / número / `0` y abre el
+ * desplegable al pulsarlo. El `0` (fallo) se tiñe naranja como en `code.html`.
+ */
+@Composable
+private fun RirCell(
+    rir: Int?,
+    onRirChange: (Int?) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    var expanded by remember { mutableStateOf(false) }
+    val isFailure = rir == 0
+    Box(
+        modifier = modifier
+            .clip(RoundedCornerShape(8.dp))
+            .background(CardHigh)
+            .border(
+                1.dp,
+                if (isFailure) Orange.copy(alpha = 0.6f) else Color.Transparent,
+                RoundedCornerShape(8.dp)
+            )
+            .clickable(onClick = { expanded = true })
+            .padding(vertical = 10.dp, horizontal = 4.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            rirLabel(rir),
+            color = when {
+                isFailure -> Orange
+                rir == null -> TextMuted
+                else -> TextPrimary
+            },
+            fontSize = 13.sp,
+            fontWeight = FontWeight.Bold,
+            textAlign = TextAlign.Center
+        )
+        DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false },
+            modifier = Modifier.background(Card2)
+        ) {
+            RIR_OPTIONS.forEach { option ->
+                DropdownMenuItem(
+                    text = {
+                        Text(
+                            rirOptionLabel(option),
+                            color = if (option == rir) Orange else TextPrimary,
+                            fontSize = 13.sp,
+                            fontWeight = if (option == rir) FontWeight.Bold else FontWeight.Normal
+                        )
+                    },
+                    onClick = {
+                        expanded = false
+                        onRirChange(option)
+                    }
+                )
+            }
+        }
+    }
+}
+
 @Composable
 private fun SetRow(
     setNumber: Int,
-    repsText: String,
-    onRepsChange: (String) -> Unit,
+    rir: Int?,
+    onRirChange: (Int?) -> Unit,
     weightText: String,
     onWeightChange: (String) -> Unit,
+    repsText: String,
+    onRepsChange: (String) -> Unit,
     restText: String,
     onRestChange: (String) -> Unit,
-    selectedType: SetType,
-    onTypeChange: (SetType) -> Unit,
     noteText: String,
     onNoteChange: (String) -> Unit,
-    onDelete: () -> Unit,
-    highlightFailure: Boolean
+    onDelete: () -> Unit
 ) {
+    val isFailure = rir == 0
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -767,7 +848,7 @@ private fun SetRow(
             .background(Bg)
             .border(
                 1.dp,
-                if (highlightFailure) Orange.copy(alpha = 0.5f) else BorderSubtle,
+                if (isFailure) Orange.copy(alpha = 0.5f) else BorderSubtle,
                 RoundedCornerShape(12.dp)
             )
             .padding(8.dp)
@@ -780,28 +861,34 @@ private fun SetRow(
                 modifier = Modifier
                     .size(28.dp)
                     .clip(RoundedCornerShape(999.dp))
-                    .background(if (highlightFailure) Orange else CardHigh),
+                    .background(if (isFailure) Orange else CardHigh),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
                     "$setNumber",
-                    color = if (highlightFailure) OnOrange else TextPrimary,
+                    color = if (isFailure) OnOrange else TextPrimary,
                     fontSize = 12.sp,
                     fontWeight = FontWeight.Bold
                 )
             }
             Spacer(Modifier.width(6.dp))
-            CellInput(
-                value = repsText,
-                onValueChange = onRepsChange,
-                keyboardType = KeyboardType.Number,
-                modifier = Modifier.weight(1f)
+            RirCell(
+                rir = rir,
+                onRirChange = onRirChange,
+                modifier = Modifier.width(54.dp)
             )
             Spacer(Modifier.width(6.dp))
             CellInput(
                 value = weightText,
                 onValueChange = onWeightChange,
                 keyboardType = KeyboardType.Decimal,
+                modifier = Modifier.weight(1f)
+            )
+            Spacer(Modifier.width(6.dp))
+            CellInput(
+                value = repsText,
+                onValueChange = onRepsChange,
+                keyboardType = KeyboardType.Number,
                 modifier = Modifier.weight(1f)
             )
             Spacer(Modifier.width(6.dp))
@@ -821,37 +908,6 @@ private fun SetRow(
             }
         }
         Spacer(Modifier.height(8.dp))
-        // Selector de tipo por fila (sin propagación).
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(6.dp)
-        ) {
-            SetType.entries.forEach { type ->
-                val selected = type == selectedType
-                Box(
-                    modifier = Modifier
-                        .weight(1f)
-                        .clip(RoundedCornerShape(999.dp))
-                        .background(if (selected) Orange else CardHigh)
-                        .border(
-                            1.dp,
-                            if (selected) Orange else BorderSubtle,
-                            RoundedCornerShape(999.dp)
-                        )
-                        .clickable(onClick = { onTypeChange(type) })
-                        .padding(vertical = 8.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        type.label(),
-                        color = if (selected) OnOrange else TextMuted,
-                        fontSize = 11.sp,
-                        fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium
-                    )
-                }
-            }
-        }
-        Spacer(Modifier.height(6.dp))
         BasicTextField(
             value = noteText,
             onValueChange = onNoteChange,
@@ -984,6 +1040,7 @@ private fun SaveFooter(
     Column(
         modifier = modifier
             .fillMaxWidth()
+            .navigationBarsPadding()
             .padding(horizontal = 20.dp)
             .padding(bottom = 16.dp)
             .clip(RoundedCornerShape(16.dp))
@@ -1068,9 +1125,9 @@ private fun RoutineEditContentPreview() {
                         routineExercise = RoutineExercise(id = "re1", routineId = "preview", exerciseId = sentadilla.id),
                         exercise = sentadilla,
                         sets = listOf(
-                            PlannedSet(id = "s1", routineExerciseId = "re1", setNumber = 1, targetReps = 12, weightKg = 60.0, restSeconds = 90, setType = SetType.WARMUP),
-                            PlannedSet(id = "s2", routineExerciseId = "re1", setNumber = 2, targetReps = 10, weightKg = 90.0, restSeconds = 90),
-                            PlannedSet(id = "s3", routineExerciseId = "re1", setNumber = 3, targetReps = 6, weightKg = 105.0, restSeconds = 120, setType = SetType.FAILURE)
+                            PlannedSet(id = "s1", routineExerciseId = "re1", setNumber = 1, targetReps = 12, weightKg = 60.0, restSeconds = 90, rir = null),
+                            PlannedSet(id = "s2", routineExerciseId = "re1", setNumber = 2, targetReps = 10, weightKg = 90.0, restSeconds = 90, rir = 3),
+                            PlannedSet(id = "s3", routineExerciseId = "re1", setNumber = 3, targetReps = 6, weightKg = 105.0, restSeconds = 120, rir = 0)
                         ),
                         expanded = true
                     ),

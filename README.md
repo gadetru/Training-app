@@ -13,6 +13,7 @@ App Android para planificar rutinas y registrar entrenos de fuerza. Funciona sin
 - **Tecnología gratuita y open source** 
 - **Plan por serie:** cada serie de un ejercicio tiene sus propias repeticiones, peso y descanso, de forma independiente en cada día de entrenamiento.
 - **Lastre y gomas:** el peso admite signo (positivo = lastre, negativo = ayuda) y una nota libre (por ejemplo, "goma amarilla").
+- **Edge-to-edge:** la app dibuja a pantalla completa por debajo de las barras del sistema (`enableEdgeToEdge`), así que toda cabecera lleva `statusBarsPadding()` y todo dock/CTA inferior `navigationBarsPadding()` (verificado en móvil físico); prohibido compensar con dp fijos extra.
 
 ## Stack y herramientas
 

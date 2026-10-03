@@ -7,7 +7,6 @@ import com.mytrainingplan.app.data.repository.RoutineRepository
 import com.mytrainingplan.app.domain.model.RoutineEditUiState
 import com.mytrainingplan.app.domain.model.RoutineExerciseUi
 import com.mytrainingplan.app.domain.model.RoutineMuscleLabels
-import com.mytrainingplan.app.domain.model.SetType
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -128,8 +127,8 @@ class RoutineEditViewModel(
     /**
      * Edita una celda con propagación (`docs/MODELO_DE_DATOS.md:82`): el valor
      * se copia a las series siguientes aún no editadas a mano; la celda
-     * editada queda marcada y ya no se sobrescribe. El tipo de serie
-     * ([onSetTypeChange]) es por fila y no propaga.
+     * editada queda marcada y ya no se sobrescribe. El RIR ([onRirChange])
+     * es por fila y no propaga.
      */
     fun onSetFieldChange(routineExerciseId: String, setId: String, field: SetField, raw: String) {
         val item = uiState.value.exercises.find { it.routineExercise.id == routineExerciseId }
@@ -174,7 +173,7 @@ class RoutineEditViewModel(
                 weightKg = newWeight,
                 restSeconds = newRest,
                 loadNote = newNote,
-                setType = edited.setType
+                rir = edited.rir
             )
             // Solo siguientes no editadas a mano.
             item.sets
@@ -187,17 +186,21 @@ class RoutineEditViewModel(
                         weightKg = newWeight,
                         restSeconds = newRest,
                         loadNote = newNote,
-                        setType = following.setType
+                        rir = following.rir
                     )
                 }
         }
     }
 
-    fun onSetTypeChange(routineExerciseId: String, setId: String, type: SetType) {
+    /**
+     * Cambia el RIR de una serie (`null` calentamiento, `0` al fallo, `n` RIR n).
+     * Es por fila y no propaga (la referencia muestra un RIR distinto por serie).
+     */
+    fun onRirChange(routineExerciseId: String, setId: String, rir: Int?) {
         val item = uiState.value.exercises.find { it.routineExercise.id == routineExerciseId }
             ?: return
         val set = item.sets.find { it.id == setId } ?: return
-        if (set.setType == type) return
+        if (set.rir == rir) return
         viewModelScope.launch {
             repository.updateSet(
                 routineExerciseId = routineExerciseId,
@@ -206,7 +209,7 @@ class RoutineEditViewModel(
                 weightKg = set.weightKg,
                 restSeconds = set.restSeconds,
                 loadNote = set.loadNote,
-                setType = type
+                rir = rir
             )
         }
     }
