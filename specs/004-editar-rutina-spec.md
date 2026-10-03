@@ -1,5 +1,5 @@
 # Constructor de Rutina – Crear/Editar (recablea el sheet de ejercicios)
-Estado: aprobado
+Estado: implementado
 Depende de: specs/003-lista-ejercicios-spec.md (reutiliza `ExercisePickerSheet` + `ExercisesViewModel` + `FakeExerciseRepository`; recablea su apertura provisional desde `Crear Rutina +`) y specs/002-vista-principal-spec.md (`NavHost` de `MainActivity`, patrón stateful+stateless, tokens locales)
 Fecha de creación: 2026-10-03
 Descripción: Maquetar en Kotlin + Compose la vista `references/plantilla-editar-rutina` como constructor de rutina en memoria (título, duración, tags auto por músculo, acordeón de ejercicios con matriz de series y tipos calentamiento/normal/al fallo, `+ Añadir Nuevo Ejercicio a la Rutina`, footer `Finalizar y Guardar Rutina`), abierto desde `Crear Rutina +` de la Home en ruta nueva, con el sheet del 003 anidado solo desde el botón de añadir. Sin Room, sin persistencia real (Fase A).
