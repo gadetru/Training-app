@@ -75,13 +75,19 @@ class WorkoutViewModel(
                 isSaving = sv
             )
         } else {
-            val items = d.items.map { item ->
+            // Por defecto solo el primer ejercicio pendiente va expandido
+            // (completados colapsados, pendientes contraídos); el mapa solo
+            // guarda los toques del usuario.
+            val firstPending = d.items.indexOfFirst { item ->
+                item.entries.any { !it.done }
+            }
+            val items = d.items.mapIndexed { index, item ->
                 WorkoutExerciseUi(
                     routineExercise = item.routineExercise,
                     exercise = item.exercise,
                     entries = item.entries.sortedBy { it.setNumber },
                     planned = item.planned.sortedBy { it.setNumber },
-                    expanded = exp[item.routineExercise.id] ?: true
+                    expanded = exp[item.routineExercise.id] ?: (index == firstPending)
                 )
             }
             val all = items.flatMap { it.entries }
