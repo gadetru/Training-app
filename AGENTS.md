@@ -2,12 +2,19 @@
 
 ## Estado actual (no asumir)
 
-Hecho Fase A (UI-first en memoria, sin Room): `001-plantilla-usuario` (`feature/profile/ProfileScreen` + `domain/model/Profile`)
-y `002-vista-principal` (implementado y verificado: `feature/home/{HomeScreen,HomeViewModel,PlaceholderTabs}` +
-`domain/model/Home.kt` + `data/repository/FakeHomeRepository` con interfaz `HomeRepository` de firma futura).
+Hecho Fase A entera (UI-first en memoria, sin Room), 5/5 vistas:
+`001-plantilla-usuario` (`feature/profile/ProfileScreen` + `domain/model/Profile`),
+`002-vista-principal` (`feature/home/{HomeScreen,HomeViewModel,PlaceholderTabs}` + `domain/model/Home.kt` +
+`data/repository/FakeHomeRepository` con interfaz `HomeRepository` de firma futura),
+`003-lista-ejercicios` (picker `ExercisePickerSheet` + `FakeExerciseRepository`),
+`004-editar-rutina` (`feature/routines/{RoutineEditScreen,RoutineEditViewModel}` + `domain/model/Routine.kt` +
+`FakeRoutineRepository` con borradores separados de guardadas),
+`005-rutina` (sesión en vivo `feature/workout/{WorkoutScreen,WorkoutViewModel}` + `domain/model/Workout.kt` +
+`FakeWorkoutRepository` con prefill última-vs-plan; verificado `assembleDebug` OK, resto pendiente de móvil físico).
 `MainActivity.kt` ya no muestra Profile directo: `TrainingNav()` con `NavHost` condicional `¿hay perfil? home:profile`
-(rutas `home/calendar/progress/profile`, `TabShell` + `BottomDock`; el tab Perfil reutiliza `ProfileScreen` sin dock).
-Pendientes Fase A: `lista-ejercicios`, `rutina`, `editar-rutina` (2 de 5 vistas hechas).
+(rutas `home/calendar/progress/profile` + `routineEdit?routineId` + `workout?routineId`; `onStart` de Home abre la sesión;
+el tab Perfil reutiliza `ProfileScreen` sin dock).
+Siguiente: Fase B Room local.
 `docs/`, `specs/`, `references/` siguen siendo guía objetivo/diseño, no código hecho.
 Desviación conocida: `material-icons-core` solo trae 49 iconos (fallbacks `List/DateRange/Star/Person` en `HomeScreen.kt:67-82`);
 fidelidad exacta a los iconos del spec exigiría `material-icons-extended` (proponer y esperar).
@@ -37,7 +44,7 @@ solo proponer línea exacta y esperar. El agente trabaja Kotlin en `app/src/main
 
 - Un solo módulo `app`. Flujo final: `feature/* Screen → ViewModel(StateFlow) → Repository → Room`; Retrofit solo rellena la DB.
 - Plan acordado: **Fase A maquetación primero** (5 vistas `references/` UI-first con `ViewModel` fake + repo fake misma firma + `NavHost` condicional `¿hay perfil? home:profile`, sin Room), luego **Fase B Room local**, **Fase C catálogo**, **Fase D Spring/MySQL**.
-- Progreso Fase A: 2/5 hechas (`plantilla-usuario`, `vista-principal` con `NavHost` + `HomeViewModel`/`FakeHomeRepository` ya cableados); pendientes `lista-ejercicios`, `rutina`, `editar-rutina`.
+- Progreso Fase A: 5/5 hechas (las 5 vistas + `NavHost` con `home/calendar/progress/profile/routineEdit/workout` ya cableados); pendiente Fase B Room local.
 - Carpetas: `core/{di,network,ui}`, `data/{local/{entity,dao},remote/{dto},mapper,repository}`, `domain/model`, `feature/{profile,exercises,routines,workout,history}`. Cada `feature/` = `Screen` + `ViewModel`.
 - Mapeo `DTO/Entity ⇄ dominio` en `data/mapper`; la UI solo ve `domain/model`, nunca Entity ni DTO.
 - Sin casos de uso ni módulos extra hasta que duelan. Versiones solo vía catálogo `gradle/libs.versions.toml`.

@@ -27,9 +27,10 @@ Lee `## 7. Plan de tareas` del spec y ejecuta en orden, un paso cada vez:
 2. Si la tarea toca una librería, framework, SDK o API (Kotlin, Compose, Room, Hilt, Coil, Retrofit), usa el MCP `context7`: `resolve-library-id` y luego `query-docs` con el ID exacto, y cita ID + URL.
 3. Implementa SOLO esa tarea. No avances tareas futuras ni agrupes pasos.
 4. Verifica en la raíz del proyecto: `./gradlew assembleDebug` OK. Si toca mapper/DTO, añade `./gradlew testDebugUnitTest --tests "*CatalogMappingTest*"`. Nota: `gradle/wrapper/gradle-wrapper.jar` falta en el repo — si el wrapper falla, avisa y detente (abrir en Android Studio primero regenera el jar). Sin emulador: la prueba en dispositivo se hace a mano con `./gradlew installDebug` en móvil físico.
-5. Informa: qué cambió (`fichero:línea`), diff resumido, resultado de la verificación.
+5. Informa: qué cambió (`fichero:línea`), diff resumido, resultado de la verificación y `Desviaciones vs spec:` (`<§X del spec> vs <fichero:línea>` o `ninguna`; van para tu enmienda manual, el agente nunca toca el spec).
 6. Pausa sin opciones: detente e informa `Revisa los cambios y haz commit a mano; respóndeme en el chat para seguir, corregir o parar.` Continúa solo con tu respuesta en texto libre (seguir, corrección o parar). Sin herramienta `question`, sin opciones.
 7. Prohibido commitear: los commits los haces tú a mano. El agente nunca ejecuta `git add` ni `git commit`.
+8. Regla anti-invención: si una firma, tipo o API del spec no existe en el código o en la versión declarada (no compila, no está en el sources.jar), no lo reinventes: un intento de alternativa mínima y, si tampoco encaja, para ese punto, anótalo en `Desviaciones vs spec` y sigue con lo demás.
 
 ### 3. Checklist final (en el mismo spec, sin auto-marcar)
 1. Al terminar todos los pasos (o al parar), añade al final del MISMO fichero del spec la sección final `Checklist verificación` si no existe (los specs creados con `/spec` ya la traen; solo créala si falta).
@@ -43,4 +44,10 @@ Lee `## 7. Plan de tareas` del spec y ejecuta en orden, un paso cada vez:
    - No crees ficheros `*-checks.md` separados ni anexos en otro sitio.
 
 ### 4. Cierre
-Informa siempre: rama de trabajo creada, lista de commits de la rama (`git log --oneline`), path del spec con la checklist añadida (cambio sin commitear, para tu commit manual) y `Marca los checks y el Estado a mano cuando los verifiques en móvil físico.`
+Informa siempre: rama de trabajo creada, lista de commits de la rama (`git log --oneline`), path del spec con la checklist añadida (cambio sin commitear, para tu commit manual), lista final de `Desviaciones vs spec` acumuladas y `Marca los checks y el Estado a mano cuando los verifiques en móvil físico.`
+
+### 5. Política anti-bloqueo (la misma de `/verifier`)
+1. Máximo 2 intentos por vía ante el mismo error: a la segunda repetición se abandona esa vía y se prueba otro camino. Sin tercer intento por la misma vía.
+2. Comandos pesados (`assembleDebug`, búsquedas amplias): un solo intento por paso, con timeout corto, sin reintentos en bucle ni polling.
+3. Si una vía atrapa recursos (build colgado, proceso que no termina, espera larga), se corta la espera, se anota `bloqueado: <motivo>` y se cambia de vía o se salta al siguiente paso.
+4. Ningún paso queda a medias sin explicar: todo bloqueo se reporta en el informe del paso.

@@ -1,5 +1,5 @@
 # Sesión en vivo – Rutina en entrenamiento (cronómetro + descanso bloqueante)
-Estado: aprobado
+Estado: implementado
 Depende de: specs/004-editar-rutina-spec.md (reutiliza `RoutineDetail`/`FakeRoutineRepository` + patrón stateful+stateless; recablea el `onStart` que el 002 dejó como TODO) y specs/002-vista-principal-spec.md heredado (`NavHost` `TrainingNav`)
 Fecha de creación: 2026-10-03
 Descripción: Maquetar en Kotlin + Compose la vista `references/plantilla-rutina` como sesión de entrenamiento en vivo en memoria (header con cronómetro, progreso, acordeón de ejercicios con tabla de series KG/REPS editables + checks, overlay de descanso bloqueante con ±10s, barra fija Pausar/Finalizar/Descartar), abierta desde `Iniciar` de la Home en ruta nueva `workout?routineId`, con prefill última-sesión-vs-planificado. Sin Room, sin persistencia real (Fase A).
