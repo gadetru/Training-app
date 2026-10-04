@@ -9,7 +9,7 @@ Nombre: usa `$ARGUMENTS` si viene (ej: `/spec filtro-ejercicios`). Si viene vac�
 
 Sanea el nombre: minúsculas, espacios/_ a `-`, solo `[a-z0-9-/.]`, sin espacios.
 
-Numeración: cada spec lleva prefijo secuencial de 3 dígitos. Lista con `glob` los `specs/*-spec.md`, extrae los prefijos `^(\d+)-` y elige el menor `NNN` libre empezando en `001` (los números de specs borrados se reutilizan). Si `$ARGUMENTS` ya trae prefijo numérico (`/spec 002-mi-cambio`), respétalo tras sanear.
+Numeración: cada spec lleva prefijo secuencial de 3 dígitos. Lista con `glob` los `specs/*-spec.md`, extrae los prefijos `^(\d+)-` y elige `max+1` (los números nunca se reutilizan: un número borrado no vuelve, por trazabilidad). Si `$ARGUMENTS` ya trae prefijo numérico (`/spec 002-mi-cambio`), respétalo tras sanear salvo que ya exista (entonces avisa y detente).
 
 Destino: `specs/<NNN>-<nombre>-spec.md` (ej: `specs/002-filtro-ejercicios-spec.md`). Si `specs/` no existe, créalo. Si el destino ya existe, no sobrescribas: avisa y detente hasta tener otro nombre.
 
@@ -50,6 +50,18 @@ Describe solo lo necesario, sin código:
 ### 4. Plan de tareas
 Lista numerada de tareas pequeñas, cada una con fichero/s implicado/s. Última tarea siempre:
 - Verificación = `./gradlew assembleDebug` OK (+ `./gradlew testDebugUnitTest --tests "*CatalogMappingTest*"` si toca mapper/DTO). Sin lint/typecheck extra en este repo.
+
+### 4b. Tolerancia de desviación (contrato, no cárcel)
+El spec es el contrato de `/spec-impl`, pero si durante la implementación algo del spec no encaja (una firma no existe, una API no está en la versión declarada), el agente no reinterpreta en silencio: aplica la regla anti-invención de `/spec-impl` (alternativa mínima + reporte) y la desviación se anota para enmienda manual tuya. Ningún agente cambia un spec aprobado.
+
+### 4c. Estilo: legible para humanos, conciso
+El spec lo vas a leer tú, no solo el agente. Lenguaje llano y frases cortas:
+- Prohibida la jerga sin definir (`firma futura`, `sync-ready`, `stateful+stateless`, `prefill`…): o se evita o se define una vez en `## 3` y luego se usa el término llano (`relleno con la última sesión`).
+- Límites orientativos: `## 1` ≤ 10 líneas, `## 2` en viñetas de 1 línea, `## 5` un criterio = una línea verificable, `## 7` una tarea = una línea con su fichero.
+- Nada de código en el spec salvo firmas imprescindibles (rutas, nombres de fichero). Los `fichero:línea` van como citas, no como bloques.
+- Ejemplo del tono:
+  - Mal: `Repo fake nuevo con interfaz de firma futura en memoria con MutableStateFlow + shared como en FakeRoutineRepository.kt:297-299`.
+  - Bien: `Repo falso en memoria con la misma forma que tendrá el real (ver FakeRoutineRepository.kt:297-299). Guarda sesiones y recuerda la última para rellenar la siguiente.`
 
 ### 5. Generar spec y parar
 Escribe `specs/<NNN>-<nombre>-spec.md` con esta plantilla (la checklist con checkboxes es siempre la ÚLTIMA sección):
