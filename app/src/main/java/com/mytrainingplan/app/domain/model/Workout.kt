@@ -58,6 +58,8 @@ data class WorkoutExerciseUi(
     val routineExercise: RoutineExercise,
     val exercise: Exercise,
     val entries: List<SetEntry> = emptyList(),
+    /** Planificado para la columna OBJETIVO (la entrada viva lleva el prefill). */
+    val planned: List<PlannedSet> = emptyList(),
     val expanded: Boolean = true
 )
 
