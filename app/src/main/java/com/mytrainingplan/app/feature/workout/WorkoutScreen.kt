@@ -26,15 +26,12 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Done
-import androidx.compose.material.icons.filled.Flag
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.Remove
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Timer
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -77,6 +74,18 @@ private val TextPrimary = Color(0xFFF5F7FA)
 private val TextMuted = Color(0xFF8B95A5)
 private val BorderSubtle = Color(0xFF282E37)
 private val ErrorRed = Color(0xFFFF8A80)
+
+/**
+ * Desviación conocida vs spec (code.html): el spec pide
+ * timer/pause/flag/remove vía material-icons, pero
+ * material-icons-core (única dep declarada) no los trae
+ * (verificado en el sources.jar 1.7.8: 49 iconos, sin Timer ni Pause
+ * ni Flag ni Remove). Fallbacks del core: Refresh (cronómetro),
+ * Menu (pausar, decorativo: el texto lleva el significado),
+ * Done (finalizar) y texto −/+ en los steppers.
+ * TODO: si se quiere fidelidad exacta, añadir material-icons-extended
+ * (propuesta en el informe del paso, requiere aprobación Gradle).
+ */
 
 private fun formatClock(totalSec: Int): String {
     val s = totalSec.coerceAtLeast(0)
@@ -342,7 +351,8 @@ private fun SessionHeader(
                         .background(if (isPaused) TextMuted else Orange)
                 )
                 Spacer(Modifier.width(8.dp))
-                Icon(Icons.Filled.Timer, contentDescription = null, tint = Orange, modifier = Modifier.size(18.dp))
+                // Timer no está en material-icons-core → fallback Refresh.
+                Icon(Icons.Filled.Refresh, contentDescription = null, tint = Orange, modifier = Modifier.size(18.dp))
                 Spacer(Modifier.width(6.dp))
                 Text(
                     formatClock(elapsedSec),
@@ -773,13 +783,14 @@ private fun Stepper(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
+        // Remove no está en material-icons-core → texto −/+ simétrico.
         Box(
             modifier = Modifier
                 .size(32.dp)
                 .clickable(onClick = onMinus),
             contentAlignment = Alignment.Center
         ) {
-            Icon(Icons.Filled.Remove, contentDescription = "Menos", tint = TextMuted, modifier = Modifier.size(14.dp))
+            Text("−", color = TextMuted, fontSize = 16.sp, fontWeight = FontWeight.Bold)
         }
         Text(
             value,
@@ -795,7 +806,7 @@ private fun Stepper(
                 .clickable(onClick = onPlus),
             contentAlignment = Alignment.Center
         ) {
-            Icon(Icons.Filled.Add, contentDescription = "Más", tint = TextMuted, modifier = Modifier.size(14.dp))
+            Text("+", color = TextMuted, fontSize = 16.sp, fontWeight = FontWeight.Bold)
         }
     }
 }
@@ -852,8 +863,9 @@ private fun SessionBar(
                 .padding(horizontal = 16.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
+            // Pause no está en material-icons-core → fallback Menu.
             Icon(
-                if (isPaused) Icons.Filled.PlayArrow else Icons.Filled.Pause,
+                if (isPaused) Icons.Filled.PlayArrow else Icons.Filled.Menu,
                 contentDescription = if (isPaused) "Reanudar" else "Pausar",
                 tint = TextPrimary,
                 modifier = Modifier.size(20.dp)
@@ -877,7 +889,8 @@ private fun SessionBar(
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Icon(Icons.Filled.Flag, contentDescription = null, tint = OnOrange, modifier = Modifier.size(20.dp))
+            // Flag no está en material-icons-core → fallback Done.
+            Icon(Icons.Filled.Done, contentDescription = null, tint = OnOrange, modifier = Modifier.size(20.dp))
             Spacer(Modifier.width(6.dp))
             Text(
                 if (isSaving) "Guardando…" else "Finalizar y Guardar",
