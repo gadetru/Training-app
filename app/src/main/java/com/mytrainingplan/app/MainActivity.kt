@@ -26,6 +26,7 @@ import com.mytrainingplan.app.feature.home.HomeTab
 import com.mytrainingplan.app.feature.home.ProgressPlaceholder
 import com.mytrainingplan.app.feature.profile.ProfileScreen
 import com.mytrainingplan.app.feature.routines.RoutineEditScreen
+import com.mytrainingplan.app.feature.workout.WorkoutScreen
 import com.mytrainingplan.app.ui.theme.MyTrainingPlanTheme
 
 private const val ROUTE_HOME = "home"
@@ -36,6 +37,8 @@ private const val ARG_ROUTINE_ID = "routineId"
 private const val ROUTE_ROUTINE_EDIT = "routineEdit?$ARG_ROUTINE_ID={$ARG_ROUTINE_ID}"
 /** Ruta sin argumentos: crear rutina nueva (el arg queda null por defecto). */
 private const val ROUTE_ROUTINE_EDIT_NEW = "routineEdit"
+/** Sesión en vivo (spec 005): `workout?routineId={id}`, null = estado vacío. */
+private const val ROUTE_WORKOUT = "workout?$ARG_ROUTINE_ID={$ARG_ROUTINE_ID}"
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -72,7 +75,9 @@ fun TrainingNav() {
                 // base sin query para que routineId llegue null (navegar al
                 // patrón con `{routineId}` literal dejaba el constructor muerto:
                 // el ViewModel buscaba un id inexistente y tragaba toda edición).
-                onCreate = { navController.navigate(ROUTE_ROUTINE_EDIT_NEW) }
+                onCreate = { navController.navigate(ROUTE_ROUTINE_EDIT_NEW) },
+                // Spec 005: `Iniciar` abre la sesión en vivo de esa rutina.
+                onStart = { navController.navigate("workout?$ARG_ROUTINE_ID=$it") }
             )
         }
         composable(
@@ -88,6 +93,29 @@ fun TrainingNav() {
             RoutineEditScreen(
                 routineId = backStackEntry.arguments?.getString(ARG_ROUTINE_ID),
                 onSaved = {
+                    navController.popBackStack()
+                    navController.navigateToTab(HomeTab.RUTINAS)
+                },
+                onBack = { navController.popBackStack() }
+            )
+        }
+        composable(
+            route = ROUTE_WORKOUT,
+            arguments = listOf(
+                navArgument(ARG_ROUTINE_ID) {
+                    type = NavType.StringType
+                    nullable = true
+                    defaultValue = null
+                }
+            )
+        ) { backStackEntry ->
+            WorkoutScreen(
+                routineId = backStackEntry.arguments?.getString(ARG_ROUTINE_ID),
+                onFinished = {
+                    navController.popBackStack()
+                    navController.navigateToTab(HomeTab.RUTINAS)
+                },
+                onDiscard = {
                     navController.popBackStack()
                     navController.navigateToTab(HomeTab.RUTINAS)
                 },
