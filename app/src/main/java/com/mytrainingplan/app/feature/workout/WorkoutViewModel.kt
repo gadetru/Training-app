@@ -24,10 +24,25 @@ import kotlinx.coroutines.launch
 const val KG_STEP: Double = 2.5
 
 /**
+ * Estado solo de pantalla (jamás se persiste): cronómetro, pausa, descanso,
+ * plegado y guardado. Vive en un único [MutableStateFlow] para que el
+ * [combine] con la sesión sea de 2 flujos (las sobrecargas tipadas de más
+ * aridad no existen en la versión de coroutines del proyecto).
+ */
+private data class Ephemeral(
+    val elapsedSec: Int = 0,
+    val isPaused: Boolean = false,
+    val restRemainingSec: Int? = null,
+    val restTotalSec: Int = 0,
+    val restEntryId: String? = null,
+    val expanded: Map<String, Boolean> = emptyMap(),
+    val isSaving: Boolean = false
+)
+
+/**
  * Sesión en vivo fake Fase A (spec 005).
  * Expone StateFlow<WorkoutUiState> combinando la sesión del repo (fuente de
- * verdad de entradas) con estado solo de pantalla (`elapsedSec`, `isPaused`,
- * descanso restante, `expanded`, que jamás se persiste).
+ * verdad de entradas) con estado solo de pantalla ([Ephemeral]).
  *
  * El timer vive aquí (no en el Composable) para sobrevivir a recomposición
  * y rotación; pausar congela el acumulado, no resetea. El descanso cuenta
@@ -45,13 +60,7 @@ class WorkoutViewModel(
 
     private var opened = false
     private val sessionId = MutableStateFlow<String?>(null)
-    private val elapsed = MutableStateFlow(0)
-    private val paused = MutableStateFlow(false)
-    private val restRemaining = MutableStateFlow<Int?>(null)
-    private val restTotal = MutableStateFlow(0)
-    private val restEntryId = MutableStateFlow<String?>(null)
-    private val expanded = MutableStateFlow<Map<String, Boolean>>(emptyMap())
-    private val saving = MutableStateFlow(false)
+    private val ephemeral = MutableStateFlow(Ephemeral())
 
     private val detail: StateFlow<WorkoutSessionDetail?> =
         sessionId.flatMapLatest { id: String? ->
@@ -62,17 +71,14 @@ class WorkoutViewModel(
             initialValue = null
         )
 
-    val uiState: StateFlow<WorkoutUiState> = combine(
-        detail, elapsed, paused, restRemaining, restTotal, expanded, saving
-    ) { d: WorkoutSessionDetail?, el: Int, pa: Boolean, rest: Int?, total: Int,
-        exp: Map<String, Boolean>, sv: Boolean ->
+    val uiState: StateFlow<WorkoutUiState> = combine(detail, ephemeral) { d, e ->
         if (d == null) {
             WorkoutUiState(
-                elapsedSec = el,
-                isPaused = pa,
-                restRemainingSec = rest,
-                restTotalSec = total,
-                isSaving = sv
+                elapsedSec = e.elapsedSec,
+                isPaused = e.isPaused,
+                restRemainingSec = e.restRemainingSec,
+                restTotalSec = e.restTotalSec,
+                isSaving = e.isSaving
             )
         } else {
             // Por defecto solo el primer ejercicio pendiente va expandido
@@ -87,21 +93,21 @@ class WorkoutViewModel(
                     exercise = item.exercise,
                     entries = item.entries.sortedBy { it.setNumber },
                     planned = item.planned.sortedBy { it.setNumber },
-                    expanded = exp[item.routineExercise.id] ?: (index == firstPending)
+                    expanded = e.expanded[item.routineExercise.id] ?: (index == firstPending)
                 )
             }
             val all = items.flatMap { it.entries }
             WorkoutUiState(
                 sessionId = d.session.id,
-                routineName = d.routine.name,
-                elapsedSec = el,
-                isPaused = pa,
+                routineName = d.routineName,
+                elapsedSec = e.elapsedSec,
+                isPaused = e.isPaused,
                 exercises = items,
                 doneCount = all.count { it.done },
                 totalCount = all.size,
-                restRemainingSec = rest,
-                restTotalSec = total,
-                isSaving = sv
+                restRemainingSec = e.restRemainingSec,
+                restTotalSec = e.restTotalSec,
+                isSaving = e.isSaving
             )
         }
     }.stateIn(
@@ -114,16 +120,20 @@ class WorkoutViewModel(
         viewModelScope.launch {
             while (true) {
                 delay(1_000)
-                if (paused.value) continue
-                if (sessionId.value != null) elapsed.update { it + 1 }
-                val cur = restRemaining.value
-                if (cur != null) {
-                    if (cur <= 1) {
-                        // A 0 se cierra solo, sin crash.
-                        restRemaining.value = null
-                        restEntryId.value = null
+                ephemeral.update { cur ->
+                    if (cur.isPaused) return@update cur
+                    val ticked = if (sessionId.value != null) {
+                        cur.copy(elapsedSec = cur.elapsedSec + 1)
                     } else {
-                        restRemaining.value = cur - 1
+                        cur
+                    }
+                    val rest = ticked.restRemainingSec
+                    if (rest != null) {
+                        // A 0 se cierra solo, sin crash.
+                        if (rest <= 1) ticked.copy(restRemainingSec = null, restEntryId = null)
+                        else ticked.copy(restRemainingSec = rest - 1)
+                    } else {
+                        ticked
                     }
                 }
             }
@@ -146,8 +156,11 @@ class WorkoutViewModel(
     }
 
     fun onToggleExpanded(routineExerciseId: String) {
-        expanded.update { current ->
-            current + (routineExerciseId to !(current[routineExerciseId] ?: true))
+        ephemeral.update { cur ->
+            cur.copy(
+                expanded = cur.expanded +
+                    (routineExerciseId to !(cur.expanded[routineExerciseId] ?: true))
+            )
         }
     }
 
@@ -182,9 +195,13 @@ class WorkoutViewModel(
                     .find { it.id == entry.plannedSetId }?.restSeconds
                 val total = entry.restSeconds ?: plannedRest ?: 90
                 if (total > 0) {
-                    restTotal.value = total
-                    restRemaining.value = total
-                    restEntryId.value = entryId
+                    ephemeral.update {
+                        it.copy(
+                            restTotalSec = total,
+                            restRemainingSec = total,
+                            restEntryId = entryId
+                        )
+                    }
                 }
             }
         }
@@ -193,29 +210,30 @@ class WorkoutViewModel(
     /** Botones `+10s/-10s` del descanso: ajustan de 10 en 10. */
     fun onRestAdjust(deltaSec: Int) {
         val sid = sessionId.value ?: return
-        val entryId = restEntryId.value ?: return
-        restRemaining.update { ((it ?: 0) + deltaSec).coerceAtLeast(0) }
+        val entryId = ephemeral.value.restEntryId ?: return
+        ephemeral.update {
+            it.copy(restRemainingSec = ((it.restRemainingSec ?: 0) + deltaSec).coerceAtLeast(0))
+        }
         viewModelScope.launch { repository.adjustRest(sid, entryId, deltaSec) }
     }
 
     /** `Terminar descanso`: cierra el overlay sin crash. */
     fun onRestFinish() {
-        restRemaining.value = null
-        restEntryId.value = null
+        ephemeral.update { it.copy(restRemainingSec = null, restEntryId = null) }
     }
 
     fun onPauseToggle() {
-        paused.update { !it }
+        ephemeral.update { it.copy(isPaused = !it.isPaused) }
     }
 
     fun onFinish(onDone: () -> Unit) {
         val sid = sessionId.value ?: return
         viewModelScope.launch {
-            saving.value = true
+            ephemeral.update { it.copy(isSaving = true) }
             try {
                 repository.finishSession(sid)
             } finally {
-                saving.value = false
+                ephemeral.update { it.copy(isSaving = false) }
             }
             onDone()
         }
