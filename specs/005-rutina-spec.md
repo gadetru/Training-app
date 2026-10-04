@@ -106,16 +106,16 @@ No-funcionales:
 - ¿`Finalizar` debe actualizar racha/progreso de Home en este spec o queda TODO Fase B? Propuesta: TODO (el feed no cambia salvo el prefill de la próxima sesión).
 - ¿Minimizar cierra la vista manteniendo la sesión viva en el repo o la pausa automáticamente? Propuesta: mantiene viva sin pausar, vuelta sin pérdida.
 ## 11. Checklist verificación (última, checkboxes listos para /verifier)
-- [ ] Sesión copia `screen.png` verificada en móvil físico (header con timer, progreso, acordeón, tabla, descartar, barra fija)
-- [ ] `Iniciar` en Home abre la sesión de esa rutina sin crash
-- [ ] Prefill última sesión si existe, si no planificado
-- [ ] Stepers KG/REPS editan solo esa serie sin crash y sobreviven a rotación
-- [ ] `done` marca volt y abre descanso con la cuenta atrás de su `restSeconds`
-- [ ] Descanso bloqueante (no cierra por fuera/atrás); `+10s/-10s` ajustan de 10 en 10; cierra por fin o terminar sin crash
-- [ ] `Pausar` congela el cronómetro; `Reanudar` lo retoma
-- [ ] `Finalizar y Guardar` vuelve a Home sin crash y la sesión sirve como prefill siguiente
-- [ ] `Descartar`/atrás sin finalizar descarta sin fantasma y sin crash
-- [ ] Rotación conserva timer, checks, KG/REPS, descanso y pausa en sesión
-- [ ] Paquete `com.mytrainingplan.app`, sin `.debug`
-- [ ] `./gradlew assembleDebug` OK
-- [ ] Prueba en móvil físico OK
+- [x] Sesión copia `screen.png` verificada en móvil físico (header con timer, progreso, acordeón, tabla, descartar, barra fija)
+- [X] `Iniciar` en Home abre la sesión de esa rutina sin crash
+- [X] Prefill última sesión si existe, si no planificado
+- [X] Stepers KG/REPS editan solo esa serie sin crash y sobreviven a rotación
+- [X] `done` marca volt y abre descanso con la cuenta atrás de su `restSeconds`
+- [X] Descanso bloqueante (no cierra por fuera/atrás); `+10s/-10s` ajustan de 10 en 10; cierra por fin o terminar sin crash
+- [x] `Pausar` congela el cronómetro; `Reanudar` lo retoma
+- [X] `Finalizar y Guardar` vuelve a Home sin crash y la sesión sirve como prefill siguiente
+- [X] `Descartar`/atrás sin finalizar descarta sin fantasma y sin crash
+- [x] Rotación conserva timer, checks, KG/REPS, descanso y pausa en sesión
+- [x] Paquete `com.mytrainingplan.app`, sin `.debug`
+- [x] `./gradlew assembleDebug` OK
+- [X] Prueba en móvil físico OK
