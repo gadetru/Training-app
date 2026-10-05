@@ -21,7 +21,8 @@ import kotlinx.coroutines.flow.map
  * Misma firma que [RoutineRepository]. Persistencia directa en Room:
  * cada mutación hace `@Upsert` al momento con `updatedAt`; `saveRoutine`
  * republica la fecha y `discard` solo borra lógico si quedó vacía
- * (el split borrador/guardada de Fase A se colapsa; refinar en paso 11).
+ * (el split borrador/guardada de Fase A se colapsa; spec 008: descarte
+ * seguro + `position` real con renumerado sin huecos).
  */
 class RoomRoutineRepository(
     private val routines: RoutineDao,
@@ -83,7 +84,8 @@ class RoomRoutineRepository(
     override suspend fun createRoutine(name: String, durationMin: Int): String {
         val id = UUID.randomUUID().toString()
         val now = System.currentTimeMillis()
-        val count = 0 // position se recalcula al listar por orden de creación
+        // Spec 008: `position` real = nº de rutinas vivas al crear (orden de creación).
+        val count = routines.observeAll().first().size
         routines.upsert(
             com.mytrainingplan.app.domain.model.Routine(
                 id = id, name = name, durationMin = durationMin,
@@ -101,9 +103,10 @@ class RoomRoutineRepository(
     override suspend fun addExercises(routineId: String, ids: List<String>) {
         if (ids.isEmpty()) return
         routines.getById(routineId) ?: return
-        // Posición siguiente (snapshot de lo observado no disponible aquí en
-        // suspend; se aproxima con el tamaño actual vía upsert directo).
-        var pos = 0
+        // Spec 008: la posición del ejercicio continúa tras el máximo existente
+        // (antes se reiniciaba a 0 en cada llamada).
+        val existing = items.observeByRoutine(routineId).first()
+        var pos = (existing.maxOfOrNull { it.position } ?: -1) + 1
         ids.forEach { exId ->
             val ex = exercises.getById(exId) ?: return@forEach
             val reId = UUID.randomUUID().toString()
@@ -172,9 +175,24 @@ class RoomRoutineRepository(
     }
 
     override suspend fun discard(routineId: String) {
-        // Solo borra lógico si no tiene ejercicios (borrador vacío);
+        // Descarte seguro (spec 008): solo el borrador vacío se borra lógico;
         // la guardada con contenido queda intacta.
         val cur = routines.getById(routineId)?.toDomain() ?: return
+        val existing = items.observeByRoutine(routineId).first()
+        if (existing.isNotEmpty()) return
         routines.upsert(cur.copy(deleted = true).toEntity())
+        renumberRoutines()
+    }
+
+    /** Recalcula `position` 0..n-1 sin huecos tras un borrado lógico (spec 008). */
+    private suspend fun renumberRoutines() {
+        val remaining = routines.observeAll().first().sortedBy { it.position }
+        remaining.forEachIndexed { index, entity ->
+            if (entity.position != index) {
+                routines.upsert(
+                    entity.copy(position = index, updatedAt = System.currentTimeMillis())
+                )
+            }
+        }
     }
 }
