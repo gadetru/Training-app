@@ -60,18 +60,19 @@ private val InputBg = Color(0xFF0C0E11)
 
 @Composable
 fun ProfileScreen(
+    initial: Profile? = null,
     onBack: () -> Unit = {},
     onSave: (Profile) -> Unit = {}
 ) {
-    var displayName by remember { mutableStateOf("Carlos Mendoza") }
-    var ageText by remember { mutableStateOf("28") }
-    var heightText by remember { mutableStateOf("178") }
-    var weightText by remember { mutableStateOf("78.5") }
-    var level by remember { mutableStateOf(TrainingLevel.INTERMEDIO) }
-    var goal by remember { mutableStateOf(TrainingGoal.FUERZA_POTENCIA) }
+    var displayName by remember(initial) { mutableStateOf(initial?.displayName ?: "Carlos Mendoza") }
+    var ageText by remember(initial) { mutableStateOf((initial?.age ?: 28)?.toString() ?: "") }
+    var heightText by remember(initial) { mutableStateOf((initial?.heightCm ?: 178)?.toString() ?: "") }
+    var weightText by remember(initial) { mutableStateOf((initial?.weightKg ?: 78.5)?.toString() ?: "") }
+    var level by remember(initial) { mutableStateOf(initial?.level ?: TrainingLevel.INTERMEDIO) }
+    var goal by remember(initial) { mutableStateOf(initial?.goal ?: TrainingGoal.FUERZA_POTENCIA) }
     // avatarUri se cableará con picker + Coil en el siguiente paso.
     // Por ahora placeholder con iniciales para la réplica visual.
-    var avatarUri by remember { mutableStateOf<String?>(null) }
+    var avatarUri by remember(initial) { mutableStateOf(initial?.avatarUri) }
 
     val profile = Profile(
         displayName = displayName.ifBlank { "Atleta" },
