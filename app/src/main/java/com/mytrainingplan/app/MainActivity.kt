@@ -8,10 +8,14 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -19,15 +23,20 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.mytrainingplan.app.domain.model.Profile
+import com.mytrainingplan.app.data.repository.CatalogSync
 import com.mytrainingplan.app.feature.home.BottomDock
 import com.mytrainingplan.app.feature.home.CalendarPlaceholder
 import com.mytrainingplan.app.feature.home.HomeScreen
 import com.mytrainingplan.app.feature.home.HomeTab
 import com.mytrainingplan.app.feature.home.ProgressPlaceholder
 import com.mytrainingplan.app.feature.profile.ProfileScreen
+import com.mytrainingplan.app.feature.profile.ProfileViewModel
 import com.mytrainingplan.app.feature.routines.RoutineEditScreen
 import com.mytrainingplan.app.feature.workout.WorkoutScreen
 import com.mytrainingplan.app.ui.theme.MyTrainingPlanTheme
+import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
+import kotlinx.coroutines.launch
 
 private const val ROUTE_HOME = "home"
 private const val ROUTE_CALENDAR = "calendar"
@@ -40,9 +49,14 @@ private const val ROUTE_ROUTINE_EDIT_NEW = "routineEdit"
 /** Sesión en vivo (spec 005): `workout?routineId={id}`, null = estado vacío. */
 private const val ROUTE_WORKOUT = "workout?$ARG_ROUTINE_ID={$ARG_ROUTINE_ID}"
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+    @Inject lateinit var catalogSync: CatalogSync
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // Catálogo al abrir (paso 8): si el tag cambió descarga, si no sigue local.
+        lifecycleScope.launch { catalogSync.syncIfNeeded() }
         enableEdgeToEdge()
         setContent {
             MyTrainingPlanTheme(dynamicColor = false, darkTheme = true) {
@@ -53,16 +67,17 @@ class MainActivity : ComponentActivity() {
 }
 
 /**
- * NavHost condicional spec 002 (Fase A, sin Hilt/Room).
- * Arranque `¿hay perfil? home:profile` con criterio simple en memoria
- * (nombre no vacío, como en 001; el defecto "Carlos Mendoza" arranca en home).
- * TODO Fase B: criterio real (fila de perfil no borrada en Room).
+ * NavHost condicional con arranque real (Paso 12 spec 006, Fase B).
+ * `¿hay perfil? home:profile` con la fila `me` de Room (no un valor en
+ * memoria): nombre vacío o fila ausente -> profile, si no -> home.
  */
 @Composable
 fun TrainingNav() {
     val navController = rememberNavController()
-    val startDestination = remember {
-        if (Profile().displayName.isNotBlank()) ROUTE_HOME else ROUTE_PROFILE
+    val profileVm: ProfileViewModel = hiltViewModel()
+    val profile by profileVm.uiState.collectAsState()
+    val startDestination = remember(profile.displayName) {
+        if (profile.displayName.isNotBlank()) ROUTE_HOME else ROUTE_PROFILE
     }
     NavHost(navController = navController, startDestination = startDestination) {
         composable(ROUTE_HOME) {
@@ -141,9 +156,16 @@ fun TrainingNav() {
         composable(ROUTE_PROFILE) {
             // El tab Perfil reutiliza ProfileScreen de 001 sin dock superpuesto
             // para no tapar su CTA "Guardar y Continuar"; se sale con ← o Guardar.
+            // Persistencia real: precarga la fila `me` y guarda en Room.
+            val vm: ProfileViewModel = hiltViewModel()
+            val saved by vm.uiState.collectAsState()
             ProfileScreen(
+                initial = saved,
                 onBack = { navController.navigateToTab(HomeTab.RUTINAS) },
-                onSave = { navController.navigateToTab(HomeTab.RUTINAS) }
+                onSave = {
+                    vm.onSave(it)
+                    navController.navigateToTab(HomeTab.RUTINAS)
+                }
             )
         }
     }

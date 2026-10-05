@@ -3,11 +3,12 @@ package com.mytrainingplan.app.feature.exercises
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mytrainingplan.app.data.repository.ExerciseRepository
-import com.mytrainingplan.app.data.repository.FakeExerciseRepository
 import com.mytrainingplan.app.domain.model.EquipmentGroups
 import com.mytrainingplan.app.domain.model.ExerciseFilter
 import com.mytrainingplan.app.domain.model.ExercisesUiState
 import com.mytrainingplan.app.domain.model.MuscleGroups
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -20,16 +21,13 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 
 /**
- * Selector de ejercicios fake Fase A (spec 003).
- * Expone StateFlow<ExercisesUiState> alimentado por el repo fake.
- * Estado neutro al abrir: sin query ni filtros (propuesta Preguntas abiertas).
- * La selección vive en memoria y sobrevive a rotación (ViewModel).
- * Sin Hilt: instanciación directa o viewModel() de lifecycle-viewmodel-compose.
- * TODO Fase B: inyectar ExerciseRepository real (Room) con Hilt.
+ * Selector de ejercicios con Room (Paso 11 spec 006, Fase B).
+ * Misma forma por fuera; repo real inyectado con Hilt.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
-class ExercisesViewModel(
-    private val repository: ExerciseRepository = FakeExerciseRepository()
+@HiltViewModel
+class ExercisesViewModel @Inject constructor(
+    private val repository: ExerciseRepository
 ) : ViewModel() {
 
     private val query = MutableStateFlow("")
@@ -71,9 +69,7 @@ class ExercisesViewModel(
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5_000),
-            initialValue = ExercisesUiState(
-                results = FakeExerciseRepository.defaultExercises()
-            )
+            initialValue = ExercisesUiState()
         )
 
     fun onQueryChange(value: String) {

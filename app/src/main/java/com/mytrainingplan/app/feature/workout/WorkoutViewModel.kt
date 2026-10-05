@@ -2,11 +2,12 @@ package com.mytrainingplan.app.feature.workout
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.mytrainingplan.app.data.repository.FakeWorkoutRepository
 import com.mytrainingplan.app.data.repository.WorkoutRepository
 import com.mytrainingplan.app.data.repository.WorkoutSessionDetail
 import com.mytrainingplan.app.domain.model.WorkoutExerciseUi
 import com.mytrainingplan.app.domain.model.WorkoutUiState
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
@@ -40,22 +41,13 @@ private data class Ephemeral(
 )
 
 /**
- * Sesión en vivo fake Fase A (spec 005).
- * Expone StateFlow<WorkoutUiState> combinando la sesión del repo (fuente de
- * verdad de entradas) con estado solo de pantalla ([Ephemeral]).
- *
- * El timer vive aquí (no en el Composable) para sobrevivir a recomposición
- * y rotación; pausar congela el acumulado, no resetea. El descanso cuenta
- * atrás también se congela en pausa.
- *
- * Sin Hilt: instanciación con viewModel() de lifecycle-viewmodel-compose o
- * directa. Comparte [FakeWorkoutRepository.shared] para ver el mismo store
- * que Home. La pantalla llama [openSession] una vez (null = estado vacío).
- * TODO Fase B: inyectar repositorio real (Room) con Hilt.
+ * Sesión en vivo con Room (Paso 11 spec 006, Fase B).
+ * Misma forma por fuera; repo real inyectado con Hilt.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
-class WorkoutViewModel(
-    private val repository: WorkoutRepository = FakeWorkoutRepository.shared
+@HiltViewModel
+class WorkoutViewModel @Inject constructor(
+    private val repository: WorkoutRepository
 ) : ViewModel() {
 
     private var opened = false

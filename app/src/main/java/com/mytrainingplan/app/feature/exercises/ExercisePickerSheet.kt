@@ -49,7 +49,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import com.mytrainingplan.app.data.repository.FakeExerciseRepository
 import com.mytrainingplan.app.domain.model.Exercise
@@ -130,7 +130,7 @@ private fun equipmentLabel(value: String): String = EQUIPMENT_LABELS[value] ?: v
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ExercisePickerSheet(
-    viewModel: ExercisesViewModel = viewModel(),
+    viewModel: ExercisesViewModel = hiltViewModel(),
     onConfirm: (List<String>) -> Unit = {},
     onDismiss: () -> Unit = {}
 ) {

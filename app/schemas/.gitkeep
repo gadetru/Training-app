@@ -1,0 +1,2 @@
+# Los JSON de esquema Room v1 se generan al sincronizar en Android Studio con red
+# (`room.schemaLocation` -> `app/schemas/`). No se commitea vacío real a mano.
