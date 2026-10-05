@@ -108,7 +108,7 @@ DTOs espejo del JSON con nombres con guion bajo (`body_part`, `gif_url`) en `dat
 - ¿Versiones exactas Room/Hilt/DataStore/Retrofit a proponer según `gradle/libs.versions.toml:1-12`?
 - ¿Semilla inicial de ejercicios si no hay red en primer arranque?
 ## 11. Checklist verificación (última, checkboxes listos para /verifier)
-- [ ] Perfil editado sigue ahí tras cerrar y abrir la app en el móvil.
+- [x] Perfil editado sigue ahí tras cerrar y abrir la app en el móvil.
 - [ ] Rutina creada con 2 ejercicios y 3 series sigue intacta tras reinicio.
 - [ ] Sesión terminada aparece en el historial tras reinicio.
 - [ ] Próxima sesión del mismo día rellena con lo hecho la última vez, no con el plan.

@@ -37,7 +37,7 @@ class RoomRoutineRepository(
     override fun observeDetails(): Flow<List<RoutineDetail>> =
         routines.observeAll().flatMapLatest { list ->
             if (list.isEmpty()) flowOf(emptyList())
-            else combine(list.map { r -> detailFlow(r.id) }) { it.toList() }
+            else combine(list.map { r -> detailFlow(r.id) }) { it.filterNotNull() }
         }
 
     @OptIn(ExperimentalCoroutinesApi::class)
@@ -49,40 +49,36 @@ class RoomRoutineRepository(
         combine(
             routines.observeById(id),
             items.observeByRoutine(id)
-        ) { routine, res ->
-            if (routine == null) return@combine null
-            val details = res.map { re ->
-                val ex = exercises.getById(re.exerciseId)?.toDomain() ?: return@map null
-                val ss = setsListSnapshot(re.id)
-                RoutineExerciseDetail(
-                    routineExercise = re.toDomain(),
-                    exercise = ex,
-                    sets = ss.sortedBy { it.setNumber }
-                )
-            }.filterNotNull()
-            // Los sets llegan por snapshot suspendido; el Flow se re-emite
-            // al cambiar rutina o sus ejercicios (los sets se refrescan en
-            // la próxima colección del detalle).
-            RoutineDetail(routine = routine.toDomain(), items = details)
-        }.flatMapLatest { base ->
-            if (base == null) flowOf(null)
-            else combine(
-                base.items.map { d ->
-                    sets.observeByExercise(d.routineExercise.id).map { ss ->
-                        d.copy(sets = ss.map { it.toDomain() }.sortedBy { it.setNumber })
+        ) { routine, res -> routine to res }
+            .flatMapLatest { (routine, res) ->
+                if (routine == null) flowOf(null)
+                else if (res.isEmpty()) flowOf(RoutineDetail(routine.toDomain(), emptyList()))
+                else combine(
+                    res.map { re ->
+                        combine(
+                            exerciseFlow(re.exerciseId),
+                            sets.observeByExercise(re.id)
+                        ) { ex, ss -> Triple(re, ex, ss) }
                     }
-                }.ifEmpty { listOf(flowOf()) }.let { flows ->
-                    @Suppress("UNCHECKED_CAST")
-                    combine(flows) { arr ->
-                        base.copy(items = (arr.toList() as List<RoutineExerciseDetail>))
-                    }
+                ) { arr ->
+                    RoutineDetail(
+                        routine = routine.toDomain(),
+                        items = arr.mapNotNull { (re, ex, ss) ->
+                            val e = ex?.toDomain() ?: return@mapNotNull null
+                            RoutineExerciseDetail(
+                                routineExercise = re.toDomain(),
+                                exercise = e,
+                                sets = ss.map { it.toDomain() }.sortedBy { it.setNumber }
+                            )
+                        }
+                    )
                 }
-            ) { it }
-        }
+            }
 
-    /** Snapshot suspendido auxiliar (los sets observan por Flow en el nivel superior). */
-    private suspend fun setsListSnapshot(routineExerciseId: String): List<PlannedSet> =
-        emptyList() // resuelto por el combine de arriba; se mantiene la firma simple
+    /** Ejercicio como Flow (el DAO solo expone `getById` suspendido). */
+    private fun exerciseFlow(id: String) = kotlinx.coroutines.flow.flow {
+        emit(exercises.getById(id))
+    }
 
     override suspend fun createRoutine(name: String, durationMin: Int): String {
         val id = UUID.randomUUID().toString()
