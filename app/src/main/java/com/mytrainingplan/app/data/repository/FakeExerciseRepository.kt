@@ -15,7 +15,7 @@ import kotlinx.coroutines.flow.map
  */
 interface ExerciseRepository {
     fun observeExercises(filter: ExerciseFilter): Flow<List<Exercise>>
-    fun getById(id: String): Exercise?
+    suspend fun getById(id: String): Exercise?
 }
 
 /**
@@ -37,7 +37,7 @@ class FakeExerciseRepository : ExerciseRepository {
     override fun observeExercises(filter: ExerciseFilter): Flow<List<Exercise>> =
         state.asStateFlow().map { list -> list.applyFilter(filter) }
 
-    override fun getById(id: String): Exercise? =
+    override suspend fun getById(id: String): Exercise? =
         state.value.find { it.id == id }
 
     companion object {

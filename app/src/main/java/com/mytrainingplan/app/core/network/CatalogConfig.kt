@@ -5,10 +5,11 @@ package com.mytrainingplan.app.core.network
  * Fork por jsDelivr con **tag fijo**, nunca rama. Solo URLs de GIF en DB
  * (Coil cachea). Al taggear el fork `gadetru` se cambia SOLO este fichero.
  *
- * Nota: el fake de Fase A apunta al upstream
- * `JahelCuadrado/ExerciseGymGifsDB@v1.1.0` porque el fork aún no tiene tag
- * (ver `FakeExerciseRepository.CATALOG_BASE`); en cuanto exista el tag del
- * fork, este `CATALOG_TAG` lo pineará.
+ * Fork `gadetru/ExerciseGymGifsDB` pineado a `v1.1.0` (verificado:
+ * `api/es/exercises.json` responde con el catálogo). El fake de Fase A sigue
+ * apuntando al upstream `JahelCuadrado/ExerciseGymGifsDB@v1.1.0`
+ * (ver `FakeExerciseRepository.CATALOG_BASE`); las `gifUrl` del JSON real
+ * son absolutas al upstream (`@main`), no relativas al tag.
  */
 object CatalogConfig {
     /** Tag fijo pineado (no usar ramas ni `latest`). */

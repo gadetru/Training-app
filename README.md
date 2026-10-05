@@ -2,10 +2,12 @@
 
 App Android para planificar rutinas y registrar entrenos de fuerza. Funciona sin conexión, no lleva anuncios y está pensada para controlar al detalle cada serie.
 
-> **Estado:** Fase A (maquetación UI-first en memoria, sin Room ni persistencia). 2 de 5 vistas hechas:
-> perfil de atleta (`plantilla-usuario`) y home (`vista-principal` con `NavHost` condicional
-> `¿hay perfil? home:profile`, verificada en móvil físico). Pendientes: `lista-ejercicios`, `rutina`, `editar-rutina`.
-> Este README y `docs/` fijan las decisiones de partida; `specs/002-vista-principal-spec.md` ya está implementado.
+> **Estado:** Fase A hecha (5/5 vistas UI-first en memoria) + Fase B Room local mergeada en `main`
+> (PR #7: entidades + DAOs con `@Upsert`, repositorios Room con la misma firma que los fakes, Hilt,
+> `CatalogTagStore`, Retrofit + Gson que solo rellena vía `CatalogSync`). En curso `007-catalogo-fork`
+> (rama sin mergear: tag `v1.1.0` del fork verificado, `CatalogSync` con 404 vs sin-red, `getById` en
+> `suspend`, DTO camelCase + `CatalogResponse`; pendiente prueba en móvil físico).
+> Este README y `docs/` fijan las decisiones de partida; `specs/` recoge lo ya implementado.
 
 ## Principios
 
@@ -26,7 +28,7 @@ App Android para planificar rutinas y registrar entrenos de fuerza. Funciona sin
 | Navegación | Navigation Compose |
 | Base de datos local | Room (sobre SQLite) |
 | Inyección de dependencias | Hilt |
-| Red | Retrofit + kotlinx.serialization |
+| Red | Retrofit + Gson (`converter-gson`, solo rellena Room vía `CatalogSync`) |
 | Imágenes y GIFs | Coil (con soporte GIF) |
 | Ajustes | DataStore |
 | Tareas en segundo plano | WorkManager (más adelante) |
@@ -34,10 +36,13 @@ App Android para planificar rutinas y registrar entrenos de fuerza. Funciona sin
 
 ### Catálogo de ejercicios
 
-- Fork propio del repositorio **ExerciseGymGifsDB**: API estática (JSON + GIFs) servida por el CDN jsDelivr.
-- URL base: `https://cdn.jsdelivr.net/gh/<usuario>/ExerciseGymGifsDB@<tag>`
+- Fork propio del repositorio **ExerciseGymGifsDB** (`gadetru`, tag fijo **`v1.1.0`**, verificado):
+  API estática (JSON + GIFs) servida por el CDN jsDelivr.
+- URL base: `https://cdn.jsdelivr.net/gh/gadetru/ExerciseGymGifsDB@v1.1.0`
 - Siempre se apunta a un **tag fijo**, nunca a una rama.
-- Idiomas disponibles: `es` y `en`.
+- El `exercises.json` real es un objeto `{"count", "exercises"}` con claves camelCase
+  (`bodyPart`, `secondaryMuscles`, `gifUrl` absolutas al upstream); la app solo usa `es`.
+- Solo se tocan filas `source=CATALOG` (vía `upsert`); los propios (`CUSTOM`) nunca se pisan.
 
 ### Backend (Fase 2)
 
@@ -56,16 +61,21 @@ App Android para planificar rutinas y registrar entrenos de fuerza. Funciona sin
 - Git y GitHub.
 - Gradle Wrapper (`gradlew`), que fija la versión de Gradle del proyecto.
 
-## Estado actual (Fase A)
+## Estado actual (Fases A + B, 007 en curso)
 
-UI-first en memoria, sin Room: cada pantalla es `Screen` (stateful + stateless) + `ViewModel` con `StateFlow` +
-repositorio fake con la misma firma que tendrá el repositorio real. La UI solo ve `domain/model`.
+Fase A: cada pantalla es `Screen` (stateful + stateless) + `ViewModel` con `StateFlow` + repositorio fake
+con la misma firma que el real. Fase B (mergeada): los fakes conviven con repositorios Room con la misma
+firma; Retrofit solo rellena la DB. La UI solo ve `domain/model`.
 
-| Vista | Estado |
+| Vista / pieza | Estado |
 |---|---|
 | Perfil de atleta (`feature/profile`, `domain/model/Profile`) | Hecha (`specs/001-plantilla-usuario-spec.md`) |
 | Home Mis Rutinas (`feature/home`, `domain/model/Home.kt`, `FakeHomeRepository`) + `NavHost` condicional + dock de 4 tabs | Hecha y verificada (`specs/002-vista-principal-spec.md`) |
-| Lista de ejercicios, rutina, editar rutina | Pendientes |
+| Lista de ejercicios (`ExercisePickerSheet` + `FakeExerciseRepository`) | Hecha (`specs/003`) |
+| Editar rutina (`feature/routines`, borradores separados de guardadas) | Hecha (`specs/004`) |
+| Sesión en vivo (`feature/workout`, prefill última-vs-plan) | Hecha (`specs/005`, `assembleDebug` OK, resto pendiente de móvil físico) |
+| Room local (entidades + DAOs `@Upsert`, Hilt, DataStore, Retrofit + Gson, `CatalogSync`, `CatalogMappingTest`) | Hecha y mergeada (`specs/006-fase-b-room-local-spec.md`, PR #7) |
+| Catálogo desde el fork + `getById` async | En curso en rama `007-catalogo-fork` (`specs/007-catalogo-fork-spec.md`); pendiente commit del paso 5 y móvil físico |
 
 Desviación conocida: `material-icons-core` solo trae 49 iconos, así que el dock usa fallbacks
 (`List`/`DateRange`/`Star`/`Person`); la fidelidad exacta a los iconos del diseño exigiría `material-icons-extended`.
@@ -103,7 +113,7 @@ Requisitos: Android Studio, Android SDK y un móvil con **depuración USB** (o i
 El SDK se apunta en `local.properties` con `sdk.dir` (no se versiona).
 
 - Compilar: `./gradlew assembleDebug`
-- Tests: `./gradlew testDebugUnitTest` (de momento solo `ExampleUnitTest`, sin suites reales)
+- Tests: `./gradlew testDebugUnitTest` (`CatalogMappingTest` 4/4 en verde + `ExampleUnitTest` de plantilla)
 - Verificación real: probar en **móvil físico**, sin emulador.
 - Proyecto: `applicationId`/`namespace` `com.mytrainingplan.app`, `minSdk 26`, `compileSdk`/`targetSdk 37`, Java 11.
 
@@ -116,8 +126,9 @@ plugins y librerías) lo crea y mantiene Android Studio, no el agente. No crear,
 (lote A): `navigation-compose, lifecycle-viewmodel-compose, material-icons-core, coil-compose` están declarados
 (`app/build.gradle.kts`) y en uso salvo Coil (picker de foto pendiente). Si una tarea necesita otra dependencia
 o plugin nuevo, indícalo y propón la línea exacta a añadir, pero no la escribas en esos archivos: las versiones las confirma
-el desarrollador desde la documentación oficial o desde Android Studio. El agente trabaja únicamente sobre el código Kotlin,
-los recursos y la documentación.
+el desarrollador desde la documentación oficial o desde Android Studio. Excepción lote B ya consumida
+(spec 006, mergeado): `room, hilt, datastore-preferences, retrofit + converter-gson` están declarados y en uso.
+El agente trabaja únicamente sobre el código Kotlin, los recursos y la documentación.
 
 ## Distribución
 
