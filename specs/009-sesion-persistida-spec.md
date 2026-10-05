@@ -1,5 +1,5 @@
 # Sesión persistida + error interno registrado
-Estado: Borrador
+Estado: aprobado
 Depende de: specs/008-rutinas-feed-spec.md (asume feed y rutinas estables en `main`)
 Fecha de creación: 2026-10-05
 Descripción: Iniciar una rutina falla y lo hecho no se guarda en ningún sitio. Este spec persiste la copia de la sesión al iniciar (para el relleno con la última sesión y la futura gráfica de progreso) y registra el fallo de forma interna, sin mostrar nada al usuario.
