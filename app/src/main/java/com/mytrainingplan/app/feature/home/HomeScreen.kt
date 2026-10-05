@@ -46,7 +46,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.mytrainingplan.app.data.repository.FakeHomeRepository
 import com.mytrainingplan.app.domain.model.AccentColor
 import com.mytrainingplan.app.domain.model.FootKind
@@ -91,7 +91,7 @@ private fun AccentColor.toCompose(): Color = when (this) {
 
 @Composable
 fun HomeScreen(
-    viewModel: HomeViewModel = viewModel(),
+    viewModel: HomeViewModel = hiltViewModel(),
     onStart: (routineId: String) -> Unit = {},
     onCreate: () -> Unit = {},
     onOptions: (routineId: String) -> Unit = {},

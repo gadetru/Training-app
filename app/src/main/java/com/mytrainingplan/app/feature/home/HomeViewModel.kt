@@ -2,8 +2,6 @@ package com.mytrainingplan.app.feature.home
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.mytrainingplan.app.data.repository.FakeHomeRepository
-import com.mytrainingplan.app.data.repository.FakeRoutineRepository
 import com.mytrainingplan.app.data.repository.HomeRepository
 import com.mytrainingplan.app.data.repository.RoutineDetail
 import com.mytrainingplan.app.data.repository.RoutineRepository
@@ -12,25 +10,21 @@ import com.mytrainingplan.app.domain.model.FootKind
 import com.mytrainingplan.app.domain.model.HomeUiState
 import com.mytrainingplan.app.domain.model.RoutineMuscleLabels
 import com.mytrainingplan.app.domain.model.RoutineSummary
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 
 /**
- * Home fake Fase A (spec 002 + 004).
- * Expone StateFlow<HomeUiState> alimentado por el repo fake de Home más las
- * rutinas creadas en el constructor (spec 004): el feed combina las 3 fijas
- * del 002 (se mantienen) con las guardadas en [RoutineRepository].
- * Comparte [FakeRoutineRepository.shared] para ver el mismo store en memoria.
- * Sin Hilt: instanciación directa o viewModel() de lifecycle-viewmodel-compose.
- * No se crea ProfileViewModel: el saludo viene en HomeUiState.firstName
- * ("Carlos", igual que Profile.firstName por defecto de 001).
- * TODO Fase B: inyectar repositorios reales (Room) con Hilt.
+ * Home con Room (Paso 11 spec 006, Fase B).
+ * Misma forma por fuera; repos reales inyectados con Hilt.
  */
-class HomeViewModel(
-    repository: HomeRepository = FakeHomeRepository(),
-    routines: RoutineRepository = FakeRoutineRepository.shared
+@HiltViewModel
+class HomeViewModel @Inject constructor(
+    repository: HomeRepository,
+    routines: RoutineRepository
 ) : ViewModel() {
 
     val uiState: StateFlow<HomeUiState> = combine(
@@ -45,7 +39,7 @@ class HomeViewModel(
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5_000),
-        initialValue = FakeHomeRepository.defaultHome()
+        initialValue = HomeUiState()
     )
 }
 

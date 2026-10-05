@@ -74,7 +74,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import com.mytrainingplan.app.domain.model.Exercise
 import com.mytrainingplan.app.domain.model.PlannedSet
@@ -126,7 +126,7 @@ private fun Modifier.dashedBorder(
 @Composable
 fun RoutineEditScreen(
     routineId: String? = null,
-    viewModel: RoutineEditViewModel = viewModel(),
+    viewModel: RoutineEditViewModel = hiltViewModel(),
     onSaved: () -> Unit = {},
     onBack: () -> Unit = {}
 ) {

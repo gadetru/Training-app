@@ -2,11 +2,12 @@ package com.mytrainingplan.app.feature.routines
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.mytrainingplan.app.data.repository.FakeRoutineRepository
 import com.mytrainingplan.app.data.repository.RoutineRepository
 import com.mytrainingplan.app.domain.model.RoutineEditUiState
 import com.mytrainingplan.app.domain.model.RoutineExerciseUi
 import com.mytrainingplan.app.domain.model.RoutineMuscleLabels
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -27,20 +28,13 @@ enum class SetField {
 }
 
 /**
- * Constructor de rutina fake Fase A (spec 004).
- * Expone StateFlow<RoutineEditUiState> combinando el borrador del repo
- * (fuente de verdad de entidades) con estado solo de pantalla (`expanded`,
- * `handEdited`, que jamás se persiste).
- *
- * Sin Hilt: instanciación con viewModel() de lifecycle-viewmodel-compose o
- * directa. Comparte [FakeRoutineRepository.shared] para ver el mismo store
- * que el feed de Home. La pantalla llama [openRoutine] una vez (null =
- * rutina nueva, o id existente para la edición futura).
- * TODO Fase B: inyectar repositorio real (Room) con Hilt.
+ * Constructor de rutina con Room (Paso 11 spec 006, Fase B).
+ * Misma forma por fuera; repo real inyectado con Hilt.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
-class RoutineEditViewModel(
-    private val repository: RoutineRepository = FakeRoutineRepository.shared
+@HiltViewModel
+class RoutineEditViewModel @Inject constructor(
+    private val repository: RoutineRepository
 ) : ViewModel() {
 
     private val routineId = MutableStateFlow<String?>(null)

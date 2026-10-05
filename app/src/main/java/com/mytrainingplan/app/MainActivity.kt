@@ -28,6 +28,7 @@ import com.mytrainingplan.app.feature.profile.ProfileScreen
 import com.mytrainingplan.app.feature.routines.RoutineEditScreen
 import com.mytrainingplan.app.feature.workout.WorkoutScreen
 import com.mytrainingplan.app.ui.theme.MyTrainingPlanTheme
+import dagger.hilt.android.AndroidEntryPoint
 
 private const val ROUTE_HOME = "home"
 private const val ROUTE_CALENDAR = "calendar"
@@ -40,6 +41,7 @@ private const val ROUTE_ROUTINE_EDIT_NEW = "routineEdit"
 /** Sesión en vivo (spec 005): `workout?routineId={id}`, null = estado vacío. */
 private const val ROUTE_WORKOUT = "workout?$ARG_ROUTINE_ID={$ARG_ROUTINE_ID}"
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

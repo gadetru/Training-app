@@ -52,7 +52,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.mytrainingplan.app.domain.model.Exercise
 import com.mytrainingplan.app.domain.model.PlannedSet
 import com.mytrainingplan.app.domain.model.RoutineExercise
@@ -104,7 +104,7 @@ private fun formatWeight(weightKg: Double): String =
 @Composable
 fun WorkoutScreen(
     routineId: String? = null,
-    viewModel: WorkoutViewModel = viewModel(),
+    viewModel: WorkoutViewModel = hiltViewModel(),
     onFinished: () -> Unit = {},
     onDiscard: () -> Unit = {},
     onBack: () -> Unit = {}
