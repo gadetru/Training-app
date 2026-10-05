@@ -1,18 +1,17 @@
 package com.mytrainingplan.app.data.local.entity
 
+import androidx.room.Entity
+import androidx.room.PrimaryKey
+
 /**
  * Serie realizada (Paso 1 spec 006, Fase B).
  * Espejo de [com.mytrainingplan.app.domain.model.SetEntry].
  * Incluye `done` del dominio (parte de "lo hecho"; `expanded`/`handEdited`/
  * pausa del cronómetro siguen solo en pantalla y no se persisten).
- *
- * TODO Fase B: `@Entity(tableName = "set_entries")` + `@PrimaryKey`
- * cuando se apruebe Room (Context7
- * `/websites/developer_android_training_data-storage_room`
- * https://developer.android.com/training/data-storage/room/defining-data).
  */
+@Entity(tableName = "set_entries")
 data class SetEntryEntity(
-    val id: String,
+    @PrimaryKey val id: String,
     val sessionId: String = "",
     val exerciseId: String = "",
     val plannedSetId: String? = null,

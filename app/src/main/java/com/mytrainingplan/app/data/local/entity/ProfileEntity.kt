@@ -1,20 +1,18 @@
 package com.mytrainingplan.app.data.local.entity
 
+import androidx.room.Entity
+import androidx.room.PrimaryKey
+
 /**
  * Fila `me` de perfil (Paso 1 spec 006, Fase B).
  * Espejo de [com.mytrainingplan.app.domain.model.Profile].
  *
- * TODO Fase B: anotar `@Entity(tableName = "profile")` + `@PrimaryKey`
- * cuando se apruebe la dependencia Room (ver Context7
- * `/websites/developer_android_training_data-storage_room`
- * https://developer.android.com/training/data-storage/room/defining-data).
- * Sin anotaciones a propósito para no romper `assembleDebug`
- * sin la dependencia (AGENTS.md: proponer líneas y esperar).
  * `level`/`goal` se guardan como `name` del enum; `updatedAt` + `deleted`
  * = borrado lógico sync-ready.
  */
+@Entity(tableName = "profile")
 data class ProfileEntity(
-    val id: String = "me",
+    @PrimaryKey val id: String = "me",
     val displayName: String = "",
     val age: Int? = null,
     val heightCm: Int? = null,
