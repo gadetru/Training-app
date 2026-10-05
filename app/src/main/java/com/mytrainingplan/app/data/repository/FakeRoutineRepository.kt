@@ -132,7 +132,10 @@ class FakeRoutineRepository(
     override suspend fun addExercises(routineId: String, ids: List<String>) {
         if (ids.isEmpty()) return
         ensureDraft(routineId) ?: return
-        val resolved = ids.mapNotNull { exercises.getById(it) }
+        val resolved = mutableListOf<Exercise>()
+        for (id in ids) {
+            exercises.getById(id)?.let { resolved.add(it) }
+        }
         if (resolved.isEmpty()) return
         drafts.update { map ->
             val current = map[routineId] ?: return@update map

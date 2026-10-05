@@ -18,11 +18,6 @@ class RoomExerciseRepository(
     override fun observeExercises(filter: ExerciseFilter): Flow<List<Exercise>> =
         dao.observeAll().map { list -> list.map { it.toDomain() }.applyFilter(filter) }
 
-    override fun getById(id: String): Exercise? =
-        throw UnsupportedOperationException(
-            "Room es asíncrono: usa observeExercises y filtra por id en el ViewModel (paso 11)."
-        )
-
-    suspend fun getByIdSuspend(id: String): Exercise? =
+    override suspend fun getById(id: String): Exercise? =
         dao.getById(id)?.toDomain()
 }
