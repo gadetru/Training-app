@@ -14,7 +14,13 @@ Hecho Fase A entera (UI-first en memoria, sin Room), 5/5 vistas:
 `MainActivity.kt` ya no muestra Profile directo: `TrainingNav()` con `NavHost` condicional `¿hay perfil? home:profile`
 (rutas `home/calendar/progress/profile` + `routineEdit?routineId` + `workout?routineId`; `onStart` de Home abre la sesión;
 el tab Perfil reutiliza `ProfileScreen` sin dock).
-Siguiente: Fase B Room local.
+Hecha Fase B Room local y mergeada en `main` (rama `006-fase-b-room-local`, PR #7): entidades + DAOs con `@Upsert`,
+`exportSchema=true`, repositorios Room con la misma firma que los fakes, Hilt, `CatalogTagStore` (DataStore),
+Retrofit + Gson que solo rellena vía `CatalogSync`, y `CatalogMappingTest` (DTO → dominio → entidad).
+En curso `007-catalogo-fork` (rama `007-catalogo-fork`, sin mergear): tag `v1.1.0` del fork `gadetru` verificado
+(1323 entradas), `CatalogSync` distingue 404 (con `Log`) de sin-red, `getById` pasa a `suspend`,
+DTO con `alternate` camelCase + envoltorio `CatalogResponse`; pendiente commit del paso 5 y prueba en móvil físico.
+Siguiente: probar 007 en móvil físico y mergear; luego Fase C (ejercicios propios `CUSTOM`) / Fase D Spring/MySQL.
 `docs/`, `specs/`, `references/` siguen siendo guía objetivo/diseño, no código hecho.
 Desviación conocida: `material-icons-core` solo trae 49 iconos (fallbacks `List/DateRange/Star/Person` en `HomeScreen.kt:67-82`);
 fidelidad exacta a los iconos del spec exigiría `material-icons-extended` (proponer y esperar).
@@ -30,13 +36,14 @@ El esqueleto Gradle lo crea y mantiene Android Studio, **no el agente**. No crea
 `gradle/libs.versions.toml`, `build.gradle.kts` (raíz y `app/`).
 Excepción lote A consumida: `navigation-compose, lifecycle-viewmodel-compose, material-icons-core, coil-compose`
 ya declarados (`app/build.gradle.kts:42-45`) y en uso (navigation, viewmodel, icons; coil aún sin uso real, picker pendiente).
-No añadir más dependencias: Fases B/C (Room/Hilt/DataStore/Retrofit) y `material-icons-extended`
+Excepción lote B consumida (spec 006, mergeado): `room, hilt, datastore-preferences, retrofit + converter-gson`
+ya declarados y en uso (Room/Hilt/DataStore/Retrofit). No añadir más dependencias: `material-icons-extended`
 solo proponer línea exacta y esperar. El agente trabaja Kotlin en `app/src/main/`, recursos y documentación.
 
 ## Comandos
 
 - Compilar: `./gradlew assembleDebug` (requiere Android SDK; `local.properties` con `sdk.dir`, no se versiona).
-- Tests plantilla: `./gradlew testDebugUnitTest` (solo `ExampleUnitTest`; no hay suites reales aún).
+- Tests: `./gradlew testDebugUnitTest` (`CatalogMappingTest` 4/4 en verde + `ExampleUnitTest` de plantilla).
 - Verificación real: probar en **móvil físico** con depuración USB/inalámbrica; **sin emulador**.
 - Proyecto: `applicationId`/`namespace` `com.mytrainingplan.app`, `minSdk 26`, `compileSdk/targetSdk 37`, Java 11.
 

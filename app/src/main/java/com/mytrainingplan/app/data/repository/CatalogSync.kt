@@ -31,7 +31,7 @@ class CatalogSync(
         val applied = tags.observeTag().first()
         if (applied == CatalogConfig.CATALOG_TAG) return
         val remote = try {
-            api.getExercises(lang)
+            api.getExercises(lang).exercises
         } catch (e: HttpException) {
             if (e.code() == 404) {
                 Log.w(TAG, "Catálogo: tag ${CatalogConfig.CATALOG_TAG} inexistente (404) en api/$lang/exercises.json; revisa el tag del fork, no se guarda tag")
