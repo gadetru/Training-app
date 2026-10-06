@@ -30,6 +30,8 @@ data class Exercise(
     /** Categoría API (strength/stretching/cardio/plyometrics). */
     val category: String,
     val secondaryMuscles: List<String> = emptyList(),
+    /** Pasos en español del catálogo (`instructions` del JSON, spec 010). */
+    val instructions: List<String> = emptyList(),
     val gifUrl: String = "",
     val source: ExerciseSource = ExerciseSource.CATALOG,
     // Sync-ready Fase B: toda entidad de usuario llevará estos campos.
