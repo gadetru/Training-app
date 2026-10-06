@@ -37,6 +37,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
@@ -65,9 +68,9 @@ fun ProfileScreen(
     onSave: (Profile) -> Unit = {}
 ) {
     var displayName by remember(initial) { mutableStateOf(initial?.displayName ?: "Carlos Mendoza") }
-    var ageText by remember(initial) { mutableStateOf((initial?.age ?: 28)?.toString() ?: "") }
-    var heightText by remember(initial) { mutableStateOf((initial?.heightCm ?: 178)?.toString() ?: "") }
-    var weightText by remember(initial) { mutableStateOf((initial?.weightKg ?: 78.5)?.toString() ?: "") }
+    var ageText by remember(initial) { mutableStateOf((initial?.age ?: 28).toString()) }
+    var heightText by remember(initial) { mutableStateOf((initial?.heightCm ?: 178).toString()) }
+    var weightText by remember(initial) { mutableStateOf((initial?.weightKg ?: 78.5).toString()) }
     var level by remember(initial) { mutableStateOf(initial?.level ?: TrainingLevel.INTERMEDIO) }
     var goal by remember(initial) { mutableStateOf(initial?.goal ?: TrainingGoal.FUERZA_POTENCIA) }
     // avatarUri se cableará con picker + Coil en el siguiente paso.
@@ -144,10 +147,15 @@ private fun ProfileContent(
             ) {
                 Box(
                     modifier = Modifier
-                        .size(40.dp)
+                        .size(48.dp)
                         .clip(CircleShape)
                         .background(Card)
-                        .clickable(onClick = onBack),
+                        .clickable(
+                            onClickLabel = "Volver",
+                            role = Role.Button,
+                            onClick = onBack
+                        )
+                        .semantics { contentDescription = "Volver" },
                     contentAlignment = Alignment.Center
                 ) {
                     Text("←", color = TextPrimary, fontSize = 20.sp)
@@ -227,11 +235,16 @@ private fun ProfileContent(
                         Box(
                             modifier = Modifier
                                 .align(Alignment.BottomEnd)
-                                .size(36.dp)
+                                .size(48.dp)
                                 .clip(CircleShape)
                                 .background(Orange)
                                 .border(2.dp, Bg, CircleShape)
-                                .clickable(onClick = onAvatarClick),
+                                .clickable(
+                                    onClickLabel = "Cambiar foto de perfil",
+                                    role = Role.Button,
+                                    onClick = onAvatarClick
+                                )
+                                .semantics { contentDescription = "Cambiar foto de perfil" },
                             contentAlignment = Alignment.Center
                         ) {
                             Text("📷", fontSize = 16.sp)
@@ -243,7 +256,11 @@ private fun ProfileContent(
                         color = Orange,
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Bold,
-                        modifier = Modifier.clickable(onClick = onAvatarClick)
+                        modifier = Modifier.clickable(
+                            onClickLabel = "Cambiar foto de perfil",
+                            role = Role.Button,
+                            onClick = onAvatarClick
+                        )
                     )
                     Spacer(Modifier.height(4.dp))
                     Text(
@@ -289,6 +306,7 @@ private fun ProfileContent(
                                 color = Orange,
                                 fontSize = 20.sp,
                                 modifier = Modifier.align(Alignment.CenterEnd).padding(end = 12.dp)
+                                    .semantics { contentDescription = "Nombre válido" }
                             )
                         }
                     }
@@ -364,7 +382,10 @@ private fun ProfileContent(
                                         if (selected) Orange else BorderSubtle,
                                         RoundedCornerShape(12.dp)
                                     )
-                                    .clickable { onLevel(lv) }
+                                    .clickable(
+                                        onClickLabel = "Seleccionar nivel ${lv.displayName}",
+                                        role = Role.Button
+                                    ) { onLevel(lv) }
                                     .padding(vertical = 10.dp),
                                 horizontalAlignment = Alignment.CenterHorizontally
                             ) {
@@ -396,7 +417,10 @@ private fun ProfileContent(
                                     .clip(RoundedCornerShape(999.dp))
                                     .background(if (selected) Orange else Card2)
                                     .border(1.dp, if (selected) Orange else BorderSubtle, RoundedCornerShape(999.dp))
-                                    .clickable { onGoal(g) }
+                                    .clickable(
+                                        onClickLabel = "Seleccionar enfoque ${g.displayName}",
+                                        role = Role.Button
+                                    ) { onGoal(g) }
                                     .padding(horizontal = 12.dp, vertical = 8.dp)
                             ) {
                                 Text(

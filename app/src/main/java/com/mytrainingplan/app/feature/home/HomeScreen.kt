@@ -48,13 +48,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.mytrainingplan.app.data.repository.FakeHomeRepository
 import com.mytrainingplan.app.domain.model.AccentColor
 import com.mytrainingplan.app.domain.model.FootKind
 import com.mytrainingplan.app.domain.model.HomeUiState
@@ -275,7 +275,7 @@ private fun TopBar(
             modifier = Modifier
                 .clip(RoundedCornerShape(999.dp))
                 .background(Orange)
-                .clickable(onClick = onCreate)
+                .clickable(role = Role.Button, onClickLabel = "Crear rutina", onClick = onCreate)
                 .padding(horizontal = 14.dp, vertical = 10.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -316,7 +316,7 @@ private fun RoutineFeed(
             Box(
                 modifier = Modifier
                     .size(48.dp)
-                    .clickable(onClick = onSort),
+                    .clickable(role = Role.Button, onClickLabel = "Ordenar rutinas", onClick = onSort),
                 contentAlignment = Alignment.Center
             ) {
                 // Sort no está en material-icons-core → fallback List.
@@ -402,7 +402,7 @@ private fun RoutineCard(
                     Box(
                         modifier = Modifier
                             .size(48.dp)
-                            .clickable(onClick = { menuExpanded = true }),
+                            .clickable(role = Role.Button, onClickLabel = "Opciones de rutina", onClick = { menuExpanded = true }),
                         contentAlignment = Alignment.TopCenter
                     ) {
                         Icon(Icons.Filled.MoreVert, contentDescription = "Opciones", tint = TextMuted, modifier = Modifier.size(22.dp))
@@ -470,7 +470,7 @@ private fun RoutineCard(
                         .clip(RoundedCornerShape(999.dp))
                         .background(if (primary) Orange else Card2)
                         .border(1.dp, if (primary) Orange else BorderSubtle, RoundedCornerShape(999.dp))
-                        .clickable(onClick = onStart)
+                        .clickable(role = Role.Button, onClickLabel = "Iniciar rutina", onClick = onStart)
                         .padding(horizontal = 16.dp, vertical = 10.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
@@ -587,7 +587,7 @@ private fun CalendarWidget(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .clickable(onClick = onSeeMonth)
+                .clickable(role = Role.Button, onClickLabel = "Ver mes", onClick = onSeeMonth)
                 .padding(vertical = 8.dp),
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically
@@ -637,7 +637,7 @@ private fun ProgressWidget(
         ) {
             Box(
                 modifier = Modifier
-                    .fillMaxWidth(progress.progressFraction)
+                    .fillMaxWidth(progress.progressFraction.coerceIn(0f, 1f))
                     .height(6.dp)
                     .clip(RoundedCornerShape(999.dp))
                     .background(Volt)
@@ -693,7 +693,7 @@ fun BottomDock(
             Column(
                 modifier = Modifier
                     .clip(RoundedCornerShape(16.dp))
-                    .clickable(onClick = { onTabSelected(tab) })
+                    .clickable(role = Role.Tab, onClickLabel = tab.label, onClick = { onTabSelected(tab) })
                     .padding(horizontal = 14.dp)
                     // Hit target >= 48dp.
                     .height(56.dp),
@@ -728,6 +728,35 @@ fun BottomDock(
 @Composable
 private fun HomeContentPreview() {
     androidx.compose.material3.MaterialTheme {
-        HomeContent(uiState = FakeHomeRepository.defaultHome())
+        // Solo domain/model: sin dependencias de data/repository en la feature.
+        HomeContent(
+            uiState = HomeUiState(
+                firstName = "Carlos",
+                routines = listOf(
+                    RoutineSummary(
+                        id = "preview-1",
+                        title = "Torso - Fuerza & Hipertrofia",
+                        tags = listOf("Pecho", "Espalda"),
+                        durationMin = 45,
+                        exerciseCount = 6,
+                        lastDoneLabel = "Hace 2 días",
+                        accent = AccentColor.ORANGE,
+                        footNote = "Récord en Press Banca",
+                        footKind = FootKind.PR
+                    ),
+                    RoutineSummary(
+                        id = "preview-2",
+                        title = "Pierna & Core Explosivo",
+                        tags = listOf("Cuádriceps", "Abdomen"),
+                        durationMin = 55,
+                        exerciseCount = 7,
+                        accent = AccentColor.VOLT,
+                        footNote = "Enfoque: Sentadilla profunda",
+                        footKind = FootKind.INFO
+                    )
+                ),
+                progress = WeeklyProgress()
+            )
+        )
     }
 }

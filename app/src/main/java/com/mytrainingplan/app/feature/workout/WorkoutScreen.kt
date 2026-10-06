@@ -33,8 +33,10 @@ import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -238,28 +240,30 @@ fun WorkoutContent(
                     )
                 },
                 dismissButton = {
-                    Row(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(999.dp))
-                            .background(CardHigh)
-                            .clickable(onClick = { showDiscardDialog = false })
-                            .padding(horizontal = 16.dp, vertical = 10.dp)
+                    TextButton(
+                        onClick = { showDiscardDialog = false },
+                        shape = RoundedCornerShape(999.dp),
+                        colors = ButtonDefaults.textButtonColors(
+                            containerColor = CardHigh,
+                            contentColor = TextPrimary
+                        )
                     ) {
-                        Text("Seguir", color = TextPrimary, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                        Text("Seguir", fontSize = 12.sp, fontWeight = FontWeight.Bold)
                     }
                 },
                 confirmButton = {
-                    Row(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(999.dp))
-                            .background(ErrorRed)
-                            .clickable(onClick = {
-                                showDiscardDialog = false
-                                onDiscard()
-                            })
-                            .padding(horizontal = 16.dp, vertical = 10.dp)
+                    TextButton(
+                        onClick = {
+                            showDiscardDialog = false
+                            onDiscard()
+                        },
+                        shape = RoundedCornerShape(999.dp),
+                        colors = ButtonDefaults.textButtonColors(
+                            containerColor = ErrorRed,
+                            contentColor = Color(0xFF1A0A00)
+                        )
                     ) {
-                        Text("Descartar", color = Color(0xFF1A0A00), fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                        Text("Descartar", fontSize = 12.sp, fontWeight = FontWeight.Bold)
                     }
                 }
             )
@@ -488,15 +492,18 @@ private fun ExerciseAccordion(
             Column(modifier = Modifier.padding(12.dp)) {
                 SetsHeaderRow()
                 Spacer(Modifier.height(6.dp))
+                // Se calcula una vez por composición (no por fila): idéntico
+                // resultado que el filter+minBy por fila, sin coste O(n²).
+                val nextPendingId = item.entries
+                    .filter { !it.done }
+                    .minByOrNull { it.setNumber }?.id
                 item.entries.forEach { entry ->
                     val planned = item.planned.find { it.id == entry.plannedSetId }
                         ?: item.planned.find { it.setNumber == entry.setNumber }
                     SetRow(
                         entry = entry,
                         planned = planned,
-                        isNext = !entry.done && item.entries
-                            .filter { !it.done }
-                            .minByOrNull { it.setNumber }?.id == entry.id,
+                        isNext = !entry.done && entry.id == nextPendingId,
                         onKgChange = { onKgChange(entry.id, it) },
                         onRepsChange = { onRepsChange(entry.id, it) },
                         onToggleDone = { onToggleDone(entry.id) }
@@ -786,7 +793,7 @@ private fun Stepper(
         // Remove no está en material-icons-core → texto −/+ simétrico.
         Box(
             modifier = Modifier
-                .size(32.dp)
+                .size(48.dp)
                 .clickable(onClick = onMinus),
             contentAlignment = Alignment.Center
         ) {
@@ -802,7 +809,7 @@ private fun Stepper(
         )
         Box(
             modifier = Modifier
-                .size(32.dp)
+                .size(48.dp)
                 .clickable(onClick = onPlus),
             contentAlignment = Alignment.Center
         ) {
