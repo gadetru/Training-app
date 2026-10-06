@@ -21,6 +21,8 @@ data class ExerciseEntity(
     val equipment: String = "",
     val category: String = "",
     val secondaryMuscles: List<String> = emptyList(),
+    /** Pasos ES del catálogo (spec 010); reutiliza el conversor JSON actual. */
+    val instructions: List<String> = emptyList(),
     val gifUrl: String = "",
     val source: String = "CATALOG",
     val updatedAt: Long = 0L,
