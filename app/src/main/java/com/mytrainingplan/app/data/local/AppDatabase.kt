@@ -3,6 +3,8 @@ package com.mytrainingplan.app.data.local
 import androidx.room.Database
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
+import androidx.room.migration.Migration
+import androidx.sqlite.db.SupportSQLiteDatabase
 import com.mytrainingplan.app.data.local.dao.ExerciseDao
 import com.mytrainingplan.app.data.local.dao.PlannedSetDao
 import com.mytrainingplan.app.data.local.dao.ProfileDao
@@ -19,7 +21,7 @@ import com.mytrainingplan.app.data.local.entity.SetEntryEntity
 import com.mytrainingplan.app.data.local.entity.WorkoutSessionEntity
 
 /**
- * Base Room v1 (Paso 3 spec 006, Fase B).
+ * Base Room v2 (Paso 3 spec 006, Fase B; v2 spec 010: +`instructions`).
  * 7 tablas espejo del dominio. `exportSchema = true`, esquemas en
  * `app/schemas/` (se generan al sincronizar en Android Studio con red;
  * aquí se deja la carpeta lista). `fallbackToDestructiveMigration()` solo
@@ -35,7 +37,7 @@ import com.mytrainingplan.app.data.local.entity.WorkoutSessionEntity
         WorkoutSessionEntity::class,
         SetEntryEntity::class
     ],
-    version = 1,
+    version = 2,
     exportSchema = true
 )
 @TypeConverters(Converters::class)
@@ -47,4 +49,15 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun plannedSetDao(): PlannedSetDao
     abstract fun workoutSessionDao(): WorkoutSessionDao
     abstract fun setEntryDao(): SetEntryDao
+}
+
+/**
+ * Migración 1→2 (spec 010): añade `instructions` (JSON `[]` por defecto)
+ * a `exercises`. Filas viejas quedan con lista vacía y la re-descarga del
+ * catálogo (mismo tag) las rellena vía `upsert`.
+ */
+val MIGRATION_1_2 = object : Migration(1, 2) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE exercises ADD COLUMN instructions TEXT NOT NULL DEFAULT '[]'")
+    }
 }

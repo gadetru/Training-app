@@ -3,6 +3,7 @@ package com.mytrainingplan.app.core.di
 import android.content.Context
 import androidx.room.Room
 import com.mytrainingplan.app.data.local.AppDatabase
+import com.mytrainingplan.app.data.local.MIGRATION_1_2
 import com.mytrainingplan.app.data.local.dao.ExerciseDao
 import com.mytrainingplan.app.data.local.dao.PlannedSetDao
 import com.mytrainingplan.app.data.local.dao.ProfileDao
@@ -29,7 +30,9 @@ object DatabaseModule {
     @Provides
     @Singleton
     fun provideDatabase(@ApplicationContext ctx: Context): AppDatabase =
-        Room.databaseBuilder(ctx, AppDatabase::class.java, "training.db").build()
+        Room.databaseBuilder(ctx, AppDatabase::class.java, "training.db")
+            .addMigrations(MIGRATION_1_2)
+            .build()
 
     @Provides fun provideProfileDao(db: AppDatabase): ProfileDao = db.profileDao()
     @Provides fun provideExerciseDao(db: AppDatabase): ExerciseDao = db.exerciseDao()
