@@ -92,7 +92,11 @@ fun TrainingNav() {
                 // el ViewModel buscaba un id inexistente y tragaba toda edición).
                 onCreate = { navController.navigate(ROUTE_ROUTINE_EDIT_NEW) },
                 // Spec 005: `Iniciar` abre la sesión en vivo de esa rutina.
-                onStart = { navController.navigate("workout?$ARG_ROUTINE_ID=$it") }
+                onStart = { navController.navigate("workout?$ARG_ROUTINE_ID=$it") },
+                // Menú ··· (P0 TODO vivo): `Editar` abre el constructor con esa
+                // rutina (la ruta ya aceptaba routineId); `Eliminar` lo gestiona
+                // Home internamente con confirmación + borrado lógico.
+                onEdit = { navController.navigate("routineEdit?$ARG_ROUTINE_ID=$it") }
             )
         }
         composable(

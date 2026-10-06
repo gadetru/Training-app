@@ -76,6 +76,9 @@ interface RoutineRepository {
 
     /** Descarta el borrador; la guardada (si la había) queda intacta. */
     suspend fun discard(routineId: String)
+
+    /** Elimina la rutina guardada (borrado lógico en Room, del mapa en el fake). */
+    suspend fun deleteRoutine(routineId: String)
 }
 
 /**
@@ -243,6 +246,18 @@ class FakeRoutineRepository(
 
     override suspend fun discard(routineId: String) {
         drafts.update { it - routineId }
+    }
+
+    override suspend fun deleteRoutine(routineId: String) {
+        drafts.update { it - routineId }
+        saved.update { map ->
+            val remaining = (map - routineId).values
+                .sortedBy { it.routine.position }
+                .mapIndexed { index, detail ->
+                    detail.copy(routine = detail.routine.copy(position = index))
+                }
+            remaining.associateBy { it.routine.id }
+        }
     }
 
     /** Copia la guardada a borrador si aún no hay sesión de edición. */

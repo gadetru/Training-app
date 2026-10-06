@@ -184,6 +184,15 @@ class RoomRoutineRepository(
         renumberRoutines()
     }
 
+    override suspend fun deleteRoutine(routineId: String) {
+        // Borrado desde el menú ··· de Home: borrado lógico + renumber sin huecos.
+        // Las sesiones históricas quedan intactas (WorkoutSession.routineId es
+        // solo referencia, sin FK en cascada).
+        val cur = routines.getById(routineId)?.toDomain() ?: return
+        routines.upsert(cur.copy(deleted = true).toEntity())
+        renumberRoutines()
+    }
+
     /** Recalcula `position` 0..n-1 sin huecos tras un borrado lógico (spec 008). */
     private suspend fun renumberRoutines() {
         val remaining = routines.observeAll().first().sortedBy { it.position }

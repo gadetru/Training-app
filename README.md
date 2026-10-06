@@ -138,3 +138,32 @@ Para que una versión actualice a la anterior (y no borre datos):
 - Firmar siempre con la misma keystore (con copia de seguridad fuera del repositorio).
 - Subir `versionCode` en cada versión.
 - Si cambia el esquema de Room, subir la versión de la base de datos y escribir su migración.
+
+## Próximos pasos (TODO vivo)
+
+> Referencia de detalles que faltan. Marcar `[x]` solo con evidencia (`assembleDebug` + móvil físico). Los `specs/` cerrados no se reescriben.
+
+### P0 — Rutinas (menú ···)
+- [x] `···` de cada card abre menú `Editar / Eliminar` (`HomeScreen RoutineCard + DropdownMenu`, `MainActivity` pasa `onOptions` real).
+- [x] `Eliminar` pide confirmación (`AlertDialog`: `¿Eliminar "X"?`) y al `Sí` borra lógico (`RoomRoutineRepository.deleteRoutine` + espejo en `Fake` + `renumber` sin huecos, `@Upsert`, sesiones históricas intactas).
+- [x] `Editar` navega a `routineEdit?routineId=id` y permite cambiar título/duración, añadir/quitar ejercicios y series (reutiliza constructor `004`).
+- [ ] Verificado en móvil físico: menú, cancelar, eliminar, editar, rotación, gestos/3 botones (el diálogo gestiona insets solo).
+
+### P1 — MVP bloqueantes
+- [ ] Detalle ejercicio (MVP-2): tap fila → GIF grande + instrucciones + secundarios. Requiere rescatar `instructions` (`DTO→Entity→dominio`, migración DB v1→v2) + ruta detalle.
+- [ ] Ejercicios propios CUSTOM (MVP-3): crear/editar desde app (`insert` en `ExerciseRepository` + UI formulario); `CatalogSync` ya protege `CUSTOM`.
+- [ ] Historial + `home-post-sesion` (MVP-7): ruta `history`, lista sesiones, `lastDoneLabel`/racha/progreso reales (hoy fijos `Home.kt:40-47`, `RoomHomeRepository.kt:35,38-43`); `Ver mes` cableado.
+
+### P2 — Sesión en vivo
+- [ ] `Añadir Ejercicio/Serie en vivo` (picker `003` reutilizado).
+- [ ] Notas/`loadNote` + RPE/DROP en vivo (modelo `Workout.kt:45` lo tiene, UI no).
+- [ ] Descanso avanzado: sonido/vibración, presets (hoy bloqueante + `±10s`).
+- [ ] Minimizar-background real (hoy solo visual, timer en RAM).
+
+### P3 — Deuda UX/técnica
+- [ ] Avatar picker + Coil (`PickVisualMedia` + URI persistente; hoy placeholder `ProfileScreen.kt:212`).
+- [ ] Tema: migrar tokens locales a `ui/theme/` + tipografías Outfit/Jakarta/Space Grotesk (hoy `Color.kt` plantilla + sistema).
+- [ ] `material-icons-extended` (proponer línea, esperar) o mantener fallbacks `List/DateRange/Star/Person`.
+- [ ] Catálogo `en` + reintento manual picker vacío (hoy solo `es` + auto al abrir).
+- [ ] Pulidos Fase A con datos reales; actualizar `AGENTS.md` (dice `007 en curso`, ya mergeado PR #8/#9/#10) y notas obsolescencia snake_case en `002/006`.
+- [ ] Fuera MVP (no tocar): accesorios tabla propia, gráficas, Spring/MySQL Fase 2.
