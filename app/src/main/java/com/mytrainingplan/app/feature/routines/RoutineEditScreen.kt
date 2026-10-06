@@ -128,7 +128,10 @@ fun RoutineEditScreen(
     routineId: String? = null,
     viewModel: RoutineEditViewModel = hiltViewModel(),
     onSaved: () -> Unit = {},
-    onBack: () -> Unit = {}
+    onBack: () -> Unit = {},
+    // Spec 010: la ficha abre desde editar rutina (miniatura/nombre) y
+    // desde el buscador (filas del sheet).
+    onExerciseClick: (String) -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
     LaunchedEffect(routineId) { viewModel.openRoutine(routineId) }
@@ -149,7 +152,8 @@ fun RoutineEditScreen(
         onAddSet = viewModel::onAddSet,
         onDeleteSet = viewModel::onDeleteSet,
         onSave = { viewModel.onSave(onSaved) },
-        onBack = { viewModel.onDiscard(onBack) }
+        onBack = { viewModel.onDiscard(onBack) },
+        onExerciseClick = onExerciseClick
     )
     if (showPicker) {
         ExercisePickerSheet(
@@ -159,7 +163,9 @@ fun RoutineEditScreen(
                 viewModel.onAddExercises(ids)
             },
             // Cerrar/X descarta sin añadir y sin crash.
-            onDismiss = { showPicker = false }
+            onDismiss = { showPicker = false },
+            // Spec 010: la ficha abre desde el buscador.
+            onExerciseClick = onExerciseClick
         )
     }
 }
@@ -177,7 +183,8 @@ fun RoutineEditContent(
     onAddSet: (String) -> Unit = {},
     onDeleteSet: (String, String) -> Unit = { _, _ -> },
     onSave: () -> Unit = {},
-    onBack: () -> Unit = {}
+    onBack: () -> Unit = {},
+    onExerciseClick: (String) -> Unit = {}
 ) {
     // Modal de nombre: se abre desde el lápiz (o el propio título); overlay
     // sobre el constructor, que conserva su posición/scroll al cerrar.
@@ -216,6 +223,7 @@ fun RoutineEditContent(
                         item = item,
                         onToggleExpanded = { onToggleExpanded(item.routineExercise.id) },
                         onDeleteExercise = { onDeleteExercise(item.routineExercise.id) },
+                        onExerciseClick = onExerciseClick,
                         onSetFieldChange = { setId, field, raw ->
                             onSetFieldChange(item.routineExercise.id, setId, field, raw)
                         },
@@ -531,6 +539,7 @@ private fun ExerciseAccordion(
     item: RoutineExerciseUi,
     onToggleExpanded: () -> Unit,
     onDeleteExercise: () -> Unit,
+    onExerciseClick: (String) -> Unit = {},
     onSetFieldChange: (String, SetField, String) -> Unit,
     onRirChange: (String, Int?) -> Unit,
     onAddSet: () -> Unit,
@@ -542,6 +551,7 @@ private fun ExerciseAccordion(
             item = item,
             onToggleExpanded = onToggleExpanded,
             onDeleteExercise = onDeleteExercise,
+            onExerciseClick = onExerciseClick,
             onSetFieldChange = onSetFieldChange,
             onRirChange = onRirChange,
             onAddSet = onAddSet,
@@ -552,7 +562,8 @@ private fun ExerciseAccordion(
             index = index,
             item = item,
             onToggleExpanded = onToggleExpanded,
-            onDeleteExercise = onDeleteExercise
+            onDeleteExercise = onDeleteExercise,
+            onExerciseClick = onExerciseClick
         )
     }
 }
@@ -563,6 +574,7 @@ private fun ExpandedExerciseCard(
     item: RoutineExerciseUi,
     onToggleExpanded: () -> Unit,
     onDeleteExercise: () -> Unit,
+    onExerciseClick: (String) -> Unit = {},
     onSetFieldChange: (String, SetField, String) -> Unit,
     onRirChange: (String, Int?) -> Unit,
     onAddSet: () -> Unit,
@@ -602,7 +614,9 @@ private fun ExpandedExerciseCard(
                 modifier = Modifier
                     .size(56.dp)
                     .clip(RoundedCornerShape(12.dp))
-                    .background(CardHigh),
+                    .background(CardHigh)
+                    // Spec 010: la miniatura abre la ficha.
+                    .clickable(onClick = { onExerciseClick(item.exercise.id) }),
                 contentAlignment = Alignment.BottomEnd
             ) {
                 AsyncImage(
@@ -631,7 +645,9 @@ private fun ExpandedExerciseCard(
                     fontSize = 15.sp,
                     fontWeight = FontWeight.SemiBold,
                     maxLines = 2,
-                    overflow = TextOverflow.Ellipsis
+                    overflow = TextOverflow.Ellipsis,
+                    // Spec 010: el nombre abre la ficha.
+                    modifier = Modifier.clickable(onClick = { onExerciseClick(item.exercise.id) })
                 )
                 Spacer(Modifier.height(2.dp))
                 Text(
@@ -965,7 +981,8 @@ private fun CollapsedExerciseCard(
     index: Int,
     item: RoutineExerciseUi,
     onToggleExpanded: () -> Unit,
-    onDeleteExercise: () -> Unit
+    onDeleteExercise: () -> Unit,
+    onExerciseClick: (String) -> Unit = {}
 ) {
     val summary = if (item.sets.isEmpty()) {
         "Sin series"
@@ -1006,7 +1023,9 @@ private fun CollapsedExerciseCard(
                 fontSize = 15.sp,
                 fontWeight = FontWeight.SemiBold,
                 maxLines = 1,
-                overflow = TextOverflow.Ellipsis
+                overflow = TextOverflow.Ellipsis,
+                // Spec 010: el nombre abre la ficha (el resto expande).
+                modifier = Modifier.clickable(onClick = { onExerciseClick(item.exercise.id) })
             )
             Spacer(Modifier.height(2.dp))
             Text(summary, color = TextMuted, fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)

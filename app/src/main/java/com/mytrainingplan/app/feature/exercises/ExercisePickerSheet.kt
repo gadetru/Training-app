@@ -132,7 +132,9 @@ private fun equipmentLabel(value: String): String = EQUIPMENT_LABELS[value] ?: v
 fun ExercisePickerSheet(
     viewModel: ExercisesViewModel = hiltViewModel(),
     onConfirm: (List<String>) -> Unit = {},
-    onDismiss: () -> Unit = {}
+    onDismiss: () -> Unit = {},
+    // Spec 010: pulsar una fila abre la ficha del ejercicio.
+    onExerciseClick: (String) -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
     ModalBottomSheet(
@@ -157,6 +159,7 @@ fun ExercisePickerSheet(
             onToggleSelected = viewModel::onToggleSelected,
             onConfirm = { onConfirm(uiState.selectedIds.toList()) },
             onDismiss = onDismiss,
+            onExerciseClick = onExerciseClick,
             modifier = Modifier.fillMaxHeight(0.88f)
         )
     }
@@ -171,6 +174,7 @@ fun ExercisePickerContent(
     onToggleSelected: (String) -> Unit = {},
     onConfirm: () -> Unit = {},
     onDismiss: () -> Unit = {},
+    onExerciseClick: (String) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -219,7 +223,9 @@ fun ExercisePickerContent(
                     ExerciseRow(
                         exercise = exercise,
                         selected = exercise.id in uiState.selectedIds,
-                        onToggle = { onToggleSelected(exercise.id) }
+                        onToggle = { onToggleSelected(exercise.id) },
+                        // Spec 010: la fila abre la ficha; la píldora añade.
+                        onDetail = { onExerciseClick(exercise.id) }
                     )
                 }
             }
@@ -364,7 +370,8 @@ private fun ResultsCount(count: Int) {
 private fun ExerciseRow(
     exercise: Exercise,
     selected: Boolean,
-    onToggle: () -> Unit
+    onToggle: () -> Unit,
+    onDetail: () -> Unit = {}
 ) {
     Row(
         modifier = Modifier
@@ -376,6 +383,7 @@ private fun ExerciseRow(
                 if (selected) Volt else BorderSubtle,
                 RoundedCornerShape(16.dp)
             )
+            .clickable(onClick = onDetail)
             .padding(10.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
