@@ -47,6 +47,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -173,7 +174,7 @@ fun WorkoutContent(
 ) {
     // Confirmación de descarte: overlay propio (AlertDialog gestiona insets solo).
     var showDiscardDialog by rememberSaveable { mutableStateOf(false) }
-    Box(modifier = Modifier.fillMaxSize().background(Bg)) {
+    Box(modifier = Modifier.fillMaxSize().background(Bg).testTag("workoutRoot")) {
         Column(modifier = Modifier.fillMaxSize()) {
             SessionHeader(
                 routineName = uiState.routineName,
@@ -904,7 +905,8 @@ private fun SessionBar(
                 .clip(RoundedCornerShape(999.dp))
                 .background(Orange)
                 .clickable(onClick = onFinish)
-                .padding(vertical = 12.dp),
+                .padding(vertical = 12.dp)
+                .testTag("workoutFinish"),
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -940,9 +942,10 @@ private fun SessionBar(
  * no se puede quitar por toque fuera (el scrim consume los taps) ni por
  * atrás (BackHandler consumido en [WorkoutScreen]); solo al llegar a 0 o
  * pulsar `Terminar descanso`. Hit targets >= 48dp.
+ * Pública (no private) para poder cubrirla con smoke en emulador sin Hilt.
  */
 @Composable
-private fun RestOverlay(
+fun RestOverlay(
     remainingSec: Int,
     totalSec: Int,
     onPlus: () -> Unit,
@@ -954,7 +957,8 @@ private fun RestOverlay(
         modifier = Modifier
             .fillMaxSize()
             .background(Color(0xBF000000))
-            .clickable(onClick = {}),
+            .clickable(onClick = {})
+            .testTag("restOverlay"),
         contentAlignment = Alignment.Center
     ) {
         Column(

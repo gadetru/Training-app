@@ -15,7 +15,7 @@ App Android para planificar rutinas y registrar entrenos de fuerza. Funciona sin
 - **Tecnología gratuita y open source** 
 - **Plan por serie:** cada serie de un ejercicio tiene sus propias repeticiones, peso y descanso, de forma independiente en cada día de entrenamiento.
 - **Lastre y gomas:** el peso admite signo (positivo = lastre, negativo = ayuda) y una nota libre (por ejemplo, "goma amarilla").
-- **Edge-to-edge:** la app dibuja a pantalla completa por debajo de las barras del sistema (`enableEdgeToEdge`), así que toda cabecera lleva `statusBarsPadding()` y todo dock/CTA inferior `navigationBarsPadding()` (verificado en móvil físico); prohibido compensar con dp fijos extra.
+- **Edge-to-edge:** la app dibuja a pantalla completa por debajo de las barras del sistema (`enableEdgeToEdge`), así que toda cabecera lleva `statusBarsPadding()` y todo dock/CTA inferior `navigationBarsPadding()` (verificado en emulador Pixel 6 API 34); prohibido compensar con dp fijos extra.
 
 ## Stack y herramientas
 
@@ -57,7 +57,8 @@ App Android para planificar rutinas y registrar entrenos de fuerza. Funciona sin
 
 ### Herramientas de desarrollo
 
-- Android Studio, probando directamente en un móvil físico (sin emulador).
+- Android Studio + SDK + **emulador Pixel 6 API 34** (`emulator-5554`).
+  El usuario crea/enciende el AVD; el agente lo consume vía `adb` + `connectedDebugAndroidTest`.
 - Git y GitHub.
 - Gradle Wrapper (`gradlew`), que fija la versión de Gradle del proyecto.
 
@@ -109,12 +110,13 @@ Del MVP, la Home ya cubre parcial: ver rutinas y punto de entrada a sesión (reg
 
 ## Compilar y ejecutar
 
-Requisitos: Android Studio, Android SDK y un móvil con **depuración USB** (o inalámbrica) activada.
+Requisitos: Android Studio, Android SDK y **emulador Pixel 6 API 34** (`emulator-5554`).
 El SDK se apunta en `local.properties` con `sdk.dir` (no se versiona).
 
 - Compilar: `./gradlew assembleDebug`
 - Tests: `./gradlew testDebugUnitTest` (`CatalogMappingTest` 4/4 en verde + `ExampleUnitTest` de plantilla)
-- Verificación real: probar en **móvil físico**, sin emulador.
+- Tests vistas (emulador encendido): `./gradlew connectedDebugAndroidTest` (`HomeNav/RoutineEdit/Workout` smoke con `testTag`)
+- Verificación: **emulador Pixel 6 API 34**, sin móvil físico.
 - Proyecto: `applicationId`/`namespace` `com.mytrainingplan.app`, `minSdk 26`, `compileSdk`/`targetSdk 37`, Java 11.
 
 ## Importante!
@@ -141,13 +143,13 @@ Para que una versión actualice a la anterior (y no borre datos):
 
 ## Próximos pasos (TODO vivo)
 
-> Referencia de detalles que faltan. Marcar `[x]` solo con evidencia (`assembleDebug` + móvil físico). Los `specs/` cerrados no se reescriben.
+> Referencia de detalles que faltan. Marcar `[x]` solo con evidencia (`assembleDebug` + `connectedDebugAndroidTest` en emulador Pixel 6 API 34). Los `specs/` cerrados no se reescriben.
 
 ### P0 — Rutinas (menú ···)
 - [x] `···` de cada card abre menú `Editar / Eliminar` (`HomeScreen RoutineCard + DropdownMenu`, `MainActivity` pasa `onOptions` real).
 - [x] `Eliminar` pide confirmación (`AlertDialog`: `¿Eliminar "X"?`) y al `Sí` borra lógico (`RoomRoutineRepository.deleteRoutine` + espejo en `Fake` + `renumber` sin huecos, `@Upsert`, sesiones históricas intactas).
 - [x] `Editar` navega a `routineEdit?routineId=id` y permite cambiar título/duración, añadir/quitar ejercicios y series (reutiliza constructor `004`).
-- [ ] Verificado en móvil físico: menú, cancelar, eliminar, editar, rotación, gestos/3 botones (el diálogo gestiona insets solo).
+- [ ] Verificado en emulador Pixel 6 API 34: menú, cancelar, eliminar, editar, rotación, gestos/3 botones (el diálogo gestiona insets solo).
 
 ### P1 — MVP bloqueantes
 - [ ] Detalle ejercicio (MVP-2): tap fila → GIF grande + instrucciones + secundarios. Requiere rescatar `instructions` (`DTO→Entity→dominio`, migración DB v1→v2) + ruta detalle.

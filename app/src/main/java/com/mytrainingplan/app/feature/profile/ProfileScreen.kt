@@ -35,6 +35,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.Role
@@ -134,6 +135,7 @@ private fun ProfileContent(
         modifier = Modifier
             .fillMaxSize()
             .background(Bg)
+            .testTag("profileRoot")
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
             // Header sticky (con colchón sobre la barra de estado: edge-to-edge).
@@ -515,6 +517,7 @@ private fun ProfileContent(
                         .fillMaxWidth()
                         .padding(horizontal = 20.dp, vertical = 16.dp)
                         .height(52.dp)
+                        .testTag("profileSave")
                 ) {
                     Text("Guardar y Continuar  →", fontSize = 15.sp, fontWeight = FontWeight.Bold)
                 }

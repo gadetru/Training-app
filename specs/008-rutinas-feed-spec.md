@@ -53,5 +53,5 @@ Toca `feature/home` (`HomeViewModel`, solo expone) y `data/repository` (`RoomHom
 - [ ] Crear y guardar una rutina → una sola card en home.
 - [ ] Editar y salir sin guardar → la anterior intacta.
 - [ ] Borrar una rutina → el resto conserva orden sin huecos.
-- [ ] `./gradlew assembleDebug` termina OK.
+- [x] `./gradlew assembleDebug` termina OK.
 - [ ] En móvil con gestos y con 3 botones nada queda bajo hora ni barra inferior.

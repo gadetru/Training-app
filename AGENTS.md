@@ -44,7 +44,10 @@ solo proponer línea exacta y esperar. El agente trabaja Kotlin en `app/src/main
 
 - Compilar: `./gradlew assembleDebug` (requiere Android SDK; `local.properties` con `sdk.dir`, no se versiona).
 - Tests: `./gradlew testDebugUnitTest` (`CatalogMappingTest` 4/4 en verde + `ExampleUnitTest` de plantilla).
-- Verificación real: probar en **móvil físico** con depuración USB/inalámbrica; **sin emulador**.
+- Verificación: **emulador Pixel 6 API 34** (`emulator-5554`, verificado vía `adb` 07-10-2026);
+- Tests auto: `testDebugUnitTest` (JVM) + `connectedDebugAndroidTest` (Compose smoke `HomeNav/RoutineEdit/Workout` con `testTag`);
+  `testTag` en raíces/CTAs (`profileRoot/profileSave`, `homeRoot/homeDock/routineCard:<id>`,
+  `routineEditRoot/routineEditAddExercise/routineEditSave`, `workoutRoot/workoutFinish/restOverlay).
 - Proyecto: `applicationId`/`namespace` `com.mytrainingplan.app`, `minSdk 26`, `compileSdk/targetSdk 37`, Java 11.
 
 ## Arquitectura objetivo (al implementar)
@@ -79,4 +82,4 @@ La app usa `enableEdgeToEdge()` (`MainActivity.kt`): el contenido dibuja por deb
 - Todo dock/CTA inferior fijo lleva `navigationBarsPadding()` (conservando su margen visual de 16dp).
 - Prohibido compensar con dp fijos extra que imiten la altura de las barras.
 - Excepciones que ya gestionan insets solas (no tocar): `ModalBottomSheet` y diálogos de Material3; contenido centrado sin elementos pegados a los bordes.
-- Checklist para futuras vistas: probar en móvil físico con navegación por gestos y (si se puede) con 3 botones; arriba nada bajo hora/cobertura/batería, abajo nada bajo la barra del sistema.
+- Checklist para futuras vistas: probar en emulador Pixel 6 API 34 con navegación por gestos y (si se puede) con 3 botones; arriba nada bajo hora/cobertura/batería, abajo nada bajo la barra del sistema.

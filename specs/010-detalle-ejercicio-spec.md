@@ -104,6 +104,6 @@ Fuente de datos: la base local; los GIF son solo direcciones que Coil guarda en 
 - [ ] Sin red la ficha abre con lo guardado y no se cae.
 - [ ] Volver atrás y rotar conserva la ficha sin duplicar ni perder.
 - [ ] Tras actualizar, los ejercicios viejos ya muestran instrucciones.
-- [ ] ./gradlew assembleDebug termina OK.
+- [x] ./gradlew assembleDebug termina OK.
 - [ ] Prueba CatalogMappingTest en verde.
 - [ ] En móvil con gestos y con 3 botones nada queda bajo hora ni barra inferior.

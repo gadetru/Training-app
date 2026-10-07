@@ -46,6 +46,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.semantics.Role
@@ -167,6 +168,7 @@ fun HomeContent(
         modifier = Modifier
             .fillMaxSize()
             .background(Bg)
+            .testTag("homeRoot")
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
             TopBar(
@@ -296,7 +298,7 @@ private fun RoutineFeed(
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Row(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth().testTag("routineFeedHeader"),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -349,6 +351,7 @@ private fun RoutineCard(
             .background(Card)
             .border(1.dp, BorderSubtle, RoundedCornerShape(16.dp))
             .padding(16.dp)
+            .testTag("routineCard:${routine.id}")
     ) {
         // Accent bar lateral.
         Box(
@@ -684,7 +687,8 @@ fun BottomDock(
             .clip(RoundedCornerShape(24.dp))
             .background(Color(0xE61E2023))
             .border(1.dp, BorderSubtle, RoundedCornerShape(24.dp))
-            .padding(horizontal = 8.dp, vertical = 6.dp),
+            .padding(horizontal = 8.dp, vertical = 6.dp)
+            .testTag("homeDock"),
         horizontalArrangement = Arrangement.SpaceAround,
         verticalAlignment = Alignment.CenterVertically
     ) {

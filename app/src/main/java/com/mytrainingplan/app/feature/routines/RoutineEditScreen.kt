@@ -51,6 +51,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
@@ -193,6 +194,7 @@ fun RoutineEditContent(
         modifier = Modifier
             .fillMaxSize()
             .background(Bg)
+            .testTag("routineEditRoot")
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
             EditHeader(
@@ -518,7 +520,8 @@ private fun AddExerciseButton(onClick: () -> Unit) {    Row(
             .clip(RoundedCornerShape(12.dp))
             .background(Card)
             .clickable(onClick = onClick)
-            .padding(vertical = 14.dp, horizontal = 16.dp),
+            .padding(vertical = 14.dp, horizontal = 16.dp)
+            .testTag("routineEditAddExercise"),
         horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -1088,7 +1091,8 @@ private fun SaveFooter(
                 .clip(RoundedCornerShape(12.dp))
                 .background(Orange)
                 .clickable(onClick = onSave)
-                .padding(vertical = 14.dp),
+                .padding(vertical = 14.dp)
+                .testTag("routineEditSave"),
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically
         ) {
