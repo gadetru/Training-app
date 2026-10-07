@@ -45,6 +45,7 @@ solo proponer línea exacta y esperar. El agente trabaja Kotlin en `app/src/main
 - Compilar: `./gradlew assembleDebug` (requiere Android SDK; `local.properties` con `sdk.dir`, no se versiona).
 - Tests: `./gradlew testDebugUnitTest` (`CatalogMappingTest` 4/4 en verde + `ExampleUnitTest` de plantilla).
 - Verificación: **emulador Pixel 6 API 34** (`emulator-5554`, verificado vía `adb` 07-10-2026);
+  revisión UI preferente vía MCP `mobile-mcp` sobre el mismo emulador (`list_available_devices` → `list_elements` por `ref` → `click`/`screenshot`/`logs`), con `adb` + `connectedTest` como fallback.
 - Tests auto: `testDebugUnitTest` (JVM) + `connectedDebugAndroidTest` (Compose smoke `HomeNav/RoutineEdit/Workout` con `testTag`);
   `testTag` en raíces/CTAs (`profileRoot/profileSave`, `homeRoot/homeDock/routineCard:<id>`,
   `routineEditRoot/routineEditAddExercise/routineEditSave`, `workoutRoot/workoutFinish/restOverlay).

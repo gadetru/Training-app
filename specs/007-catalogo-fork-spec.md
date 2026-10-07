@@ -68,10 +68,10 @@ Toca `feature/exercises` (picker + `ExercisesViewModel`, solo lectura) y la capa
 - ¿Tag definitivo del fork (v1.1.0 u otro)?
 - ¿Las `gif_url` del JSON son absolutas o relativas al tag?
 ## 11. Checklist verificación (última, checkboxes listos para /verifier)
-- [ ] Con red el picker muestra los ejercicios del fork tras abrir la app.
-- [ ] Sin red el picker abre con lo guardado y no se cae.
-- [ ] Con tag inexistente no se guarda tag y el fallo es visible en logs.
-- [ ] `getById` no lanza excepción en el repo real.
-- [ ] `./gradlew assembleDebug` termina OK.
-- [ ] Prueba `CatalogMappingTest` en verde.
+- [x] Con red el picker muestra los ejercicios del fork tras abrir la app.
+- [x] Sin red el picker abre con lo guardado y no se cae.
+- [x] Con tag inexistente no se guarda tag y el fallo es visible en logs.
+- [x] `getById` no lanza excepción en el repo real.
+- [x] `./gradlew assembleDebug` termina OK.
+- [x] Prueba `CatalogMappingTest` en verde.
 - [ ] En móvil con gestos y con 3 botones nada queda bajo hora ni barra inferior.

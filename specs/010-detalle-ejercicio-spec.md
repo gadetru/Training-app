@@ -105,5 +105,5 @@ Fuente de datos: la base local; los GIF son solo direcciones que Coil guarda en 
 - [ ] Volver atrás y rotar conserva la ficha sin duplicar ni perder.
 - [ ] Tras actualizar, los ejercicios viejos ya muestran instrucciones.
 - [x] ./gradlew assembleDebug termina OK.
-- [ ] Prueba CatalogMappingTest en verde.
+- [x] Prueba CatalogMappingTest en verde.
 - [ ] En móvil con gestos y con 3 botones nada queda bajo hora ni barra inferior.

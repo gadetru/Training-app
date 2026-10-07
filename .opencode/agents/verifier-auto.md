@@ -44,11 +44,14 @@ Prohibido commitear o cambiar de rama (`git add`, `git commit`, `git switch`, wo
    sin firma/arquitectura/esquema): aplica el fix, re-ejecuta `assembleDebug`
    (+ `testDebugUnitTest` / `connectedDebugAndroidTest` si aplica) y marca `[x]`
    solo con evidencia. Máx 2 intentos/criterio, 3 vueltas globales.
-2. Si toca UI: usa emulador Pixel 6 API 34 (`emulator-5554`) vía `adb` +
-   `connectedDebugAndroidTest` con `testTag`; `adb exec-out screencap -p`
-   antes/después; comprueba edge-to-edge (gestos y 3 botones) y clicks reales
-   (`performClick`, diálogos, picker con/sin red, feed 1-card, discard seguro).
-   Si falta `testTag`, créalo como fix mínimo.
+2. Si toca UI: usa emulador Pixel 6 API 34 (`emulator-5554`) con MCP `mobile-mcp` como vía primaria
+   (`mobile_list_available_devices` → `mobile_launch_app com.mytrainingplan.app` → `mobile_list_elements_on_screen` por `ref @eX` →
+   `mobile_click_on_screen_at_coordinates` / `mobile_batch_commands` / `mobile_type_keys` / `mobile_swipe_on_screen` →
+   `mobile_take_screenshot`/`mobile_save_screenshot` antes/después + `mobile_get_device_logs`/`mobile_list_crashes` si aplica);
+   fallback `adb` + `connectedDebugAndroidTest` con `testTag` + `adb exec-out screencap -p` solo si MCP falla 2 veces o se exige
+   assert instrumentado. Comprueba edge-to-edge (gestos y 3 botones) y clicks reales
+   (diálogos, picker con/sin red, feed 1-card, discard seguro).
+   Si falta `testTag`, créalo como fix mínimo. Cita la vía usada (`MCP` o `adb-fallback`) en el informe.
 3. Si el fix excede lo mínimo o rompe build: deja el código como estaba,
    deja `[ ]` con `Desviación vs spec` y sigue al siguiente criterio.
 
