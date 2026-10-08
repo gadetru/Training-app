@@ -85,3 +85,8 @@ dependencies {
     debugImplementation(libs.androidx.compose.ui.test.manifest)
     debugImplementation(libs.androidx.compose.ui.tooling)
 }
+
+// Dorados versionados en el repo (docs vía Context7: /takahirom/roborazzi).
+roborazzi {
+    outputDir.set(file("src/test/screenshots"))
+}
