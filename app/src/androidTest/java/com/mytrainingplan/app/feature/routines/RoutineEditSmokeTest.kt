@@ -1,4 +1,4 @@
-package com.mytrainingplan.app
+package com.mytrainingplan.app.feature.routines
 
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.ui.test.assertIsDisplayed
@@ -10,12 +10,12 @@ import com.mytrainingplan.app.domain.model.PlannedSet
 import com.mytrainingplan.app.domain.model.RoutineEditUiState
 import com.mytrainingplan.app.domain.model.RoutineExercise
 import com.mytrainingplan.app.domain.model.RoutineExerciseUi
-import com.mytrainingplan.app.feature.routines.RoutineEditContent
 import org.junit.Rule
 import org.junit.Test
 
 /**
- * Smoke Editar Rutina en emulador Pixel 6 API 34.
+ * Smoke Editar Rutina en emulador Pixel 6 API 34 (movido a su espejo
+ * `feature/routines` en el paso 13 del spec 011, sin cambiar lógica).
  * Sin Hilt: ataca RoutineEditContent stateless con estado fake.
  */
 class RoutineEditSmokeTest {

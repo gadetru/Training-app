@@ -1,4 +1,4 @@
-package com.mytrainingplan.app
+package com.mytrainingplan.app.feature.workout
 
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.ui.test.assertIsDisplayed
@@ -13,13 +13,12 @@ import com.mytrainingplan.app.domain.model.SetEntry
 import com.mytrainingplan.app.domain.model.WorkoutExerciseUi
 import com.mytrainingplan.app.domain.model.WorkoutUiState
 import com.mytrainingplan.app.feature.profile.ProfileScreen
-import com.mytrainingplan.app.feature.workout.RestOverlay
-import com.mytrainingplan.app.feature.workout.WorkoutContent
 import org.junit.Rule
 import org.junit.Test
 
 /**
- * Smoke Sesión en vivo + Perfil en emulador Pixel 6 API 34.
+ * Smoke Sesión en vivo + Perfil en emulador Pixel 6 API 34 (movido a su
+ * espejo `feature/workout` en el paso 13 del spec 011, sin cambiar lógica).
  * Sin Hilt: ataca WorkoutContent/ProfileScreen stateless con fakes.
  * Cubre prefill última-vs-plan a nivel visual (objetivo vs viva).
  */

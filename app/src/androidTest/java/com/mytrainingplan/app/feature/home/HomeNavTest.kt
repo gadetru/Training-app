@@ -1,4 +1,4 @@
-package com.mytrainingplan.app
+package com.mytrainingplan.app.feature.home
 
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.ui.test.assertCountEquals
@@ -13,13 +13,12 @@ import com.mytrainingplan.app.domain.model.FootKind
 import com.mytrainingplan.app.domain.model.HomeUiState
 import com.mytrainingplan.app.domain.model.RoutineSummary
 import com.mytrainingplan.app.domain.model.WeeklyProgress
-import com.mytrainingplan.app.feature.home.HomeContent
-import com.mytrainingplan.app.feature.home.HomeTab
 import org.junit.Rule
 import org.junit.Test
 
 /**
- * Smoke Home en emulador Pixel 6 API 34.
+ * Smoke Home en emulador Pixel 6 API 34 (movido a su espejo `feature/home`
+ * en el paso 13 del spec 011, sin cambiar lógica).
  * Sin Hilt: ataca HomeContent stateless con estado fake.
  */
 class HomeNavTest {
