@@ -17,19 +17,15 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import com.mytrainingplan.app.ui.theme.AppColors
+import com.mytrainingplan.app.ui.theme.AppDimens
+import com.mytrainingplan.app.ui.theme.AppTextSizes
 
-// Tokens locales (mismos que HomeScreen): Fase A sin migrar a ui/theme.
-private val Bg = Color(0xFF111316)
-private val Orange = Color(0xFFFF5E00)
-private val TextPrimary = Color(0xFFF5F7FA)
-private val TextMuted = Color(0xFF8B95A5)
+// Colores y medidas desde ui/theme (spec 011): sin tokens locales.
 
 /**
  * Placeholders de tabs Fase A (spec 002, paso 4).
@@ -59,22 +55,22 @@ private fun TabPlaceholder(title: String, subtitle: String, icon: ImageVector) {
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Bg)
-            .padding(20.dp),
+            .background(AppColors.Bg)
+            .padding(AppDimens.ScreenHorizontal),
         contentAlignment = Alignment.Center
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            Icon(icon, contentDescription = null, tint = Orange, modifier = Modifier.size(40.dp))
-            Spacer(Modifier.height(12.dp))
-            Text(title, color = TextPrimary, fontSize = 20.sp, fontWeight = FontWeight.Bold)
-            Spacer(Modifier.height(6.dp))
+            Icon(icon, contentDescription = null, tint = AppColors.Orange, modifier = Modifier.size(AppDimens.PlaceholderIcon))
+            Spacer(Modifier.height(AppDimens.SpaceXl))
+            Text(title, color = AppColors.TextPrimary, fontSize = AppTextSizes.DisplaySm, fontWeight = FontWeight.Bold)
+            Spacer(Modifier.height(AppDimens.SpaceSm))
             Text(
                 subtitle,
-                color = TextMuted,
-                fontSize = 13.sp,
+                color = AppColors.TextMuted,
+                fontSize = AppTextSizes.BodyLg,
                 textAlign = TextAlign.Center
             )
         }
