@@ -53,8 +53,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import com.mytrainingplan.app.ui.theme.AppColors
+import com.mytrainingplan.app.ui.theme.AppDimens
+import com.mytrainingplan.app.ui.theme.AppTextSizes
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.mytrainingplan.app.domain.model.Exercise
 import com.mytrainingplan.app.domain.model.PlannedSet
@@ -64,19 +65,7 @@ import com.mytrainingplan.app.domain.model.WorkoutExerciseUi
 import com.mytrainingplan.app.domain.model.WorkoutUiState
 import kotlinx.coroutines.delay
 
-// Tokens references/plantilla-rutina/DESIGN.md + patrón RoutineEditScreen (004).
-// Tipografías de sistema en Fase A (Outfit/Plus Jakarta/Space Grotesk van en Futuros).
-private val Bg = Color(0xFF111316)
-private val Card = Color(0xFF1A1C1F)
-private val Card2 = Color(0xFF1E2023)
-private val CardHigh = Color(0xFF282A2D)
-private val Orange = Color(0xFFFF5E00)
-private val Volt = Color(0xFFCCFF00)
-private val OnOrange = Color(0xFF1A0A00)
-private val TextPrimary = Color(0xFFF5F7FA)
-private val TextMuted = Color(0xFF8B95A5)
-private val BorderSubtle = Color(0xFF282E37)
-private val ErrorRed = Color(0xFFFF8A80)
+// Colores y medidas desde ui/theme (spec 011): sin tokens locales.
 
 /**
  * Desviación conocida vs spec (code.html): el spec pide
@@ -130,7 +119,7 @@ fun WorkoutScreen(
         delay(1_500)
         waited = true
     }
-    Box(modifier = Modifier.fillMaxSize().background(Bg)) {
+    Box(modifier = Modifier.fillMaxSize().background(AppColors.Bg)) {
         if (uiState.exercises.isEmpty() && waited) {
             EmptySession(onBack = onBack)
         } else {
@@ -174,7 +163,7 @@ fun WorkoutContent(
 ) {
     // Confirmación de descarte: overlay propio (AlertDialog gestiona insets solo).
     var showDiscardDialog by rememberSaveable { mutableStateOf(false) }
-    Box(modifier = Modifier.fillMaxSize().background(Bg).testTag("workoutRoot")) {
+    Box(modifier = Modifier.fillMaxSize().background(AppColors.Bg).testTag("workoutRoot")) {
         Column(modifier = Modifier.fillMaxSize()) {
             SessionHeader(
                 routineName = uiState.routineName,
@@ -185,10 +174,10 @@ fun WorkoutContent(
             LazyColumn(
                 modifier = Modifier
                     .weight(1f)
-                    .padding(horizontal = 20.dp)
+                    .padding(horizontal = AppDimens.ScreenHorizontal)
                     // Hueco para que la barra fija no tape contenido.
-                    .padding(top = 4.dp, bottom = 170.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                    .padding(top = AppDimens.SpaceXs, bottom = AppDimens.WorkoutBottom),
+                verticalArrangement = Arrangement.spacedBy(AppDimens.SpaceXl)
             ) {
                 item {
                     ProgressCard(
@@ -228,33 +217,33 @@ fun WorkoutContent(
         if (showDiscardDialog) {
             AlertDialog(
                 onDismissRequest = { showDiscardDialog = false },
-                containerColor = Card,
-                shape = RoundedCornerShape(16.dp),
+                containerColor = AppColors.Card,
+                shape = RoundedCornerShape(AppDimens.RadiusCard),
                 title = {
                     Text(
                         "¿Descartar entrenamiento?",
-                        color = TextPrimary,
-                        fontSize = 18.sp,
+                        color = AppColors.TextPrimary,
+                        fontSize = AppTextSizes.Headline,
                         fontWeight = FontWeight.Bold
                     )
                 },
                 text = {
                     Text(
                         "La sesión se descarta sin guardar y no contará como prefill.",
-                        color = TextMuted,
-                        fontSize = 14.sp
+                        color = AppColors.TextMuted,
+                        fontSize = AppTextSizes.TitleSm
                     )
                 },
                 dismissButton = {
                     TextButton(
                         onClick = { showDiscardDialog = false },
-                        shape = RoundedCornerShape(999.dp),
+                        shape = RoundedCornerShape(AppDimens.RadiusPill),
                         colors = ButtonDefaults.textButtonColors(
-                            containerColor = CardHigh,
-                            contentColor = TextPrimary
+                            containerColor = AppColors.CardHigh,
+                            contentColor = AppColors.TextPrimary
                         )
                     ) {
-                        Text("Seguir", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                        Text("Seguir", fontSize = AppTextSizes.Body, fontWeight = FontWeight.Bold)
                     }
                 },
                 confirmButton = {
@@ -263,13 +252,13 @@ fun WorkoutContent(
                             showDiscardDialog = false
                             onDiscard()
                         },
-                        shape = RoundedCornerShape(999.dp),
+                        shape = RoundedCornerShape(AppDimens.RadiusPill),
                         colors = ButtonDefaults.textButtonColors(
-                            containerColor = ErrorRed,
-                            contentColor = Color(0xFF1A0A00)
+                            containerColor = AppColors.ErrorRed,
+                            contentColor = AppColors.OnOrange
                         )
                     ) {
-                        Text("Descartar", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                        Text("Descartar", fontSize = AppTextSizes.Body, fontWeight = FontWeight.Bold)
                     }
                 }
             )
@@ -283,32 +272,32 @@ private fun EmptySession(onBack: () -> Unit) {
         modifier = Modifier
             .fillMaxSize()
             .statusBarsPadding()
-            .padding(horizontal = 20.dp),
+            .padding(horizontal = AppDimens.ScreenHorizontal),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
         Text(
             "Sesión no encontrada",
-            color = TextPrimary,
-            fontSize = 20.sp,
+            color = AppColors.TextPrimary,
+            fontSize = AppTextSizes.DisplaySm,
             fontWeight = FontWeight.Bold
         )
-        Spacer(Modifier.height(8.dp))
+        Spacer(Modifier.height(AppDimens.SpaceMd))
         Text(
             "La rutina no existe o el id es inválido.",
-            color = TextMuted,
-            fontSize = 14.sp,
+            color = AppColors.TextMuted,
+            fontSize = AppTextSizes.TitleSm,
             textAlign = TextAlign.Center
         )
-        Spacer(Modifier.height(16.dp))
+        Spacer(Modifier.height(AppDimens.SpaceHuge))
         Row(
             modifier = Modifier
-                .clip(RoundedCornerShape(999.dp))
-                .background(Orange)
+                .clip(RoundedCornerShape(AppDimens.RadiusPill))
+                .background(AppColors.Orange)
                 .clickable(onClick = onBack)
-                .padding(horizontal = 20.dp, vertical = 12.dp)
+                .padding(horizontal = AppDimens.ScreenHorizontal, vertical = AppDimens.SpaceXl)
         ) {
-            Text("Volver", color = OnOrange, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+            Text("Volver", color = AppColors.OnOrange, fontSize = AppTextSizes.TitleSm, fontWeight = FontWeight.Bold)
         }
     }
 }
@@ -323,10 +312,10 @@ private fun SessionHeader(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(Bg)
+            .background(AppColors.Bg)
             .statusBarsPadding()
-            .padding(horizontal = 20.dp, vertical = 12.dp),
-        verticalArrangement = Arrangement.spacedBy(10.dp)
+            .padding(horizontal = AppDimens.ScreenHorizontal, vertical = AppDimens.SpaceXl),
+        verticalArrangement = Arrangement.spacedBy(AppDimens.SpaceLg)
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -336,65 +325,65 @@ private fun SessionHeader(
             // Minimizar/volver (mantiene la sesión viva en el repo).
             Box(
                 modifier = Modifier
-                    .size(48.dp)
-                    .clip(RoundedCornerShape(999.dp))
-                    .background(Card)
-                    .border(1.dp, BorderSubtle, RoundedCornerShape(999.dp))
+                    .size(AppDimens.TouchMin)
+                    .clip(RoundedCornerShape(AppDimens.RadiusPill))
+                    .background(AppColors.Card)
+                    .border(AppDimens.BorderThin, AppColors.BorderSubtle, RoundedCornerShape(AppDimens.RadiusPill))
                     .clickable(onClick = onBack),
                 contentAlignment = Alignment.Center
             ) {
-                Icon(Icons.Filled.KeyboardArrowDown, contentDescription = "Minimizar", tint = TextPrimary)
+                Icon(Icons.Filled.KeyboardArrowDown, contentDescription = "Minimizar", tint = AppColors.TextPrimary)
             }
             // Cronómetro de sesión activo.
             Row(
                 modifier = Modifier
-                    .clip(RoundedCornerShape(999.dp))
-                    .background(Card)
-                    .border(1.dp, Orange.copy(alpha = 0.3f), RoundedCornerShape(999.dp))
-                    .padding(horizontal = 14.dp, vertical = 8.dp),
+                    .clip(RoundedCornerShape(AppDimens.RadiusPill))
+                    .background(AppColors.Card)
+                    .border(AppDimens.BorderThin, AppColors.Orange.copy(alpha = 0.3f), RoundedCornerShape(AppDimens.RadiusPill))
+                    .padding(horizontal = AppDimens.SpaceXxl, vertical = AppDimens.SpaceMd),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Box(
                     modifier = Modifier
-                        .size(8.dp)
+                        .size(AppDimens.StatusDot)
                         .clip(CircleShape)
-                        .background(if (isPaused) TextMuted else Orange)
+                        .background(if (isPaused) AppColors.TextMuted else AppColors.Orange)
                 )
-                Spacer(Modifier.width(8.dp))
+                Spacer(Modifier.width(AppDimens.SpaceMd))
                 // Timer no está en material-icons-core → fallback Refresh.
-                Icon(Icons.Filled.Refresh, contentDescription = null, tint = Orange, modifier = Modifier.size(18.dp))
-                Spacer(Modifier.width(6.dp))
+                Icon(Icons.Filled.Refresh, contentDescription = null, tint = AppColors.Orange, modifier = Modifier.size(AppDimens.IconInline))
+                Spacer(Modifier.width(AppDimens.SpaceSm))
                 Text(
                     formatClock(elapsedSec),
-                    color = TextPrimary,
-                    fontSize = 14.sp,
+                    color = AppColors.TextPrimary,
+                    fontSize = AppTextSizes.TitleSm,
                     fontWeight = FontWeight.Bold
                 )
             }
             // Ajustes (TODO visual sin crash).
             Box(
                 modifier = Modifier
-                    .size(48.dp)
-                    .clip(RoundedCornerShape(999.dp))
-                    .background(Card)
-                    .border(1.dp, BorderSubtle, RoundedCornerShape(999.dp))
+                    .size(AppDimens.TouchMin)
+                    .clip(RoundedCornerShape(AppDimens.RadiusPill))
+                    .background(AppColors.Card)
+                    .border(AppDimens.BorderThin, AppColors.BorderSubtle, RoundedCornerShape(AppDimens.RadiusPill))
                     .clickable(onClick = {}),
                 contentAlignment = Alignment.Center
             ) {
-                Icon(Icons.Filled.MoreVert, contentDescription = "Ajustes", tint = TextPrimary)
+                Icon(Icons.Filled.MoreVert, contentDescription = "Ajustes", tint = AppColors.TextPrimary)
             }
         }
         Column {
             Text(
                 if (isPaused) "ENTRENAMIENTO EN PAUSA" else "ENTRENAMIENTO ACTIVO",
-                color = Orange,
-                fontSize = 10.sp,
+                color = AppColors.Orange,
+                fontSize = AppTextSizes.Caption,
                 fontWeight = FontWeight.Bold
             )
             Text(
                 if (routineName.isBlank()) "Sesión" else routineName,
-                color = TextPrimary,
-                fontSize = 22.sp,
+                color = AppColors.TextPrimary,
+                fontSize = AppTextSizes.Display,
                 fontWeight = FontWeight.Bold,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis
@@ -412,46 +401,46 @@ private fun ProgressCard(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp))
-            .background(Card)
-            .border(1.dp, BorderSubtle, RoundedCornerShape(16.dp))
-            .padding(14.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
+            .clip(RoundedCornerShape(AppDimens.RadiusCard))
+            .background(AppColors.Card)
+            .border(AppDimens.BorderThin, AppColors.BorderSubtle, RoundedCornerShape(AppDimens.RadiusCard))
+            .padding(AppDimens.SpaceXxl),
+        verticalArrangement = Arrangement.spacedBy(AppDimens.SpaceMd)
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(
                 "Ejercicio $current de $total",
-                color = TextPrimary,
-                fontSize = 13.sp,
+                color = AppColors.TextPrimary,
+                fontSize = AppTextSizes.BodyLg,
                 fontWeight = FontWeight.Bold
             )
-            Spacer(Modifier.width(8.dp))
+            Spacer(Modifier.width(AppDimens.SpaceMd))
             Box(
                 modifier = Modifier
-                    .size(4.dp)
+                    .size(AppDimens.SpaceXs)
                     .clip(CircleShape)
-                    .background(BorderSubtle)
+                    .background(AppColors.BorderSubtle)
             )
-            Spacer(Modifier.width(8.dp))
+            Spacer(Modifier.width(AppDimens.SpaceMd))
             Text(
                 "${(fraction * 100).toInt()}% completado",
-                color = TextMuted,
-                fontSize = 12.sp
+                color = AppColors.TextMuted,
+                fontSize = AppTextSizes.Body
             )
         }
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(8.dp)
-                .clip(RoundedCornerShape(999.dp))
-                .background(CardHigh)
+                .height(AppDimens.SpaceMd)
+                .clip(RoundedCornerShape(AppDimens.RadiusPill))
+                .background(AppColors.CardHigh)
         ) {
             Box(
                 modifier = Modifier
                     .fillMaxWidth(fraction.coerceIn(0f, 1f))
-                    .height(8.dp)
-                    .clip(RoundedCornerShape(999.dp))
-                    .background(Orange)
+                    .height(AppDimens.SpaceMd)
+                    .clip(RoundedCornerShape(AppDimens.RadiusPill))
+                    .background(AppColors.Orange)
             )
         }
     }
@@ -475,12 +464,12 @@ private fun ExerciseAccordion(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .clip(RoundedCornerShape(16.dp))
-                .background(Card)
+                .clip(RoundedCornerShape(AppDimens.RadiusCard))
+                .background(AppColors.Card)
                 .border(
-                    1.dp,
-                    if (isActive && !completed) Orange.copy(alpha = 0.4f) else BorderSubtle,
-                    RoundedCornerShape(16.dp)
+                    AppDimens.BorderThin,
+                    if (isActive && !completed) AppColors.Orange.copy(alpha = 0.4f) else AppColors.BorderSubtle,
+                    RoundedCornerShape(AppDimens.RadiusCard)
                 )
         ) {
             ExerciseHeader(
@@ -497,9 +486,9 @@ private fun ExerciseAccordion(
                 onToggleExpanded = onToggleExpanded,
                 onNameClick = { onExerciseClick(item.exercise.id) }
             )
-            Column(modifier = Modifier.padding(12.dp)) {
+            Column(modifier = Modifier.padding(AppDimens.SpaceXl)) {
                 SetsHeaderRow()
-                Spacer(Modifier.height(6.dp))
+                Spacer(Modifier.height(AppDimens.SpaceSm))
                 // Se calcula una vez por composición (no por fila): idéntico
                 // resultado que el filter+minBy por fila, sin coste O(n²).
                 val nextPendingId = item.entries
@@ -516,7 +505,7 @@ private fun ExerciseAccordion(
                         onRepsChange = { onRepsChange(entry.id, it) },
                         onToggleDone = { onToggleDone(entry.id) }
                     )
-                    Spacer(Modifier.height(8.dp))
+                    Spacer(Modifier.height(AppDimens.SpaceMd))
                 }
             }
         }
@@ -524,49 +513,49 @@ private fun ExerciseAccordion(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .clip(RoundedCornerShape(16.dp))
-                .background(Card)
-                .border(1.dp, BorderSubtle, RoundedCornerShape(16.dp))
+                .clip(RoundedCornerShape(AppDimens.RadiusCard))
+                .background(AppColors.Card)
+                .border(AppDimens.BorderThin, AppColors.BorderSubtle, RoundedCornerShape(AppDimens.RadiusCard))
                 .clickable(onClick = onToggleExpanded)
-                .padding(12.dp),
+                .padding(AppDimens.SpaceXl),
             verticalAlignment = Alignment.CenterVertically
         ) {
             if (completed) {
                 Icon(
                     Icons.Filled.CheckCircle,
                     contentDescription = null,
-                    tint = Volt,
-                    modifier = Modifier.size(36.dp)
+                    tint = AppColors.Volt,
+                    modifier = Modifier.size(AppDimens.SetCell)
                 )
             } else {
                 Box(
                     modifier = Modifier
-                        .size(36.dp)
-                        .clip(RoundedCornerShape(10.dp))
-                        .background(CardHigh),
+                        .size(AppDimens.SetCell)
+                        .clip(RoundedCornerShape(AppDimens.RadiusLg))
+                        .background(AppColors.CardHigh),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
                         "${index + 1}",
-                        color = TextPrimary,
-                        fontSize = 14.sp,
+                        color = AppColors.TextPrimary,
+                        fontSize = AppTextSizes.TitleSm,
                         fontWeight = FontWeight.Bold
                     )
                 }
             }
-            Spacer(Modifier.width(10.dp))
+            Spacer(Modifier.width(AppDimens.SpaceLg))
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     "${index + 1}. ${item.exercise.name}",
-                    color = TextPrimary,
-                    fontSize = 15.sp,
+                    color = AppColors.TextPrimary,
+                    fontSize = AppTextSizes.Title,
                     fontWeight = FontWeight.SemiBold,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                     // Spec 010: el nombre abre la ficha (el resto expande).
                     modifier = Modifier.clickable(onClick = { onExerciseClick(item.exercise.id) })
                 )
-                Spacer(Modifier.height(2.dp))
+                Spacer(Modifier.height(AppDimens.SpaceXxs))
                 Text(
                     if (completed) {
                         val maxW = item.entries.maxOfOrNull { it.weightKg } ?: 0.0
@@ -574,17 +563,17 @@ private fun ExerciseAccordion(
                     } else {
                         "$total series programadas"
                     },
-                    color = TextMuted,
-                    fontSize = 12.sp,
+                    color = AppColors.TextMuted,
+                    fontSize = AppTextSizes.Body,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
             }
             Box(
-                modifier = Modifier.size(48.dp),
+                modifier = Modifier.size(AppDimens.TouchMin),
                 contentAlignment = Alignment.Center
             ) {
-                Icon(Icons.Filled.KeyboardArrowDown, contentDescription = "Expandir", tint = TextMuted)
+                Icon(Icons.Filled.KeyboardArrowDown, contentDescription = "Expandir", tint = AppColors.TextMuted)
             }
         }
     }
@@ -603,48 +592,48 @@ private fun ExerciseHeader(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .background(CardHigh.copy(alpha = 0.4f))
-            .padding(12.dp),
+            .background(AppColors.CardHigh.copy(alpha = 0.4f))
+            .padding(AppDimens.SpaceXl),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Box(
             modifier = Modifier
-                .size(28.dp)
-                .clip(RoundedCornerShape(8.dp))
-                .background(if (completed) Volt.copy(alpha = 0.2f) else Orange),
+                .size(AppDimens.SetBadge)
+                .clip(RoundedCornerShape(AppDimens.RadiusMd))
+                .background(if (completed) AppColors.Volt.copy(alpha = 0.2f) else AppColors.Orange),
             contentAlignment = Alignment.Center
         ) {
             if (completed) {
-                Icon(Icons.Filled.Check, contentDescription = null, tint = Volt, modifier = Modifier.size(18.dp))
+                Icon(Icons.Filled.Check, contentDescription = null, tint = AppColors.Volt, modifier = Modifier.size(AppDimens.IconInline))
             } else {
-                Text("${index + 1}", color = OnOrange, fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                Text("${index + 1}", color = AppColors.OnOrange, fontSize = AppTextSizes.BodyLg, fontWeight = FontWeight.Bold)
             }
         }
-        Spacer(Modifier.width(10.dp))
+        Spacer(Modifier.width(AppDimens.SpaceLg))
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 "${index + 1}. $name",
-                color = TextPrimary,
-                fontSize = 15.sp,
+                color = AppColors.TextPrimary,
+                fontSize = AppTextSizes.Title,
                 fontWeight = FontWeight.SemiBold,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
                 // Spec 010: el nombre abre la ficha.
                 modifier = Modifier.clickable(onClick = onNameClick)
             )
-            Spacer(Modifier.height(2.dp))
-            Text(subtitle, color = TextMuted, fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Spacer(Modifier.height(AppDimens.SpaceXxs))
+            Text(subtitle, color = AppColors.TextMuted, fontSize = AppTextSizes.Body, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
         Box(
             modifier = Modifier
-                .size(48.dp)
+                .size(AppDimens.TouchMin)
                 .clickable(onClick = onToggleExpanded),
             contentAlignment = Alignment.Center
         ) {
             Icon(
                 if (expanded) Icons.Filled.KeyboardArrowUp else Icons.Filled.KeyboardArrowDown,
                 contentDescription = if (expanded) "Colapsar" else "Expandir",
-                tint = TextMuted
+                tint = AppColors.TextMuted
             )
         }
     }
@@ -655,15 +644,15 @@ private fun SetsHeaderRow() {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 4.dp),
+            .padding(horizontal = AppDimens.SpaceXs),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text("SET", color = TextMuted, fontSize = 10.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.width(32.dp))
-        Text("OBJETIVO", color = TextMuted, fontSize = 10.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
-        Text("KG", color = TextMuted, fontSize = 10.sp, fontWeight = FontWeight.SemiBold, textAlign = TextAlign.Center, modifier = Modifier.weight(1f))
-        Text("REPS", color = TextMuted, fontSize = 10.sp, fontWeight = FontWeight.SemiBold, textAlign = TextAlign.Center, modifier = Modifier.weight(1f))
-        Text("PAUSA", color = TextMuted, fontSize = 10.sp, fontWeight = FontWeight.SemiBold, textAlign = TextAlign.Center, modifier = Modifier.width(44.dp))
-        Spacer(Modifier.width(48.dp))
+        Text("SET", color = AppColors.TextMuted, fontSize = AppTextSizes.Caption, fontWeight = FontWeight.SemiBold, modifier = Modifier.width(AppDimens.SetNumWidth))
+        Text("OBJETIVO", color = AppColors.TextMuted, fontSize = AppTextSizes.Caption, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
+        Text("KG", color = AppColors.TextMuted, fontSize = AppTextSizes.Caption, fontWeight = FontWeight.SemiBold, textAlign = TextAlign.Center, modifier = Modifier.weight(1f))
+        Text("REPS", color = AppColors.TextMuted, fontSize = AppTextSizes.Caption, fontWeight = FontWeight.SemiBold, textAlign = TextAlign.Center, modifier = Modifier.weight(1f))
+        Text("PAUSA", color = AppColors.TextMuted, fontSize = AppTextSizes.Caption, fontWeight = FontWeight.SemiBold, textAlign = TextAlign.Center, modifier = Modifier.width(AppDimens.PauseWidth))
+        Spacer(Modifier.width(AppDimens.TouchMin))
     }
 }
 
@@ -685,50 +674,50 @@ private fun SetRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(12.dp))
+            .clip(RoundedCornerShape(AppDimens.RadiusXl))
             .background(
-                if (!entry.done && isNext) CardHigh.copy(alpha = 0.9f)
-                else Color(0xFF0C0E11)
+                if (!entry.done && isNext) AppColors.CardHigh.copy(alpha = 0.9f)
+                else AppColors.InputBg
             )
             .border(
-                1.dp,
-                if (entry.done) Volt.copy(alpha = 0.35f) else BorderSubtle,
-                RoundedCornerShape(12.dp)
+                AppDimens.BorderThin,
+                if (entry.done) AppColors.Volt.copy(alpha = 0.35f) else AppColors.BorderSubtle,
+                RoundedCornerShape(AppDimens.RadiusXl)
             )
-            .padding(8.dp),
+            .padding(AppDimens.SpaceMd),
         verticalAlignment = Alignment.CenterVertically
     ) {
         // Nº de serie.
         Box(
             modifier = Modifier
-                .size(28.dp)
-                .clip(RoundedCornerShape(999.dp))
+                .size(AppDimens.SetBadge)
+                .clip(RoundedCornerShape(AppDimens.RadiusPill))
                 .background(
                     when {
-                        entry.done -> Volt.copy(alpha = 0.2f)
-                        isNext -> Orange
-                        else -> CardHigh
+                        entry.done -> AppColors.Volt.copy(alpha = 0.2f)
+                        isNext -> AppColors.Orange
+                        else -> AppColors.CardHigh
                     }
                 ),
             contentAlignment = Alignment.Center
         ) {
             if (entry.done) {
-                Icon(Icons.Filled.Check, contentDescription = null, tint = Volt, modifier = Modifier.size(16.dp))
+                Icon(Icons.Filled.Check, contentDescription = null, tint = AppColors.Volt, modifier = Modifier.size(AppDimens.IconMd))
             } else {
                 Text(
                     "${entry.setNumber}",
-                    color = if (isNext) OnOrange else TextPrimary,
-                    fontSize = 12.sp,
+                    color = if (isNext) AppColors.OnOrange else AppColors.TextPrimary,
+                    fontSize = AppTextSizes.Body,
                     fontWeight = FontWeight.Bold
                 )
             }
         }
-        Spacer(Modifier.width(6.dp))
+        Spacer(Modifier.width(AppDimens.SpaceSm))
         // Objetivo planificado.
         Text(
             objective,
-            color = TextMuted,
-            fontSize = 11.sp,
+            color = AppColors.TextMuted,
+            fontSize = AppTextSizes.Small,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier.weight(1f)
@@ -740,7 +729,7 @@ private fun SetRow(
             onPlus = { onKgChange(KG_STEP) },
             modifier = Modifier.weight(1f)
         )
-        Spacer(Modifier.width(4.dp))
+        Spacer(Modifier.width(AppDimens.SpaceXs))
         // Stepper REPS (±1).
         Stepper(
             value = "${entry.reps}",
@@ -748,40 +737,40 @@ private fun SetRow(
             onPlus = { onRepsChange(1) },
             modifier = Modifier.weight(1f)
         )
-        Spacer(Modifier.width(4.dp))
+        Spacer(Modifier.width(AppDimens.SpaceXs))
         Text(
             "${restSec}s",
-            color = TextMuted,
-            fontSize = 11.sp,
+            color = AppColors.TextMuted,
+            fontSize = AppTextSizes.Small,
             textAlign = TextAlign.Center,
-            modifier = Modifier.width(44.dp)
+            modifier = Modifier.width(AppDimens.PauseWidth)
         )
         // Estado: pendiente → botón naranja `done`; hecha → check volt.
         Box(
             modifier = Modifier
-                .size(48.dp)
+                .size(AppDimens.TouchMin)
                 .clickable(onClick = onToggleDone),
             contentAlignment = Alignment.Center
         ) {
             if (entry.done) {
                 Box(
                     modifier = Modifier
-                        .size(36.dp)
-                        .clip(RoundedCornerShape(10.dp))
-                        .background(Volt.copy(alpha = 0.2f)),
+                        .size(AppDimens.SetCell)
+                        .clip(RoundedCornerShape(AppDimens.RadiusLg))
+                        .background(AppColors.Volt.copy(alpha = 0.2f)),
                     contentAlignment = Alignment.Center
                 ) {
-                    Icon(Icons.Filled.Check, contentDescription = "Desmarcar serie", tint = Volt, modifier = Modifier.size(20.dp))
+                    Icon(Icons.Filled.Check, contentDescription = "Desmarcar serie", tint = AppColors.Volt, modifier = Modifier.size(AppDimens.IconXl))
                 }
             } else {
                 Box(
                     modifier = Modifier
-                        .size(36.dp)
-                        .clip(RoundedCornerShape(10.dp))
-                        .background(Orange),
+                        .size(AppDimens.SetCell)
+                        .clip(RoundedCornerShape(AppDimens.RadiusLg))
+                        .background(AppColors.Orange),
                     contentAlignment = Alignment.Center
                 ) {
-                    Icon(Icons.Filled.Done, contentDescription = "Completar serie", tint = OnOrange, modifier = Modifier.size(20.dp))
+                    Icon(Icons.Filled.Done, contentDescription = "Completar serie", tint = AppColors.OnOrange, modifier = Modifier.size(AppDimens.IconXl))
                 }
             }
         }
@@ -797,36 +786,36 @@ private fun Stepper(
 ) {
     Row(
         modifier = modifier
-            .clip(RoundedCornerShape(8.dp))
-            .background(CardHigh)
-            .padding(horizontal = 2.dp, vertical = 4.dp),
+            .clip(RoundedCornerShape(AppDimens.RadiusMd))
+            .background(AppColors.CardHigh)
+            .padding(horizontal = AppDimens.SpaceXxs, vertical = AppDimens.SpaceXs),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         // Remove no está en material-icons-core → texto −/+ simétrico.
         Box(
             modifier = Modifier
-                .size(48.dp)
+                .size(AppDimens.TouchMin)
                 .clickable(onClick = onMinus),
             contentAlignment = Alignment.Center
         ) {
-            Text("−", color = TextMuted, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+            Text("−", color = AppColors.TextMuted, fontSize = AppTextSizes.TitleLg, fontWeight = FontWeight.Bold)
         }
         Text(
             value,
-            color = TextPrimary,
-            fontSize = 13.sp,
+            color = AppColors.TextPrimary,
+            fontSize = AppTextSizes.BodyLg,
             fontWeight = FontWeight.Bold,
             textAlign = TextAlign.Center,
             maxLines = 1
         )
         Box(
             modifier = Modifier
-                .size(48.dp)
+                .size(AppDimens.TouchMin)
                 .clickable(onClick = onPlus),
             contentAlignment = Alignment.Center
         ) {
-            Text("+", color = TextMuted, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+            Text("+", color = AppColors.TextMuted, fontSize = AppTextSizes.TitleLg, fontWeight = FontWeight.Bold)
         }
     }
 }
@@ -839,14 +828,14 @@ private fun DiscardButton(onClick: () -> Unit) {
     ) {
         Row(
             modifier = Modifier
-                .clip(RoundedCornerShape(12.dp))
+                .clip(RoundedCornerShape(AppDimens.RadiusXl))
                 .clickable(onClick = onClick)
-                .padding(horizontal = 16.dp, vertical = 12.dp),
+                .padding(horizontal = AppDimens.SpaceHuge, vertical = AppDimens.SpaceXl),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Icon(Icons.Filled.Close, contentDescription = null, tint = ErrorRed, modifier = Modifier.size(18.dp))
-            Spacer(Modifier.width(6.dp))
-            Text("Descartar Entrenamiento", color = ErrorRed, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+            Icon(Icons.Filled.Close, contentDescription = null, tint = AppColors.ErrorRed, modifier = Modifier.size(AppDimens.IconInline))
+            Spacer(Modifier.width(AppDimens.SpaceSm))
+            Text("Descartar Entrenamiento", color = AppColors.ErrorRed, fontSize = AppTextSizes.BodyLg, fontWeight = FontWeight.SemiBold)
         }
     }
 }
@@ -864,37 +853,37 @@ private fun SessionBar(
         modifier = modifier
             .fillMaxWidth()
             .navigationBarsPadding()
-            .padding(horizontal = 20.dp)
-            .padding(bottom = 16.dp)
-            .clip(RoundedCornerShape(24.dp))
-            .background(Card)
-            .border(1.dp, BorderSubtle, RoundedCornerShape(24.dp))
-            .padding(10.dp),
+            .padding(horizontal = AppDimens.ScreenHorizontal)
+            .padding(bottom = AppDimens.SpaceHuge)
+            .clip(RoundedCornerShape(AppDimens.RadiusDock))
+            .background(AppColors.Card)
+            .border(AppDimens.BorderThin, AppColors.BorderSubtle, RoundedCornerShape(AppDimens.RadiusDock))
+            .padding(AppDimens.SpaceLg),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
+        horizontalArrangement = Arrangement.spacedBy(AppDimens.SpaceMd)
     ) {
         // Pausar/Reanudar.
         Row(
             modifier = Modifier
-                .clip(RoundedCornerShape(999.dp))
-                .background(CardHigh)
-                .border(1.dp, BorderSubtle, RoundedCornerShape(999.dp))
+                .clip(RoundedCornerShape(AppDimens.RadiusPill))
+                .background(AppColors.CardHigh)
+                .border(AppDimens.BorderThin, AppColors.BorderSubtle, RoundedCornerShape(AppDimens.RadiusPill))
                 .clickable(onClick = onPauseToggle)
-                .padding(horizontal = 16.dp, vertical = 12.dp),
+                .padding(horizontal = AppDimens.SpaceHuge, vertical = AppDimens.SpaceXl),
             verticalAlignment = Alignment.CenterVertically
         ) {
             // Pause no está en material-icons-core → fallback Menu.
             Icon(
                 if (isPaused) Icons.Filled.PlayArrow else Icons.Filled.Menu,
                 contentDescription = if (isPaused) "Reanudar" else "Pausar",
-                tint = TextPrimary,
-                modifier = Modifier.size(20.dp)
+                tint = AppColors.TextPrimary,
+                modifier = Modifier.size(AppDimens.IconXl)
             )
-            Spacer(Modifier.width(6.dp))
+            Spacer(Modifier.width(AppDimens.SpaceSm))
             Text(
                 if (isPaused) "Reanudar" else "Pausar",
-                color = TextPrimary,
-                fontSize = 12.sp,
+                color = AppColors.TextPrimary,
+                fontSize = AppTextSizes.Body,
                 fontWeight = FontWeight.Bold
             )
         }
@@ -902,21 +891,21 @@ private fun SessionBar(
         Row(
             modifier = Modifier
                 .weight(1f)
-                .clip(RoundedCornerShape(999.dp))
-                .background(Orange)
+                .clip(RoundedCornerShape(AppDimens.RadiusPill))
+                .background(AppColors.Orange)
                 .clickable(onClick = onFinish)
-                .padding(vertical = 12.dp)
+                .padding(vertical = AppDimens.SpaceXl)
                 .testTag("workoutFinish"),
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically
         ) {
             // Flag no está en material-icons-core → fallback Done.
-            Icon(Icons.Filled.Done, contentDescription = null, tint = OnOrange, modifier = Modifier.size(20.dp))
-            Spacer(Modifier.width(6.dp))
+            Icon(Icons.Filled.Done, contentDescription = null, tint = AppColors.OnOrange, modifier = Modifier.size(AppDimens.IconXl))
+            Spacer(Modifier.width(AppDimens.SpaceSm))
             Text(
                 if (isSaving) "Guardando…" else "Finalizar y Guardar",
-                color = OnOrange,
-                fontSize = 13.sp,
+                color = AppColors.OnOrange,
+                fontSize = AppTextSizes.BodyLg,
                 fontWeight = FontWeight.Bold,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
@@ -925,14 +914,14 @@ private fun SessionBar(
         // Minimizar (TODO visual: vuelve atrás manteniendo la sesión viva).
         Box(
             modifier = Modifier
-                .size(48.dp)
-                .clip(RoundedCornerShape(999.dp))
-                .background(CardHigh)
-                .border(1.dp, BorderSubtle, RoundedCornerShape(999.dp))
+                .size(AppDimens.TouchMin)
+                .clip(RoundedCornerShape(AppDimens.RadiusPill))
+                .background(AppColors.CardHigh)
+                .border(AppDimens.BorderThin, AppColors.BorderSubtle, RoundedCornerShape(AppDimens.RadiusPill))
                 .clickable(onClick = onBack),
             contentAlignment = Alignment.Center
         ) {
-            Icon(Icons.Filled.KeyboardArrowDown, contentDescription = "Minimizar sesión", tint = TextMuted)
+            Icon(Icons.Filled.KeyboardArrowDown, contentDescription = "Minimizar sesión", tint = AppColors.TextMuted)
         }
     }
 }
@@ -956,7 +945,7 @@ fun RestOverlay(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xBF000000))
+            .background(AppColors.Scrim)
             .clickable(onClick = {})
             .testTag("restOverlay"),
         contentAlignment = Alignment.Center
@@ -964,84 +953,84 @@ fun RestOverlay(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 32.dp)
-                .clip(RoundedCornerShape(24.dp))
-                .background(Card)
-                .border(1.dp, BorderSubtle, RoundedCornerShape(24.dp))
-                .padding(24.dp),
+                .padding(horizontal = AppDimens.RestHorizontal)
+                .clip(RoundedCornerShape(AppDimens.RadiusDock))
+                .background(AppColors.Card)
+                .border(AppDimens.BorderThin, AppColors.BorderSubtle, RoundedCornerShape(AppDimens.RadiusDock))
+                .padding(AppDimens.DialogPadding),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
                 "DESCANSO ACTIVO",
-                color = Volt,
-                fontSize = 11.sp,
+                color = AppColors.Volt,
+                fontSize = AppTextSizes.Small,
                 fontWeight = FontWeight.Bold
             )
-            Spacer(Modifier.height(8.dp))
+            Spacer(Modifier.height(AppDimens.SpaceMd))
             Text(
                 formatClock(remainingSec),
-                color = TextPrimary,
-                fontSize = 56.sp,
+                color = AppColors.TextPrimary,
+                fontSize = AppTextSizes.RestClock,
                 fontWeight = FontWeight.Bold
             )
-            Spacer(Modifier.height(12.dp))
+            Spacer(Modifier.height(AppDimens.SpaceXl))
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(8.dp)
-                    .clip(RoundedCornerShape(999.dp))
-                    .background(CardHigh)
+                    .height(AppDimens.SpaceMd)
+                    .clip(RoundedCornerShape(AppDimens.RadiusPill))
+                    .background(AppColors.CardHigh)
             ) {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth(fraction.coerceIn(0f, 1f))
-                        .height(8.dp)
-                        .clip(RoundedCornerShape(999.dp))
-                        .background(Volt)
+                        .height(AppDimens.SpaceMd)
+                        .clip(RoundedCornerShape(AppDimens.RadiusPill))
+                        .background(AppColors.Volt)
                 )
             }
-            Spacer(Modifier.height(16.dp))
+            Spacer(Modifier.height(AppDimens.SpaceHuge))
             Row(
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                horizontalArrangement = Arrangement.spacedBy(AppDimens.SpaceXl),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Row(
                     modifier = Modifier
-                        .clip(RoundedCornerShape(999.dp))
-                        .background(CardHigh)
-                        .border(1.dp, BorderSubtle, RoundedCornerShape(999.dp))
+                        .clip(RoundedCornerShape(AppDimens.RadiusPill))
+                        .background(AppColors.CardHigh)
+                        .border(AppDimens.BorderThin, AppColors.BorderSubtle, RoundedCornerShape(AppDimens.RadiusPill))
                         .clickable(onClick = onMinus)
-                        .padding(horizontal = 20.dp, vertical = 14.dp),
+                        .padding(horizontal = AppDimens.ScreenHorizontal, vertical = AppDimens.SpaceXxl),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text("-10s", color = TextPrimary, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                    Text("-10s", color = AppColors.TextPrimary, fontSize = AppTextSizes.TitleSm, fontWeight = FontWeight.Bold)
                 }
                 Row(
                     modifier = Modifier
-                        .clip(RoundedCornerShape(999.dp))
-                        .background(CardHigh)
-                        .border(1.dp, BorderSubtle, RoundedCornerShape(999.dp))
+                        .clip(RoundedCornerShape(AppDimens.RadiusPill))
+                        .background(AppColors.CardHigh)
+                        .border(AppDimens.BorderThin, AppColors.BorderSubtle, RoundedCornerShape(AppDimens.RadiusPill))
                         .clickable(onClick = onPlus)
-                        .padding(horizontal = 20.dp, vertical = 14.dp),
+                        .padding(horizontal = AppDimens.ScreenHorizontal, vertical = AppDimens.SpaceXxl),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text("+10s", color = TextPrimary, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                    Text("+10s", color = AppColors.TextPrimary, fontSize = AppTextSizes.TitleSm, fontWeight = FontWeight.Bold)
                 }
             }
-            Spacer(Modifier.height(16.dp))
+            Spacer(Modifier.height(AppDimens.SpaceHuge))
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clip(RoundedCornerShape(999.dp))
-                    .background(Orange)
+                    .clip(RoundedCornerShape(AppDimens.RadiusPill))
+                    .background(AppColors.Orange)
                     .clickable(onClick = onFinish)
-                    .padding(vertical = 14.dp),
+                    .padding(vertical = AppDimens.SpaceXxl),
                 horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Icon(Icons.Filled.Done, contentDescription = null, tint = OnOrange, modifier = Modifier.size(20.dp))
-                Spacer(Modifier.width(8.dp))
-                Text("Terminar descanso", color = OnOrange, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                Icon(Icons.Filled.Done, contentDescription = null, tint = AppColors.OnOrange, modifier = Modifier.size(AppDimens.IconXl))
+                Spacer(Modifier.width(AppDimens.SpaceMd))
+                Text("Terminar descanso", color = AppColors.OnOrange, fontSize = AppTextSizes.TitleSm, fontWeight = FontWeight.Bold)
             }
         }
     }

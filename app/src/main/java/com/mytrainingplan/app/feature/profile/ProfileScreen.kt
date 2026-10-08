@@ -29,8 +29,10 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -68,23 +70,23 @@ fun ProfileScreen(
     onBack: () -> Unit = {},
     onSave: (Profile) -> Unit = {}
 ) {
-    var displayName by remember(initial) { mutableStateOf(initial?.displayName ?: "Carlos Mendoza") }
-    var ageText by remember(initial) { mutableStateOf((initial?.age ?: 28).toString()) }
-    var heightText by remember(initial) { mutableStateOf((initial?.heightCm ?: 178).toString()) }
-    var weightText by remember(initial) { mutableStateOf((initial?.weightKg ?: 78.5).toString()) }
-    var level by remember(initial) { mutableStateOf(initial?.level ?: TrainingLevel.INTERMEDIO) }
-    var goal by remember(initial) { mutableStateOf(initial?.goal ?: TrainingGoal.FUERZA_POTENCIA) }
+    var displayName by rememberSaveable(initial) { mutableStateOf(initial?.displayName ?: "Carlos Mendoza") }
+    var ageText by rememberSaveable(initial) { mutableStateOf((initial?.age ?: 28).toString()) }
+    var heightText by rememberSaveable(initial) { mutableStateOf((initial?.heightCm ?: 178).toString()) }
+    var weightText by rememberSaveable(initial) { mutableStateOf((initial?.weightKg ?: 78.5).toString()) }
+    var levelIndex by rememberSaveable(initial) { mutableIntStateOf((initial?.level ?: TrainingLevel.INTERMEDIO).ordinal) }
+    var goalIndex by rememberSaveable(initial) { mutableIntStateOf((initial?.goal ?: TrainingGoal.FUERZA_POTENCIA).ordinal) }
     // avatarUri se cableará con picker + Coil en el siguiente paso.
     // Por ahora placeholder con iniciales para la réplica visual.
-    var avatarUri by remember(initial) { mutableStateOf(initial?.avatarUri) }
+    var avatarUri by rememberSaveable(initial) { mutableStateOf(initial?.avatarUri) }
 
     val profile = Profile(
         displayName = displayName.ifBlank { "Atleta" },
         age = ageText.toIntOrNull(),
         heightCm = heightText.toIntOrNull(),
         weightKg = weightText.toDoubleOrNull(),
-        level = level,
-        goal = goal,
+        level = TrainingLevel.entries[levelIndex.coerceIn(TrainingLevel.entries.indices)],
+        goal = TrainingGoal.entries[goalIndex.coerceIn(TrainingGoal.entries.indices)],
         avatarUri = avatarUri
     )
 
@@ -106,8 +108,8 @@ fun ProfileScreen(
             else parts[0] + "." + parts.drop(1).joinToString("")
             weightText = normalized.take(6)
         },
-        onLevel = { level = it },
-        onGoal = { goal = it },
+        onLevel = { levelIndex = it.ordinal },
+        onGoal = { goalIndex = it.ordinal },
         onAvatarClick = { /* TODO picker + Coil */ },
         onBack = onBack,
         onSave = { onSave(profile) }

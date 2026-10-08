@@ -189,6 +189,11 @@ private val SAMPLE_EXERCISES: List<Exercise> = listOf(
         equipment = "barbell",
         category = "strength",
         secondaryMuscles = listOf("forearms"),
+        instructions = listOf(
+            "De pie, agarra la barra con las manos a la anchura de los hombros.",
+            "Flexiona los codos y sube la barra hasta los hombros sin balancear el cuerpo.",
+            "Baja despacio hasta estirar los brazos del todo."
+        ),
         gifUrl = gif("biceps", "barbell-curl"),
         source = ExerciseSource.CATALOG
     ),

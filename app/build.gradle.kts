@@ -4,6 +4,7 @@ plugins {
     alias(libs.plugins.ksp)
     alias(libs.plugins.hilt)
     alias(libs.plugins.androidx.room)
+    alias(libs.plugins.roborazzi)
 }
 
 android {
@@ -36,6 +37,13 @@ android {
     buildFeatures {
         compose = true
     }
+    // Roborazzi/Robolectric (spec 011, fotos): los recursos Android tienen
+    // que estar disponibles en los unit tests de la JVM.
+    testOptions {
+        unitTests {
+            isIncludeAndroidResources = true
+        }
+    }
 }
 
 room {
@@ -65,10 +73,20 @@ dependencies {
     implementation(libs.retrofit.converter.gson)
     implementation(libs.androidx.hilt.navigation.compose)
     testImplementation(libs.junit)
+    // Fotos de referencia con Roborazzi en la JVM (spec 011, paso 14).
+    testImplementation(libs.roborazzi)
+    testImplementation(libs.roborazzi.compose)
+    testImplementation(libs.robolectric)
+    testImplementation(libs.androidx.compose.ui.test.junit4)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(libs.androidx.junit)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
     debugImplementation(libs.androidx.compose.ui.tooling)
+}
+
+// Dorados versionados en el repo (docs vía Context7: /takahirom/roborazzi).
+roborazzi {
+    outputDir.set(file("src/test/screenshots"))
 }

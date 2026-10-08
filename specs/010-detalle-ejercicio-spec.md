@@ -101,9 +101,9 @@ Fuente de datos: la base local; los GIF son solo direcciones que Coil guarda en 
 - [x] La ficha muestra el GIF grande del ejercicio.
 - [x] La ficha muestra secundarios más músculo y equipo.
 - [x] La ficha muestra las instrucciones en orden y completas.
-- [ ] Sin red la ficha abre con lo guardado y no se cae.
-- [ ] Volver atrás y rotar conserva la ficha sin duplicar ni perder.
+- [x] Sin red la ficha abre con lo guardado y no se cae.
+- [x] Volver atrás y rotar conserva la ficha sin duplicar ni perder.
 - [x] Tras actualizar, los ejercicios viejos ya muestran instrucciones.
 - [x] ./gradlew assembleDebug termina OK.
 - [x] Prueba CatalogMappingTest en verde.
-- [ ] En móvil con gestos y con 3 botones nada queda bajo hora ni barra inferior.
+- [x] En móvil con gestos y con 3 botones nada queda bajo hora ni barra inferior.

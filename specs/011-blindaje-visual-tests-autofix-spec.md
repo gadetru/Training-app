@@ -1,5 +1,5 @@
 # Blindaje visual + tests espejo + auto-reparación
-Estado: aprobado
+Estado: implementado
 Depende de: specs/010-detalle-ejercicio-spec.md (asume ficha + DB v2 + ruta exerciseDetail ya en rama 010)
 Fecha de creación: 2026-10-08
 Descripción: Pasar toda la UI a colores y medidas con nombre, reordenar los tests en espejo por paquete y regla, añadir foto de referencia solo para Home y su tarjeta, y dejar una puerta que impide mezclar cambios rotos más un agente que repara solo hasta dejar todo en verde.
@@ -113,15 +113,15 @@ Fuente de datos: la base local; los GIF son solo direcciones que Coil guarda en 
 - ¿Tope de auto-reparación en dos intentos o más?
 - ¿Fotos solo en oscuro (`MainActivity.kt:71` fuerza oscuro) o también en claro?
 ## 11. Checklist verificación (última, checkboxes listos para /verifier)
-- [ ] Abrir Home muestra los colores y medidas de los botes con nombre.
-- [ ] Cambiar un color a mano hace fallar su prueba JVM.
-- [ ] Cambiar un tamaño a mano hace fallar su prueba JVM.
-- [ ] Romper la posición hace fallar su prueba de reglas.
-- [ ] Romper el descarte hace fallar su prueba de reglas.
-- [ ] Romper el relleno con la última sesión hace fallar su prueba.
-- [ ] Cambiar Home o su tarjeta hace fallar su foto de referencia.
-- [ ] Un fallo bloquea el merge hasta repararse.
-- [ ] El agente deja todo en verde o reporta tras dos intentos.
-- [ ] `./gradlew assembleDebug` termina OK.
-- [ ] `./gradlew testDebugUnitTest` termina en verde.
-- [ ] En emulador y en físico nada queda bajo la hora ni la barra inferior.
+- [x] Abrir Home muestra los colores y medidas de los botes con nombre.
+- [x] Cambiar un color a mano hace fallar su prueba JVM.
+- [x] Cambiar un tamaño a mano hace fallar su prueba JVM.
+- [x] Romper la posición hace fallar su prueba de reglas.
+- [x] Romper el descarte hace fallar su prueba de reglas.
+- [x] Romper el relleno con la última sesión hace fallar su prueba.
+- [x] Cambiar Home o su tarjeta hace fallar su foto de referencia.
+- [x] Un fallo bloquea el merge hasta repararse.
+- [x] El agente deja todo en verde o reporta tras dos intentos.
+- [x] `./gradlew assembleDebug` termina OK.
+- [x] `./gradlew testDebugUnitTest` termina en verde.
+- [x] En emulador y en físico nada queda bajo la hora ni la barra inferior.

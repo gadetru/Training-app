@@ -1,0 +1,23 @@
+name: blindaje
+# Puerta de merge (spec 011, paso 15): un test en rojo bloquea el merge.
+# Requiere activar en GitHub (Settings > Branches > main): exigir este check.
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+jobs:
+  blindaje:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+      - uses: android-actions/setup-android@v3
+      - name: Compilar
+        run: ./gradlew assembleDebug --console=plain
+      - name: Tests JVM (botes, mapper, reglas + fotos Roborazzi)
+        run: ./gradlew testDebugUnitTest --console=plain
