@@ -97,13 +97,13 @@ Fuente de datos: la base local; los GIF son solo direcciones que Coil guarda en 
 ## Preguntas abiertas
 - ¿El olvido del tag se hace borrando el tag guardado o con una marca de esquema?
 ## 11. Checklist verificación (última, checkboxes listos para /verifier)
-- [ ] Pulsar un ejercicio del buscador abre su ficha sin fallar.
-- [ ] La ficha muestra el GIF grande del ejercicio.
-- [ ] La ficha muestra secundarios más músculo y equipo.
-- [ ] La ficha muestra las instrucciones en orden y completas.
+- [x] Pulsar un ejercicio del buscador abre su ficha sin fallar.
+- [x] La ficha muestra el GIF grande del ejercicio.
+- [x] La ficha muestra secundarios más músculo y equipo.
+- [x] La ficha muestra las instrucciones en orden y completas.
 - [ ] Sin red la ficha abre con lo guardado y no se cae.
 - [ ] Volver atrás y rotar conserva la ficha sin duplicar ni perder.
-- [ ] Tras actualizar, los ejercicios viejos ya muestran instrucciones.
+- [x] Tras actualizar, los ejercicios viejos ya muestran instrucciones.
 - [x] ./gradlew assembleDebug termina OK.
 - [x] Prueba CatalogMappingTest en verde.
 - [ ] En móvil con gestos y con 3 botones nada queda bajo hora ni barra inferior.
