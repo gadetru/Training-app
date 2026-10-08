@@ -70,6 +70,8 @@ object AppDimens {
     val IconMd: Dp = 16.dp
     val IconLg: Dp = 22.dp
     val IconXl: Dp = 20.dp
+    val IconInline: Dp = 18.dp
+    val SetNumWidth: Dp = 32.dp
     val TabHeight: Dp = 56.dp
     val PlaceholderIcon: Dp = 40.dp
 }
