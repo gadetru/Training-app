@@ -1,8 +1,6 @@
-package com.mytrainingplan.app
+package com.mytrainingplan.app.data.mapper
 
 import com.google.gson.Gson
-import com.mytrainingplan.app.data.mapper.toDomain as entityToDomain
-import com.mytrainingplan.app.data.mapper.toEntity
 import com.mytrainingplan.app.data.remote.dto.CatalogResponse
 import com.mytrainingplan.app.data.remote.dto.ExerciseDto
 import com.mytrainingplan.app.data.remote.dto.toDomain
@@ -12,7 +10,8 @@ import org.junit.Assert.assertFalse
 import org.junit.Test
 
 /**
- * Prueba de conversión del catálogo (Paso 9 spec 006).
+ * Prueba de conversión del catálogo (Paso 9 spec 006; movida a su espejo
+ * `data/mapper` en el paso 8 del spec 011, sin cambiar lógica).
  * DTO snake_case -> dominio -> entidad, sin tocar Android/Room.
  */
 class CatalogMappingTest {
@@ -159,7 +158,7 @@ class CatalogMappingTest {
             instructions = steps
         ).toDomain(now = 11L)
 
-        val roundTrip = domain.toEntity(now = 13L).entityToDomain()
+        val roundTrip = domain.toEntity(now = 13L).toDomain()
 
         assertEquals(steps, roundTrip.instructions)
     }
