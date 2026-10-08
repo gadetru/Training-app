@@ -1,5 +1,5 @@
 # Plantilla Usuario – Perfil de Atleta (copia imagen)
-Estado: aprobado
+Estado: implementado
 Depende de: Ninguno
 Fecha de creación: 2026-10-02
 Descripción: Crear la pantalla de perfil de atleta como copia exacta de references/plantilla-usuario/screen.png (HTML en code.html) en Kotlin + Compose, maquetación UI-first en memoria sin persistencia aún (Fase A).
@@ -95,12 +95,12 @@ No-funcionales:
 - ¿La ruta `profile` debe ser `startDestination` en primer arranque o solo accesible bajo demanda en este spec?
 
 ## 11. Checklist verificación (última, checkboxes listos para /verifier)
-- [ ] Pantalla copia `screen.png` verificada en móvil físico (header, avatar, form, chips, preview, CTA)
-- [ ] Nombre actualiza `Hola, {primerNombre}` en tiempo real
-- [ ] Edad/Estatura/Peso/Nivel/Enfoque editables en sesión
-- [ ] Badge `Cambiar foto` visible sin crash (picker real en siguiente spec)
-- [ ] `Guardar y Continuar` emite `onSave` sin crash
-- [ ] Rotación conserva estado en sesión
-- [ ] Paquete `com.mytrainingplan.app`, sin `.debug`
-- [ ] `./gradlew assembleDebug` OK
-- [ ] Prueba en móvil físico OK
+- [x] Pantalla copia `screen.png` verificada en móvil físico (header, avatar, form, chips, preview, CTA)
+- [x] Nombre actualiza `Hola, {primerNombre}` en tiempo real
+- [x] Edad/Estatura/Peso/Nivel/Enfoque editables en sesión
+- [x] Badge `Cambiar foto` visible sin crash (picker real en siguiente spec)
+- [x] `Guardar y Continuar` emite `onSave` sin crash
+- [x] Rotación conserva estado en sesión
+- [x] Paquete `com.mytrainingplan.app`, sin `.debug`
+- [x] `./gradlew assembleDebug` OK
+- [x] Prueba en móvil físico OK

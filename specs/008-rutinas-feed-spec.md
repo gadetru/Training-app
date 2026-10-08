@@ -54,4 +54,4 @@ Toca `feature/home` (`HomeViewModel`, solo expone) y `data/repository` (`RoomHom
 - [x] Editar y salir sin guardar → la anterior intacta.
 - [x] Borrar una rutina → el resto conserva orden sin huecos.
 - [x] `./gradlew assembleDebug` termina OK.
-- [ ] En móvil con gestos y con 3 botones nada queda bajo hora ni barra inferior.
+- [x] En móvil con gestos y con 3 botones nada queda bajo hora ni barra inferior.

@@ -74,4 +74,4 @@ Toca `feature/exercises` (picker + `ExercisesViewModel`, solo lectura) y la capa
 - [x] `getById` no lanza excepción en el repo real.
 - [x] `./gradlew assembleDebug` termina OK.
 - [x] Prueba `CatalogMappingTest` en verde.
-- [ ] En móvil con gestos y con 3 botones nada queda bajo hora ni barra inferior.
+- [x] En móvil con gestos y con 3 botones nada queda bajo hora ni barra inferior.
