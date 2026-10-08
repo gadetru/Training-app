@@ -56,3 +56,18 @@ fun MyTrainingPlanTheme(
         content = content
     )
 }
+
+/**
+ * Puerta única a los botes con nombre (spec 011, paso 2).
+ * Patrón oficial Compose DesignSystems: objeto que expone los sistemas
+ * (ver https://developer.android.com/develop/ui/compose/designsystems/anatomy
+ * y .../custom). Versión simple sin `CompositionLocal`: los botes son
+ * singletons estables y las pruebas JVM (`AppColorsTest`, `AppDimensTest`)
+ * los leen sin runtime Compose.
+ * Docs vía Context7: `/websites/developer_android_develop_ui_compose_designsystems`.
+ */
+object AppTheme {
+    val colors get() = AppColors
+    val dimens get() = AppDimens
+    val textSizes get() = AppTextSizes
+}
