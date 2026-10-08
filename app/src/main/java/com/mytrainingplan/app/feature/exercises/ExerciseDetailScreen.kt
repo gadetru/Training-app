@@ -30,28 +30,19 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.ColorPainter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import com.mytrainingplan.app.ui.theme.AppColors
+import com.mytrainingplan.app.ui.theme.AppDimens
+import com.mytrainingplan.app.ui.theme.AppTextSizes
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import com.mytrainingplan.app.domain.model.Exercise
 
-// Tokens patrón ExercisePickerSheet (003) + RoutineEditScreen (004).
-// Tipografías de sistema (Outfit/Jakarta van en Futuros).
-private val Bg = Color(0xFF111316)
-private val Card = Color(0xFF1A1C1F)
-private val CardHigh = Color(0xFF282A2D)
-private val Orange = Color(0xFFFF5E00)
-private val OnOrange = Color(0xFF1A0A00)
-private val TextPrimary = Color(0xFFF5F7FA)
-private val TextMuted = Color(0xFF8B95A5)
-private val BorderSubtle = Color(0xFF282E37)
+// Colores y medidas desde ui/theme (spec 011): sin tokens locales.
 
 /** Etiquetas ES (mismo mapa que el buscador, spec 003 §4). */
 private val MUSCLE_LABELS: Map<String, String> = mapOf(
@@ -107,7 +98,7 @@ fun ExerciseDetailScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Bg)
+            .background(AppColors.Bg)
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
             DetailHeader(onBack = onBack)
@@ -132,27 +123,27 @@ private fun DetailHeader(onBack: () -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .background(Bg)
+            .background(AppColors.Bg)
             .statusBarsPadding()
-            .padding(horizontal = 20.dp, vertical = 12.dp),
+            .padding(horizontal = AppDimens.ScreenHorizontal, vertical = AppDimens.SpaceXl),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Box(
             modifier = Modifier
-                .size(48.dp)
-                .clip(RoundedCornerShape(999.dp))
-                .background(Card)
-                .border(1.dp, BorderSubtle, RoundedCornerShape(999.dp))
+                .size(AppDimens.TouchMin)
+                .clip(RoundedCornerShape(AppDimens.RadiusPill))
+                .background(AppColors.Card)
+                .border(AppDimens.BorderThin, AppColors.BorderSubtle, RoundedCornerShape(AppDimens.RadiusPill))
                 .clickable(onClick = onBack),
             contentAlignment = Alignment.Center
         ) {
-            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver", tint = TextPrimary)
+            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver", tint = AppColors.TextPrimary)
         }
-        Spacer(Modifier.width(10.dp))
+        Spacer(Modifier.width(AppDimens.SpaceLg))
         Text(
             "Detalle de ejercicio",
-            color = TextPrimary,
-            fontSize = 18.sp,
+            color = AppColors.TextPrimary,
+            fontSize = AppTextSizes.Headline,
             fontWeight = FontWeight.Bold,
             modifier = Modifier.weight(1f)
         )
@@ -167,75 +158,75 @@ private fun DetailBody(
     Column(
         modifier = modifier
             .verticalScroll(rememberScrollState())
-            .padding(horizontal = 20.dp)
+            .padding(horizontal = AppDimens.ScreenHorizontal)
             // Hueco para que el pie fijo no tape las instrucciones.
-            .padding(top = 4.dp, bottom = 110.dp),
-        verticalArrangement = Arrangement.spacedBy(14.dp)
+            .padding(top = AppDimens.ContentTop, bottom = AppDimens.DetailBottom),
+        verticalArrangement = Arrangement.spacedBy(AppDimens.SpaceXxl)
     ) {
         // GIF grande vía Coil (sin coil-gif: primer frame; sin red usa caché).
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(240.dp)
-                .clip(RoundedCornerShape(16.dp))
-                .background(CardHigh),
+                .height(AppDimens.DetailHeroHeight)
+                .clip(RoundedCornerShape(AppDimens.RadiusCard))
+                .background(AppColors.CardHigh),
             contentAlignment = Alignment.BottomEnd
         ) {
             AsyncImage(
                 model = exercise.gifUrl,
                 contentDescription = exercise.name,
-                placeholder = ColorPainter(CardHigh),
-                error = ColorPainter(CardHigh),
+                placeholder = ColorPainter(AppColors.CardHigh),
+                error = ColorPainter(AppColors.CardHigh),
                 contentScale = ContentScale.Crop,
                 modifier = Modifier.fillMaxSize()
             )
             Box(
                 modifier = Modifier
-                    .padding(8.dp)
-                    .clip(RoundedCornerShape(6.dp))
-                    .background(Color(0xCC0C0E11))
-                    .padding(horizontal = 8.dp, vertical = 3.dp)
+                    .padding(AppDimens.SpaceMd)
+                    .clip(RoundedCornerShape(AppDimens.RadiusSm))
+                    .background(AppColors.BadgeBg)
+                    .padding(horizontal = AppDimens.SpaceMd, vertical = AppDimens.SpaceTiny)
             ) {
-                Text("GIF", color = Orange, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                Text("GIF", color = AppColors.Orange, fontSize = AppTextSizes.Caption, fontWeight = FontWeight.Bold)
             }
         }
-        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Column(verticalArrangement = Arrangement.spacedBy(AppDimens.SpaceXs)) {
             Text(
                 exercise.name,
-                color = TextPrimary,
-                fontSize = 22.sp,
+                color = AppColors.TextPrimary,
+                fontSize = AppTextSizes.Display,
                 fontWeight = FontWeight.Bold
             )
             Text(
                 "${muscleLabel(exercise.muscle)} · ${equipmentLabel(exercise.equipment)}",
-                color = TextMuted,
-                fontSize = 13.sp
+                color = AppColors.TextMuted,
+                fontSize = AppTextSizes.BodyLg
             )
         }
         if (exercise.secondaryMuscles.isNotEmpty()) {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(AppDimens.SpaceMd)) {
                 Text(
                     "SECUNDARIOS",
-                    color = TextMuted,
-                    fontSize = 10.sp,
+                    color = AppColors.TextMuted,
+                    fontSize = AppTextSizes.Caption,
                     fontWeight = FontWeight.SemiBold
                 )
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    horizontalArrangement = Arrangement.spacedBy(AppDimens.SpaceSm)
                 ) {
                     exercise.secondaryMuscles.forEach { secondary ->
                         Box(
                             modifier = Modifier
-                                .clip(RoundedCornerShape(8.dp))
-                                .background(Card)
-                                .border(1.dp, BorderSubtle, RoundedCornerShape(8.dp))
-                                .padding(horizontal = 10.dp, vertical = 6.dp)
+                                .clip(RoundedCornerShape(AppDimens.RadiusMd))
+                                .background(AppColors.Card)
+                                .border(AppDimens.BorderThin, AppColors.BorderSubtle, RoundedCornerShape(AppDimens.RadiusMd))
+                                .padding(horizontal = AppDimens.SpaceLg, vertical = AppDimens.SpaceSm)
                         ) {
                             Text(
                                 muscleLabel(secondary),
-                                color = TextPrimary,
-                                fontSize = 11.sp,
+                                color = AppColors.TextPrimary,
+                                fontSize = AppTextSizes.Small,
                                 fontWeight = FontWeight.SemiBold
                             )
                         }
@@ -243,18 +234,18 @@ private fun DetailBody(
                 }
             }
         }
-        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Column(verticalArrangement = Arrangement.spacedBy(AppDimens.SpaceMd)) {
             Text(
                 "INSTRUCCIONES",
-                color = Orange,
-                fontSize = 10.sp,
+                color = AppColors.Orange,
+                fontSize = AppTextSizes.Caption,
                 fontWeight = FontWeight.Bold
             )
             if (exercise.instructions.isEmpty()) {
                 Text(
                     "Sin instrucciones guardadas para este ejercicio.",
-                    color = TextMuted,
-                    fontSize = 13.sp
+                    color = AppColors.TextMuted,
+                    fontSize = AppTextSizes.BodyLg
                 )
             } else {
                 exercise.instructions.forEachIndexed { index, step ->
@@ -270,34 +261,34 @@ private fun InstructionRow(number: Int, text: String) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(12.dp))
-            .background(Card)
-            .border(1.dp, BorderSubtle, RoundedCornerShape(12.dp))
-            .padding(12.dp),
+            .clip(RoundedCornerShape(AppDimens.RadiusXl))
+            .background(AppColors.Card)
+            .border(AppDimens.BorderThin, AppColors.BorderSubtle, RoundedCornerShape(AppDimens.RadiusXl))
+            .padding(AppDimens.SpaceXl),
         verticalAlignment = Alignment.Top
     ) {
         Box(
             modifier = Modifier
-                .size(28.dp)
-                .clip(RoundedCornerShape(999.dp))
-                .background(Orange),
+                .size(AppDimens.SetBadge)
+                .clip(RoundedCornerShape(AppDimens.RadiusPill))
+                .background(AppColors.Orange),
             contentAlignment = Alignment.Center
         ) {
             Text(
                 "$number",
-                color = OnOrange,
-                fontSize = 13.sp,
+                color = AppColors.OnOrange,
+                fontSize = AppTextSizes.BodyLg,
                 fontWeight = FontWeight.Bold
             )
         }
-        Spacer(Modifier.width(10.dp))
+        Spacer(Modifier.width(AppDimens.SpaceLg))
         Text(
             text,
-            color = TextPrimary,
-            fontSize = 13.sp,
+            color = AppColors.TextPrimary,
+            fontSize = AppTextSizes.BodyLg,
             modifier = Modifier
                 .weight(1f)
-                .padding(top = 4.dp)
+                .padding(top = AppDimens.SpaceXs)
         )
     }
 }
@@ -307,21 +298,21 @@ private fun MissingExercise(modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 20.dp),
+            .padding(horizontal = AppDimens.ScreenHorizontal),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
         Text(
             "Ejercicio no encontrado",
-            color = TextPrimary,
-            fontSize = 20.sp,
+            color = AppColors.TextPrimary,
+            fontSize = AppTextSizes.DisplaySm,
             fontWeight = FontWeight.Bold
         )
-        Spacer(Modifier.height(8.dp))
+        Spacer(Modifier.height(AppDimens.SpaceMd))
         Text(
             "El ejercicio no existe en este móvil.",
-            color = TextMuted,
-            fontSize = 14.sp,
+            color = AppColors.TextMuted,
+            fontSize = AppTextSizes.TitleSm,
             textAlign = TextAlign.Center
         )
     }
@@ -336,19 +327,19 @@ private fun DetailFooter(
         modifier = modifier
             .fillMaxWidth()
             .navigationBarsPadding()
-            .padding(horizontal = 20.dp)
-            .padding(bottom = 16.dp)
-            .clip(RoundedCornerShape(999.dp))
-            .background(Orange)
+            .padding(horizontal = AppDimens.ScreenHorizontal)
+            .padding(bottom = AppDimens.SpaceHuge)
+            .clip(RoundedCornerShape(AppDimens.RadiusPill))
+            .background(AppColors.Orange)
             .clickable(onClick = onBack)
-            .padding(vertical = 14.dp),
+            .padding(vertical = AppDimens.SpaceXxl),
         horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
             "Volver",
-            color = OnOrange,
-            fontSize = 14.sp,
+            color = AppColors.OnOrange,
+            fontSize = AppTextSizes.TitleSm,
             fontWeight = FontWeight.Bold
         )
     }
@@ -361,7 +352,7 @@ private fun ExerciseDetailPreview() {
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Bg)
+                .background(AppColors.Bg)
         ) {
             Column(modifier = Modifier.fillMaxSize()) {
                 DetailHeader(onBack = {})

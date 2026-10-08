@@ -23,6 +23,7 @@ object AppDimens {
 
     // Espaciados.
     val SpaceXxs: Dp = 2.dp
+    val SpaceTiny: Dp = 3.dp
     val SpaceXs: Dp = 4.dp
     val SpaceSm: Dp = 6.dp
     val SpaceMd: Dp = 8.dp
@@ -50,6 +51,8 @@ object AppDimens {
     val AccentBarHeight: Dp = 88.dp
     val DetailHeroHeight: Dp = 240.dp
     val ConfirmHeight: Dp = 52.dp
+    val ChipMinHeight: Dp = 28.dp
+    val TitleDot: Dp = 10.dp
     val ProgressBarThin: Dp = 6.dp
     val ProgressBarThick: Dp = 8.dp
     val Divider: Dp = 1.dp

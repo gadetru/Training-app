@@ -47,27 +47,16 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import com.mytrainingplan.app.ui.theme.AppColors
+import com.mytrainingplan.app.ui.theme.AppDimens
+import com.mytrainingplan.app.ui.theme.AppTextSizes
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import com.mytrainingplan.app.data.repository.FakeExerciseRepository
 import com.mytrainingplan.app.domain.model.Exercise
 import com.mytrainingplan.app.domain.model.ExercisesUiState
 
-// Tokens references/plantilla-lista-ejercicios/DESIGN.md + patrón HomeScreen (002).
-// Tipografías de sistema en Fase A (Outfit/Plus Jakarta/Space Grotesk van en Futuros).
-private val SheetBg = Color(0xFF1A1C1F)
-private val Card = Color(0xFF1E2023)
-private val CardHigh = Color(0xFF282A2D)
-private val Orange = Color(0xFFFF5E00)
-private val Volt = Color(0xFFCCFF00)
-private val OnOrange = Color(0xFF1A0A00)
-private val OnVolt = Color(0xFF1A2A00)
-private val TextPrimary = Color(0xFFF5F7FA)
-private val TextMuted = Color(0xFF8B95A5)
-private val BorderSubtle = Color(0xFF282E37)
-private val InputBg = Color(0xFF0C0E11)
+// Colores y medidas desde ui/theme (spec 011): sin tokens locales.
 
 /** Chip de músculo: clave de [selectedMuscle] + etiqueta ES (spec 003 §4). */
 private val MUSCLE_CHIPS: List<Pair<String?, String>> = listOf(
@@ -140,14 +129,14 @@ fun ExercisePickerSheet(
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
-        containerColor = SheetBg,
+        containerColor = AppColors.SheetBg,
         dragHandle = {
             Box(
                 modifier = Modifier
-                    .padding(top = 12.dp, bottom = 4.dp)
-                    .size(width = 48.dp, height = 6.dp)
-                    .clip(RoundedCornerShape(999.dp))
-                    .background(CardHigh)
+                    .padding(top = AppDimens.SpaceXl, bottom = AppDimens.SpaceXs)
+                    .size(width = AppDimens.TouchMin, height = AppDimens.SpaceSm)
+                    .clip(RoundedCornerShape(AppDimens.RadiusPill))
+                    .background(AppColors.CardHigh)
             )
         }
     ) {
@@ -180,7 +169,7 @@ fun ExercisePickerContent(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .background(SheetBg)
+            .background(AppColors.SheetBg)
     ) {
         SheetTitleRow(onDismiss = onDismiss)
         SearchBar(
@@ -207,8 +196,8 @@ fun ExercisePickerContent(
             ) {
                 Text(
                     "Sin resultados: ajusta la búsqueda o los filtros",
-                    color = TextMuted,
-                    fontSize = 13.sp
+                    color = AppColors.TextMuted,
+                    fontSize = AppTextSizes.BodyLg
                 )
             }
         } else {
@@ -216,8 +205,8 @@ fun ExercisePickerContent(
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxWidth(),
-                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-                verticalArrangement = Arrangement.spacedBy(10.dp)
+                contentPadding = PaddingValues(horizontal = AppDimens.SpaceHuge, vertical = AppDimens.SpaceMd),
+                verticalArrangement = Arrangement.spacedBy(AppDimens.SpaceLg)
             ) {
                 items(uiState.results, key = { it.id }) { exercise ->
                     ExerciseRow(
@@ -242,34 +231,34 @@ private fun SheetTitleRow(onDismiss: () -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 20.dp, vertical = 8.dp),
+            .padding(horizontal = AppDimens.ScreenHorizontal, vertical = AppDimens.SpaceMd),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Box(
             modifier = Modifier
-                .size(10.dp)
-                .clip(RoundedCornerShape(999.dp))
-                .background(Orange)
+                .size(AppDimens.TitleDot)
+                .clip(RoundedCornerShape(AppDimens.RadiusPill))
+                .background(AppColors.Orange)
         )
-        Spacer(Modifier.width(10.dp))
+        Spacer(Modifier.width(AppDimens.SpaceLg))
         Text(
             "Seleccionar Ejercicio",
-            color = TextPrimary,
-            fontSize = 18.sp,
+            color = AppColors.TextPrimary,
+            fontSize = AppTextSizes.Headline,
             fontWeight = FontWeight.Bold,
             modifier = Modifier.weight(1f)
         )
         // Cerrar/X: descarta sin emitir (hit target 48dp).
         Box(
             modifier = Modifier
-                .size(48.dp)
-                .clip(RoundedCornerShape(999.dp))
-                .background(Card)
-                .border(1.dp, BorderSubtle, RoundedCornerShape(999.dp))
+                .size(AppDimens.TouchMin)
+                .clip(RoundedCornerShape(AppDimens.RadiusPill))
+                .background(AppColors.Card2)
+                .border(AppDimens.BorderThin, AppColors.BorderSubtle, RoundedCornerShape(AppDimens.RadiusPill))
                 .clickable(onClick = onDismiss),
             contentAlignment = Alignment.Center
         ) {
-            Icon(Icons.Filled.Close, contentDescription = "Cerrar", tint = TextMuted)
+            Icon(Icons.Filled.Close, contentDescription = "Cerrar", tint = AppColors.TextMuted)
         }
     }
 }
@@ -283,33 +272,33 @@ private fun SearchBar(
         value = query,
         onValueChange = onQueryChange,
         singleLine = true,
-        placeholder = { Text("Buscar ejercicio (ej. Sentadilla, Prensa...)", color = TextMuted, fontSize = 14.sp) },
-        leadingIcon = { Icon(Icons.Filled.Search, contentDescription = null, tint = Orange) },
+        placeholder = { Text("Buscar ejercicio (ej. Sentadilla, Prensa...)", color = AppColors.TextMuted, fontSize = AppTextSizes.TitleSm) },
+        leadingIcon = { Icon(Icons.Filled.Search, contentDescription = null, tint = AppColors.Orange) },
         trailingIcon = {
             if (query.isNotEmpty()) {
                 Box(
                     modifier = Modifier
-                        .size(48.dp)
+                        .size(AppDimens.TouchMin)
                         .clickable(onClick = { onQueryChange("") }),
                     contentAlignment = Alignment.Center
                 ) {
-                    Icon(Icons.Filled.Close, contentDescription = "Borrar búsqueda", tint = TextMuted)
+                    Icon(Icons.Filled.Close, contentDescription = "Borrar búsqueda", tint = AppColors.TextMuted)
                 }
             }
         },
-        shape = RoundedCornerShape(12.dp),
+        shape = RoundedCornerShape(AppDimens.RadiusXl),
         colors = TextFieldDefaults.colors(
-            focusedContainerColor = InputBg,
-            unfocusedContainerColor = InputBg,
+            focusedContainerColor = AppColors.InputBg,
+            unfocusedContainerColor = AppColors.InputBg,
             focusedIndicatorColor = Color.Transparent,
             unfocusedIndicatorColor = Color.Transparent,
-            cursorColor = Orange,
-            focusedTextColor = TextPrimary,
-            unfocusedTextColor = TextPrimary
+            cursorColor = AppColors.Orange,
+            focusedTextColor = AppColors.TextPrimary,
+            unfocusedTextColor = AppColors.TextPrimary
         ),
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 20.dp, vertical = 4.dp)
+            .padding(horizontal = AppDimens.ScreenHorizontal, vertical = AppDimens.SpaceXs)
     )
 }
 
@@ -321,25 +310,25 @@ private fun ChipsRow(
 ) {
     LazyRow(
         modifier = Modifier.fillMaxWidth(),
-        contentPadding = PaddingValues(horizontal = 20.dp, vertical = 6.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
+        contentPadding = PaddingValues(horizontal = AppDimens.ScreenHorizontal, vertical = AppDimens.SpaceSm),
+        horizontalArrangement = Arrangement.spacedBy(AppDimens.SpaceMd)
     ) {
         items(chips, key = { it.second }) { (key, label) ->
             val active = key == selected
             Box(
                 modifier = Modifier
-                    .clip(RoundedCornerShape(999.dp))
-                    .background(if (active) Orange else Card)
-                    .border(1.dp, if (active) Orange else BorderSubtle, RoundedCornerShape(999.dp))
+                    .clip(RoundedCornerShape(AppDimens.RadiusPill))
+                    .background(if (active) AppColors.Orange else AppColors.Card2)
+                    .border(AppDimens.BorderThin, if (active) AppColors.Orange else AppColors.BorderSubtle, RoundedCornerShape(AppDimens.RadiusPill))
                     .clickable(onClick = { onSelected(if (active) null else key) })
-                    .padding(horizontal = 14.dp, vertical = 10.dp)
-                    .sizeIn(minWidth = 48.dp, minHeight = 28.dp),
+                    .padding(horizontal = AppDimens.SpaceXxl, vertical = AppDimens.SpaceLg)
+                    .sizeIn(minWidth = AppDimens.TouchMin, minHeight = AppDimens.ChipMinHeight),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
                     label,
-                    color = if (active) OnOrange else TextMuted,
-                    fontSize = 12.sp,
+                    color = if (active) AppColors.OnOrange else AppColors.TextMuted,
+                    fontSize = AppTextSizes.Body,
                     fontWeight = if (active) FontWeight.Bold else FontWeight.Medium
                 )
             }
@@ -352,15 +341,15 @@ private fun ResultsCount(count: Int) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 20.dp, vertical = 6.dp),
+            .padding(horizontal = AppDimens.ScreenHorizontal, vertical = AppDimens.SpaceSm),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text("EJERCICIOS", color = TextMuted, fontSize = 10.sp, fontWeight = FontWeight.SemiBold)
+        Text("EJERCICIOS", color = AppColors.TextMuted, fontSize = AppTextSizes.Caption, fontWeight = FontWeight.SemiBold)
         Text(
             "$count DISPONIBLES",
-            color = Orange,
-            fontSize = 10.sp,
+            color = AppColors.Orange,
+            fontSize = AppTextSizes.Caption,
             fontWeight = FontWeight.Bold
         )
     }
@@ -376,15 +365,15 @@ private fun ExerciseRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp))
-            .background(Card)
+            .clip(RoundedCornerShape(AppDimens.RadiusCard))
+            .background(AppColors.Card2)
             .border(
-                1.dp,
-                if (selected) Volt else BorderSubtle,
-                RoundedCornerShape(16.dp)
+                AppDimens.BorderThin,
+                if (selected) AppColors.Volt else AppColors.BorderSubtle,
+                RoundedCornerShape(AppDimens.RadiusCard)
             )
             .clickable(onClick = onDetail)
-            .padding(10.dp),
+            .padding(AppDimens.SpaceLg),
         verticalAlignment = Alignment.CenterVertically
     ) {
         // Thumbnail GIF real vía Coil (Coil sin coil-gif: primer frame estático).
@@ -392,75 +381,75 @@ private fun ExerciseRow(
         // Docs: /coil-kt/coil (coil-compose AsyncImage + placeholder/error).
         Box(
             modifier = Modifier
-                .size(56.dp)
-                .clip(RoundedCornerShape(12.dp))
-                .background(CardHigh),
+                .size(AppDimens.Thumb)
+                .clip(RoundedCornerShape(AppDimens.RadiusXl))
+                .background(AppColors.CardHigh),
             contentAlignment = Alignment.BottomEnd
         ) {
             AsyncImage(
                 model = exercise.gifUrl,
                 contentDescription = exercise.name,
-                placeholder = ColorPainter(CardHigh),
-                error = ColorPainter(CardHigh),
+                placeholder = ColorPainter(AppColors.CardHigh),
+                error = ColorPainter(AppColors.CardHigh),
                 contentScale = ContentScale.Crop,
                 modifier = Modifier.fillMaxSize()
             )
             Box(
                 modifier = Modifier
-                    .padding(2.dp)
-                    .clip(RoundedCornerShape(4.dp))
-                    .background(Color(0xCC0C0E11))
-                    .padding(horizontal = 4.dp, vertical = 1.dp)
+                    .padding(AppDimens.SpaceXxs)
+                    .clip(RoundedCornerShape(AppDimens.RadiusXs))
+                    .background(AppColors.BadgeBg)
+                    .padding(horizontal = AppDimens.SpaceXs, vertical = AppDimens.Divider)
             ) {
-                Text("GIF", color = Orange, fontSize = 8.sp, fontWeight = FontWeight.Bold)
+                Text("GIF", color = AppColors.Orange, fontSize = AppTextSizes.Badge, fontWeight = FontWeight.Bold)
             }
         }
-        Spacer(Modifier.width(12.dp))
+        Spacer(Modifier.width(AppDimens.SpaceXl))
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 exercise.name,
-                color = TextPrimary,
-                fontSize = 14.sp,
+                color = AppColors.TextPrimary,
+                fontSize = AppTextSizes.TitleSm,
                 fontWeight = FontWeight.Bold,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
-            Spacer(Modifier.height(2.dp))
+            Spacer(Modifier.height(AppDimens.SpaceXxs))
             Text(
                 "${muscleLabel(exercise.muscle)} · ${equipmentLabel(exercise.equipment)}",
-                color = if (selected) Volt else TextMuted,
-                fontSize = 12.sp,
+                color = if (selected) AppColors.Volt else AppColors.TextMuted,
+                fontSize = AppTextSizes.Body,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
         }
-        Spacer(Modifier.width(8.dp))
+        Spacer(Modifier.width(AppDimens.SpaceMd))
         // Añadir ↔ Añadido volt (área táctil >= 48dp, píldora compacta).
         Box(
             modifier = Modifier
-                .sizeIn(minWidth = 48.dp, minHeight = 48.dp),
+                .sizeIn(minWidth = AppDimens.TouchMin, minHeight = AppDimens.TouchMin),
             contentAlignment = Alignment.Center
         ) {
             Row(
                 modifier = Modifier
-                    .clip(RoundedCornerShape(999.dp))
-                    .background(if (selected) Volt else CardHigh)
-                    .border(1.dp, if (selected) Volt else BorderSubtle, RoundedCornerShape(999.dp))
+                    .clip(RoundedCornerShape(AppDimens.RadiusPill))
+                    .background(if (selected) AppColors.Volt else AppColors.CardHigh)
+                    .border(AppDimens.BorderThin, if (selected) AppColors.Volt else AppColors.BorderSubtle, RoundedCornerShape(AppDimens.RadiusPill))
                     .clickable(onClick = onToggle)
-                    .padding(horizontal = 12.dp, vertical = 8.dp),
+                    .padding(horizontal = AppDimens.SpaceXl, vertical = AppDimens.SpaceMd),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Icon(
                     if (selected) Icons.Filled.Check else Icons.Filled.Add,
                     contentDescription = null,
-                    tint = if (selected) OnVolt else Orange,
-                    modifier = Modifier.size(14.dp)
+                    tint = if (selected) AppColors.OnVolt else AppColors.Orange,
+                    modifier = Modifier.size(AppDimens.IconSm)
                 )
-                Spacer(Modifier.width(4.dp))
+                Spacer(Modifier.width(AppDimens.SpaceXs))
                 Text(
                     if (selected) "Añadido" else "Añadir",
-                    color = if (selected) OnVolt else TextPrimary,
-                    fontSize = 11.sp,
+                    color = if (selected) AppColors.OnVolt else AppColors.TextPrimary,
+                    fontSize = AppTextSizes.Small,
                     fontWeight = FontWeight.Bold
                 )
             }
@@ -477,22 +466,22 @@ private fun ConfirmFooter(
         onClick = onConfirm,
         enabled = selectedCount > 0,
         colors = ButtonDefaults.buttonColors(
-            containerColor = Orange,
-            disabledContainerColor = CardHigh,
-            contentColor = OnOrange,
-            disabledContentColor = TextMuted
+            containerColor = AppColors.Orange,
+            disabledContainerColor = AppColors.CardHigh,
+            contentColor = AppColors.OnOrange,
+            disabledContentColor = AppColors.TextMuted
         ),
-        shape = RoundedCornerShape(999.dp),
+        shape = RoundedCornerShape(AppDimens.RadiusPill),
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 20.dp, vertical = 16.dp)
-            .height(52.dp)
+            .padding(horizontal = AppDimens.ScreenHorizontal, vertical = AppDimens.SpaceHuge)
+            .height(AppDimens.ConfirmHeight)
     ) {
-        Icon(Icons.Filled.Check, contentDescription = null, modifier = Modifier.size(16.dp))
-        Spacer(Modifier.width(8.dp))
+        Icon(Icons.Filled.Check, contentDescription = null, modifier = Modifier.size(AppDimens.IconMd))
+        Spacer(Modifier.width(AppDimens.SpaceMd))
         Text(
             "Listo ($selectedCount seleccionados)",
-            fontSize = 14.sp,
+            fontSize = AppTextSizes.TitleSm,
             fontWeight = FontWeight.Bold
         )
     }
