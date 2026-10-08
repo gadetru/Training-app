@@ -92,7 +92,7 @@ Los GIFs no se guardan en SQLite: solo su URL. Coil los cachea en disco conforme
 | Catálogo | Fork propio de ExerciseGymGifsDB vía jsDelivr, con tag fijo |
 | Backend | Java + Spring Boot, a partir de la Fase 2 |
 | Base de datos del servidor | MySQL, a partir de la Fase 2 |
-| Desarrollo | Android Studio con móvil físico, sin emulador |
+| Desarrollo | Android Studio + emulador Pixel 6 API 34 (`emulator-5554`), verificación automática con `connectedDebugAndroidTest` |
 
 ## Pendiente de decidir
 

@@ -1,6 +1,7 @@
 package com.mytrainingplan.app
 
 import android.os.Bundle
+import android.net.Uri
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -24,6 +25,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.mytrainingplan.app.domain.model.Profile
 import com.mytrainingplan.app.data.repository.CatalogSync
+import com.mytrainingplan.app.feature.exercises.ExerciseDetailScreen
 import com.mytrainingplan.app.feature.home.BottomDock
 import com.mytrainingplan.app.feature.home.CalendarPlaceholder
 import com.mytrainingplan.app.feature.home.HomeScreen
@@ -48,6 +50,13 @@ private const val ROUTE_ROUTINE_EDIT = "routineEdit?$ARG_ROUTINE_ID={$ARG_ROUTIN
 private const val ROUTE_ROUTINE_EDIT_NEW = "routineEdit"
 /** Sesión en vivo (spec 005): `workout?routineId={id}`, null = estado vacío. */
 private const val ROUTE_WORKOUT = "workout?$ARG_ROUTINE_ID={$ARG_ROUTINE_ID}"
+/**
+ * Ficha de ejercicio (spec 010): query-param porque el id de catálogo lleva
+ * `/` (`músculo/slug`); al navegar se pasa con `Uri.encode` y el NavComponent
+ * lo devuelve decodificado. Nulo o inexistente = aviso sin crash.
+ */
+private const val ARG_EXERCISE_ID = "exerciseId"
+private const val ROUTE_EXERCISE_DETAIL = "exerciseDetail?$ARG_EXERCISE_ID={$ARG_EXERCISE_ID}"
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -115,7 +124,9 @@ fun TrainingNav() {
                     navController.popBackStack()
                     navController.navigateToTab(HomeTab.RUTINAS)
                 },
-                onBack = { navController.popBackStack() }
+                onBack = { navController.popBackStack() },
+                // Spec 010: la ficha abre desde editar rutina.
+                onExerciseClick = { navController.navigateToExercise(it) }
             )
         }
         composable(
@@ -138,6 +149,23 @@ fun TrainingNav() {
                     navController.popBackStack()
                     navController.navigateToTab(HomeTab.RUTINAS)
                 },
+                onBack = { navController.popBackStack() },
+                // Spec 010: la ficha abre desde la sesión.
+                onExerciseClick = { navController.navigateToExercise(it) }
+            )
+        }
+        composable(
+            route = ROUTE_EXERCISE_DETAIL,
+            arguments = listOf(
+                navArgument(ARG_EXERCISE_ID) {
+                    type = NavType.StringType
+                    nullable = true
+                    defaultValue = null
+                }
+            )
+        ) { backStackEntry ->
+            ExerciseDetailScreen(
+                exerciseId = backStackEntry.arguments?.getString(ARG_EXERCISE_ID),
                 onBack = { navController.popBackStack() }
             )
         }
@@ -187,6 +215,11 @@ private fun NavHostController.navigateToTab(tab: HomeTab) {
         popUpTo(graph.startDestinationId) { saveState = true }
         restoreState = true
     }
+}
+
+/** Abre la ficha del ejercicio (spec 010): el id lleva `/`, se codifica. */
+private fun NavHostController.navigateToExercise(exerciseId: String) {
+    navigate("exerciseDetail?$ARG_EXERCISE_ID=${Uri.encode(exerciseId)}")
 }
 
 /** Placeholder a pantalla completa + dock flotante compartido. */

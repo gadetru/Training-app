@@ -23,6 +23,14 @@ class CatalogTagStore(private val context: Context) {
         context.catalogStore.edit { it[KEY_TAG] = tag }
     }
 
+    /**
+     * Olvida el tag guardado (spec 010): fuerza re-descargar con el mismo
+     * tag fijo para rellenar `instructions` en filas migradas a v2.
+     */
+    suspend fun clearTag() {
+        context.catalogStore.edit { it.remove(KEY_TAG) }
+    }
+
     companion object {
         private val KEY_TAG = stringPreferencesKey("catalog_tag")
     }

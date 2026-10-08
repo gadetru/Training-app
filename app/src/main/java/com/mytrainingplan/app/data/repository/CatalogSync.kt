@@ -21,6 +21,9 @@ import retrofit2.HttpException
  *   el tag (reintenta en el próximo arranque).
  * - Tag inexistente (HTTP 404) u otra respuesta inesperada: se avisa por
  *   log y tampoco se guarda el tag (nunca silencio total).
+ * - Spec 010 (DB v2): si el tag coincide pero ninguna fila `CATALOG` trae
+ *   `instructions` (filas viejas migradas), se olvida el tag y se descarga
+ *   otra vez con el mismo tag fijo; los `CUSTOM` ni se tocan.
  */
 class CatalogSync(
     private val api: ExerciseApi,
@@ -29,7 +32,12 @@ class CatalogSync(
 ) {
     suspend fun syncIfNeeded(lang: String = CatalogConfig.DEFAULT_LANG) {
         val applied = tags.observeTag().first()
-        if (applied == CatalogConfig.CATALOG_TAG) return
+        if (applied == CatalogConfig.CATALOG_TAG) {
+            // Tag ya aplicado: solo se re-descarga si falta el backfill de
+            // `instructions` (migración v2); si no, misma forma (salir).
+            if (!needsInstructionsBackfill()) return
+            tags.clearTag()
+        }
         val remote = try {
             api.getExercises(lang).exercises
         } catch (e: HttpException) {
@@ -56,6 +64,10 @@ class CatalogSync(
         stale.forEach { dao.upsert(it.copy(deleted = true, updatedAt = now)) }
         tags.saveTag(CatalogConfig.CATALOG_TAG)
     }
+
+    /** `true` si ningún CATALOG local trae instrucciones (pendiente backfill v2). */
+    private suspend fun needsInstructionsBackfill(): Boolean =
+        dao.observeBySource("CATALOG").first().none { it.instructions.isNotEmpty() }
 
     companion object {
         private const val TAG = "CatalogSync"

@@ -46,6 +46,7 @@ fun ExerciseDto.toDomain(now: Long = System.currentTimeMillis()): Exercise = Exe
     equipment = equipment,
     category = category,
     secondaryMuscles = secondaryMuscles,
+    instructions = instructions,
     gifUrl = gifUrl,
     source = ExerciseSource.CATALOG,
     updatedAt = now,

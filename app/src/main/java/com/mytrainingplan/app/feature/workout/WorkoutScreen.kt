@@ -47,6 +47,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -109,7 +110,9 @@ fun WorkoutScreen(
     viewModel: WorkoutViewModel = hiltViewModel(),
     onFinished: () -> Unit = {},
     onDiscard: () -> Unit = {},
-    onBack: () -> Unit = {}
+    onBack: () -> Unit = {},
+    // Spec 010: la ficha abre desde la sesión (nombre del ejercicio).
+    onExerciseClick: (String) -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
     LaunchedEffect(routineId) { viewModel.openSession(routineId) }
@@ -140,7 +143,8 @@ fun WorkoutScreen(
                 onPauseToggle = viewModel::onPauseToggle,
                 onFinish = { viewModel.onFinish(onFinished) },
                 onDiscard = { viewModel.onDiscard(onDiscard) },
-                onBack = onBack
+                onBack = onBack,
+                onExerciseClick = onExerciseClick
             )
         }
         if (restVisible) {
@@ -165,11 +169,12 @@ fun WorkoutContent(
     onPauseToggle: () -> Unit = {},
     onFinish: () -> Unit = {},
     onDiscard: () -> Unit = {},
-    onBack: () -> Unit = {}
+    onBack: () -> Unit = {},
+    onExerciseClick: (String) -> Unit = {}
 ) {
     // Confirmación de descarte: overlay propio (AlertDialog gestiona insets solo).
     var showDiscardDialog by rememberSaveable { mutableStateOf(false) }
-    Box(modifier = Modifier.fillMaxSize().background(Bg)) {
+    Box(modifier = Modifier.fillMaxSize().background(Bg).testTag("workoutRoot")) {
         Column(modifier = Modifier.fillMaxSize()) {
             SessionHeader(
                 routineName = uiState.routineName,
@@ -203,7 +208,8 @@ fun WorkoutContent(
                         onToggleExpanded = { onToggleExpanded(item.routineExercise.id) },
                         onKgChange = onKgChange,
                         onRepsChange = onRepsChange,
-                        onToggleDone = onToggleDone
+                        onToggleDone = onToggleDone,
+                        onExerciseClick = onExerciseClick
                     )
                 }
                 item {
@@ -459,7 +465,8 @@ private fun ExerciseAccordion(
     onToggleExpanded: () -> Unit,
     onKgChange: (String, Double) -> Unit,
     onRepsChange: (String, Int) -> Unit,
-    onToggleDone: (String) -> Unit
+    onToggleDone: (String) -> Unit,
+    onExerciseClick: (String) -> Unit = {}
 ) {
     val doneCount = item.entries.count { it.done }
     val total = item.entries.size
@@ -487,7 +494,8 @@ private fun ExerciseAccordion(
                 },
                 completed = completed,
                 expanded = true,
-                onToggleExpanded = onToggleExpanded
+                onToggleExpanded = onToggleExpanded,
+                onNameClick = { onExerciseClick(item.exercise.id) }
             )
             Column(modifier = Modifier.padding(12.dp)) {
                 SetsHeaderRow()
@@ -554,7 +562,9 @@ private fun ExerciseAccordion(
                     fontSize = 15.sp,
                     fontWeight = FontWeight.SemiBold,
                     maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
+                    overflow = TextOverflow.Ellipsis,
+                    // Spec 010: el nombre abre la ficha (el resto expande).
+                    modifier = Modifier.clickable(onClick = { onExerciseClick(item.exercise.id) })
                 )
                 Spacer(Modifier.height(2.dp))
                 Text(
@@ -587,7 +597,8 @@ private fun ExerciseHeader(
     subtitle: String,
     completed: Boolean,
     expanded: Boolean,
-    onToggleExpanded: () -> Unit
+    onToggleExpanded: () -> Unit,
+    onNameClick: () -> Unit = {}
 ) {
     Row(
         modifier = Modifier
@@ -617,7 +628,9 @@ private fun ExerciseHeader(
                 fontSize = 15.sp,
                 fontWeight = FontWeight.SemiBold,
                 maxLines = 2,
-                overflow = TextOverflow.Ellipsis
+                overflow = TextOverflow.Ellipsis,
+                // Spec 010: el nombre abre la ficha.
+                modifier = Modifier.clickable(onClick = onNameClick)
             )
             Spacer(Modifier.height(2.dp))
             Text(subtitle, color = TextMuted, fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
@@ -892,7 +905,8 @@ private fun SessionBar(
                 .clip(RoundedCornerShape(999.dp))
                 .background(Orange)
                 .clickable(onClick = onFinish)
-                .padding(vertical = 12.dp),
+                .padding(vertical = 12.dp)
+                .testTag("workoutFinish"),
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -928,9 +942,10 @@ private fun SessionBar(
  * no se puede quitar por toque fuera (el scrim consume los taps) ni por
  * atrás (BackHandler consumido en [WorkoutScreen]); solo al llegar a 0 o
  * pulsar `Terminar descanso`. Hit targets >= 48dp.
+ * Pública (no private) para poder cubrirla con smoke en emulador sin Hilt.
  */
 @Composable
-private fun RestOverlay(
+fun RestOverlay(
     remainingSec: Int,
     totalSec: Int,
     onPlus: () -> Unit,
@@ -942,7 +957,8 @@ private fun RestOverlay(
         modifier = Modifier
             .fillMaxSize()
             .background(Color(0xBF000000))
-            .clickable(onClick = {}),
+            .clickable(onClick = {})
+            .testTag("restOverlay"),
         contentAlignment = Alignment.Center
     ) {
         Column(

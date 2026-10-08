@@ -59,6 +59,6 @@ Toca `feature/workout` (`WorkoutViewModel`, misma forma) y `data/repository/Room
 - [ ] Marcar series y terminar deja la sesión cerrada con sus datos tras reinicio.
 - [ ] La siguiente sesión del mismo día propone lo último hecho.
 - [ ] Cancelar no deja sesión fantasma.
-- [ ] El fallo queda en el log interno sin mostrarse en UI.
-- [ ] `./gradlew assembleDebug` termina OK.
+- [x] El fallo queda en el log interno sin mostrarse en UI.
+- [x] `./gradlew assembleDebug` termina OK.
 - [ ] En móvil con gestos y con 3 botones nada queda bajo hora ni barra inferior.

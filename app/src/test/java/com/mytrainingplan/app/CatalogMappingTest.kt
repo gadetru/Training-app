@@ -1,6 +1,7 @@
 package com.mytrainingplan.app
 
 import com.google.gson.Gson
+import com.mytrainingplan.app.data.mapper.toDomain as entityToDomain
 import com.mytrainingplan.app.data.mapper.toEntity
 import com.mytrainingplan.app.data.remote.dto.CatalogResponse
 import com.mytrainingplan.app.data.remote.dto.ExerciseDto
@@ -73,6 +74,11 @@ class CatalogMappingTest {
             "https://cdn.jsdelivr.net/gh/JahelCuadrado/ExerciseGymGifsDB@main/abs/side-bridge-hip-abduction.gif",
             domain.gifUrl
         )
+        // Spec 010: la entrada real trae `instructions` y llegan al dominio.
+        assertEquals(
+            listOf("Adopta la postura inicial con buena alineación corporal."),
+            domain.instructions
+        )
         assertEquals(ExerciseSource.CATALOG, domain.source)
     }
 
@@ -129,5 +135,32 @@ class CatalogMappingTest {
         assertEquals("back", entity.bodyPart)
         assertEquals(9L, entity.updatedAt)
         assertFalse(entity.deleted)
+    }
+
+    /**
+     * Spec 010: las instrucciones sobreviven la ida y vuelta
+     * DTO -> dominio -> entidad -> dominio, en orden y completas.
+     */
+    @Test
+    fun instrucciones_sobreviven_ida_y_vuelta_dominio_entidad() {
+        val steps = listOf(
+            "De pie, agarra la barra con las manos a la anchura de los hombros.",
+            "Flexiona los codos y sube la barra hasta los hombros sin balancear el cuerpo.",
+            "Baja despacio hasta estirar los brazos del todo."
+        )
+        val domain = ExerciseDto(
+            slug = "barbell-curl",
+            name = "Curl con barra",
+            muscle = "biceps",
+            bodyPart = "arms",
+            equipment = "barbell",
+            category = "strength",
+            secondaryMuscles = listOf("forearms"),
+            instructions = steps
+        ).toDomain(now = 11L)
+
+        val roundTrip = domain.toEntity(now = 13L).entityToDomain()
+
+        assertEquals(steps, roundTrip.instructions)
     }
 }
