@@ -406,6 +406,9 @@ private fun SessionHeader(
             }
         }
         Column {
+            // Spec 013 paso 5: coherente con SessionBar por construcción —
+            // EN PAUSA justo cuando la barra ofrece Comenzar/Reanudar,
+            // ACTIVO justo cuando ofrece Pausar (misma fuente: uiState).
             Text(
                 if (isPaused) "ENTRENAMIENTO EN PAUSA" else "ENTRENAMIENTO ACTIVO",
                 color = AppColors.Orange,
