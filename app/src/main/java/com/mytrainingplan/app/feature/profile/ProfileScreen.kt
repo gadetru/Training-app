@@ -70,7 +70,8 @@ private val InputBg = Color(0xFF0C0E11)
 fun ProfileScreen(
     initial: Profile? = null,
     onBack: () -> Unit = {},
-    onSave: (Profile) -> Unit = {}
+    onSave: (Profile) -> Unit = {},
+    onCreate: () -> Unit = {}
 ) {
     var displayName by rememberSaveable(initial) { mutableStateOf(initial?.displayName ?: "Carlos Mendoza") }
     var ageText by rememberSaveable(initial) { mutableStateOf((initial?.age ?: 28).toString()) }
@@ -114,7 +115,8 @@ fun ProfileScreen(
         onGoal = { goalIndex = it.ordinal },
         onAvatarClick = { /* TODO picker + Coil */ },
         onBack = onBack,
-        onSave = { onSave(profile) }
+        onSave = { onSave(profile) },
+        onCreate = onCreate
     )
 }
 
@@ -134,7 +136,8 @@ private fun ProfileContent(
     onGoal: (TrainingGoal) -> Unit,
     onAvatarClick: () -> Unit,
     onBack: () -> Unit,
-    onSave: () -> Unit
+    onSave: () -> Unit,
+    onCreate: () -> Unit
 ) {
     Box(
         modifier = Modifier
@@ -499,6 +502,11 @@ private fun ProfileContent(
                                 .clip(RoundedCornerShape(999.dp))
                                 .background(Card)
                                 .border(1.dp, BorderSubtle, RoundedCornerShape(999.dp))
+                                .clickable(
+                                    onClickLabel = "Crear rutina",
+                                    role = Role.Button,
+                                    onClick = onCreate
+                                )
                                 .padding(horizontal = 12.dp, vertical = 6.dp)
                         ) {
                             Text("Crear Rutina +", color = Orange, fontSize = 11.sp, fontWeight = FontWeight.Bold)
