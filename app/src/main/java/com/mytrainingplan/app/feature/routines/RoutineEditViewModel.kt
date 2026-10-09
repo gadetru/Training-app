@@ -19,12 +19,11 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-/** Campo editable de una serie en la matriz del constructor. */
+/** Campo editable de una serie en la matriz del constructor (la nota es por ejercicio). */
 enum class SetField {
     TARGET_REPS,
     WEIGHT_KG,
-    REST_SECONDS,
-    LOAD_NOTE
+    REST_SECONDS
 }
 
 /**
@@ -143,13 +142,8 @@ class RoutineEditViewModel @Inject constructor(
         } else {
             edited.restSeconds
         }
-        val newNote = if (field == SetField.LOAD_NOTE) {
-            raw.ifBlank { null }
-        } else {
-            edited.loadNote
-        }
         if (newReps == edited.targetReps && newWeight == edited.weightKg &&
-            newRest == edited.restSeconds && newNote == edited.loadNote
+            newRest == edited.restSeconds
         ) {
             return
         }
@@ -166,7 +160,7 @@ class RoutineEditViewModel @Inject constructor(
                 targetReps = newReps,
                 weightKg = newWeight,
                 restSeconds = newRest,
-                loadNote = newNote,
+                loadNote = edited.loadNote,
                 rir = edited.rir
             )
             // Solo siguientes no editadas a mano.
@@ -179,11 +173,30 @@ class RoutineEditViewModel @Inject constructor(
                         targetReps = newReps,
                         weightKg = newWeight,
                         restSeconds = newRest,
-                        loadNote = newNote,
+                        loadNote = following.loadNote,
                         rir = following.rir
                     )
                 }
         }
+    }
+
+    /**
+     * Nota única del ejercicio: guarda `RoutineExercise.note` y la espeja en
+     * el `loadNote` de todas sus series (el prefill de sesión lee por serie).
+     * No propaga ni marca celdas: es un campo por ejercicio, no por serie.
+     */
+    fun onExerciseNoteChange(routineExerciseId: String, raw: String) {
+        val item = uiState.value.exercises.find { it.routineExercise.id == routineExerciseId }
+            ?: return
+        val current = effectiveNote(item.routineExercise.note, item.sets.mapNotNull { it.loadNote })
+        if (current == raw) return
+        viewModelScope.launch { repository.updateExerciseNote(routineExerciseId, raw) }
+    }
+
+    /** Nota efectiva (misma adopción que la UI): propia o primera de series. */
+    private fun effectiveNote(exerciseNote: String, setNotes: List<String>): String {
+        if (exerciseNote.isNotBlank()) return exerciseNote
+        return setNotes.firstOrNull { it.isNotBlank() }.orEmpty()
     }
 
     /**

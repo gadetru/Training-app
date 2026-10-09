@@ -21,9 +21,6 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-/** Paso de KG de los steppers en vivo. */
-const val KG_STEP: Double = 2.5
-
 /**
  * Estado solo de pantalla (jamás se persiste): cronómetro, pausa, descanso,
  * plegado y guardado. Vive en un único [MutableStateFlow] para que el
@@ -32,7 +29,9 @@ const val KG_STEP: Double = 2.5
  */
 private data class Ephemeral(
     val elapsedSec: Int = 0,
-    val isPaused: Boolean = false,
+    // Spec 013 paso 3: arranque detenido (el cronómetro no auto-arranca;
+    // el botón Comenzar lo pone en marcha vía onPauseToggle).
+    val isPaused: Boolean = true,
     val restRemainingSec: Int? = null,
     val restTotalSec: Int = 0,
     val restEntryId: String? = null,
@@ -147,28 +146,47 @@ class WorkoutViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Spec 013 paso 4: niega el estado EFECTIVO (toque previo o defecto
+     * primer pendiente, igual que el `combine`), no `?: true`: si no,
+     * expandir una tarjeta colapsada por defecto costaba 2 taps (el 1º
+     * guardaba `false`, que ya era su estado visible).
+     */
     fun onToggleExpanded(routineExerciseId: String) {
+        val items = detail.value?.items ?: emptyList()
+        val firstPending = items.indexOfFirst { item ->
+            item.entries.any { !it.done }
+        }
         ephemeral.update { cur ->
+            val index = items.indexOfFirst { it.routineExercise.id == routineExerciseId }
+            val current = cur.expanded[routineExerciseId]
+                ?: (index != -1 && index == firstPending)
             cur.copy(
                 expanded = cur.expanded +
-                    (routineExerciseId to !(cur.expanded[routineExerciseId] ?: true))
+                    (routineExerciseId to !current)
             )
         }
     }
 
-    /** Stepper KG en vivo: cambia solo esa entrada. */
-    fun onKgChange(entryId: String, deltaKg: Double) {
+    /**
+     * Spec 013 paso 2: guardado de golpe desde el modal (KG con signo,
+     * REPS ≥ 0, PAUSA ≥ 0) vía rutas existentes: `updateEntry` (KG+REPS) y
+     * `adjustRest` con el delta (PAUSA absoluta menos base). Sin Room nuevo.
+     */
+    fun onUpdateEntry(entryId: String, weightKg: Double, reps: Int, restSeconds: Int) {
         val sid = sessionId.value ?: return
-        val entry = findEntry(entryId) ?: return
-        val newWeight = (entry.weightKg + deltaKg).coerceAtLeast(0.0)
-        viewModelScope.launch { repository.updateEntry(sid, entryId, entry.reps, newWeight) }
-    }
-
-    /** Stepper REPS en vivo: cambia solo esa entrada. */
-    fun onRepsChange(entryId: String, deltaReps: Int) {
-        val sid = sessionId.value ?: return
-        val entry = findEntry(entryId) ?: return
-        viewModelScope.launch { repository.updateEntry(sid, entryId, (entry.reps + deltaReps).coerceAtLeast(0), entry.weightKg) }
+        val d = detail.value ?: return
+        val entry = d.items.flatMap { it.entries }.find { it.id == entryId } ?: return
+        val safeReps = reps.coerceAtLeast(0)
+        val safeRest = restSeconds.coerceAtLeast(0)
+        viewModelScope.launch { repository.updateEntry(sid, entryId, safeReps, weightKg) }
+        val plannedRest = d.items.flatMap { it.planned }
+            .find { it.id == entry.plannedSetId }?.restSeconds
+        val baseRest = entry.restSeconds ?: plannedRest ?: 90
+        val deltaRest = safeRest - baseRest
+        if (deltaRest != 0) {
+            viewModelScope.launch { repository.adjustRest(sid, entryId, deltaRest) }
+        }
     }
 
     /**
@@ -214,6 +232,7 @@ class WorkoutViewModel @Inject constructor(
         ephemeral.update { it.copy(restRemainingSec = null, restEntryId = null) }
     }
 
+    /** Spec 013 paso 3: alterna Comenzar → Pausar → Reanudar (sin lógica de repo). */
     fun onPauseToggle() {
         ephemeral.update { it.copy(isPaused = !it.isPaused) }
     }
@@ -239,9 +258,6 @@ class WorkoutViewModel @Inject constructor(
             onDone()
         }
     }
-
-    private fun findEntry(entryId: String) =
-        detail.value?.items?.flatMap { it.entries }?.find { it.id == entryId }
 
     /** Flujo crudo para previsualización o depuración. */
     internal fun observeDetail(): Flow<WorkoutSessionDetail?> = detail

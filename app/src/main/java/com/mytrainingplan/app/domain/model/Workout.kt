@@ -71,7 +71,9 @@ data class WorkoutUiState(
     val sessionId: String = "",
     val routineName: String = "",
     val elapsedSec: Int = 0,
-    val isPaused: Boolean = false,
+    // Spec 013 paso 5: el primer fotograma también es coherente (00:00 +
+    // Comenzar + EN PAUSA): el valor inicial ya arranca detenido.
+    val isPaused: Boolean = true,
     val exercises: List<WorkoutExerciseUi> = emptyList(),
     val doneCount: Int = 0,
     val totalCount: Int = 0,

@@ -1,15 +1,24 @@
 package com.mytrainingplan.app.feature.routines
 
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertTextContains
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performTextClearance
+import androidx.compose.ui.test.performTextInput
+import androidx.compose.ui.test.performTextReplacement
 import com.mytrainingplan.app.domain.model.Exercise
 import com.mytrainingplan.app.domain.model.PlannedSet
 import com.mytrainingplan.app.domain.model.RoutineEditUiState
 import com.mytrainingplan.app.domain.model.RoutineExercise
 import com.mytrainingplan.app.domain.model.RoutineExerciseUi
+import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
 
@@ -80,5 +89,51 @@ class RoutineEditSmokeTest {
         rule.onNodeWithText("Nueva rutina").assertIsDisplayed()
         rule.onNodeWithText("Sin ejercicios: añade uno para ver los grupos musculares").assertIsDisplayed()
         rule.onNodeWithTag("routineEditAddExercise").assertIsDisplayed()
+    }
+
+    @Test
+    fun nota_unica_adopta_nota_de_serie_y_guarda() {
+        var captured: Pair<String, String>? = null
+        val withSetNote = fakeState().copy(
+            exercises = listOf(
+                fakeState().exercises.single().copy(
+                    sets = listOf(
+                        PlannedSet(id = "s1", routineExerciseId = "re1", setNumber = 1, targetReps = 12, weightKg = 60.0, restSeconds = 90, loadNote = "goma amarilla"),
+                        PlannedSet(id = "s2", routineExerciseId = "re1", setNumber = 2, targetReps = 10, weightKg = 80.0, restSeconds = 120)
+                    )
+                )
+            )
+        )
+        rule.setContent {
+            // Estado con memoria como en producción (el repo reemite tras
+            // guardar); si no, el buffer del campo diverge del uiState fijo.
+            var ui by remember { mutableStateOf(withSetNote) }
+            MaterialTheme {
+                RoutineEditContent(
+                    uiState = ui,
+                    onExerciseNoteChange = { reId, note ->
+                        captured = reId to note
+                        ui = ui.copy(
+                            exercises = ui.exercises.map { e ->
+                                if (e.routineExercise.id == reId) {
+                                    e.copy(routineExercise = e.routineExercise.copy(note = note))
+                                } else {
+                                    e
+                                }
+                            }
+                        )
+                    }
+                )
+            }
+        }
+
+        // Un solo campo por ejercicio con la nota vieja de la serie adoptada.
+        // Reemplazo directo (esta versión vieja de ui-test no vacía bien el
+        // BasicTextField con clear+input: el buffer conserva el texto).
+        rule.onNodeWithTag("exerciseNote:re1").assertIsDisplayed()
+        rule.onNodeWithTag("exerciseNote:re1").assertTextContains("goma amarilla")
+        rule.onNodeWithTag("exerciseNote:re1").performTextClearance()
+        rule.onNodeWithTag("exerciseNote:re1").performTextReplacement("magnesio")
+        assertEquals("re1" to "magnesio", captured)
     }
 }

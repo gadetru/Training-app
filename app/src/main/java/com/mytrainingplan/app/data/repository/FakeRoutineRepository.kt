@@ -64,6 +64,13 @@ interface RoutineRepository {
         rir: Int?
     )
 
+    /**
+     * Nota única del ejercicio: persiste `RoutineExercise.note` y la espeja
+     * en el `loadNote` de todas sus series (el prefill de sesión lee por
+     * serie). Sin cambio de esquema: la columna ya existe.
+     */
+    suspend fun updateExerciseNote(routineExerciseId: String, note: String)
+
     /** Nueva serie copiando los valores de la 1ª. */
     suspend fun addSet(routineExerciseId: String)
 
@@ -185,6 +192,16 @@ class FakeRoutineRepository(
                         set
                     }
                 }
+            )
+        }
+    }
+
+    override suspend fun updateExerciseNote(routineExerciseId: String, note: String) {
+        if (!ensureDraftForItem(routineExerciseId)) return
+        mutateItem(routineExerciseId) { detail ->
+            detail.copy(
+                routineExercise = detail.routineExercise.copy(note = note),
+                sets = detail.sets.map { it.copy(loadNote = note.ifBlank { null }) }
             )
         }
     }

@@ -92,4 +92,26 @@ class RoutineRulesTest {
 
         assertEquals(listOf(0, 1, 2), items.map { it.routineExercise.position })
     }
+
+    @Test
+    fun nota_ejercicio_guarda_y_espeja_a_todas_las_series() = runBlocking {
+        val r = repo()
+        val id = r.createRoutine(name = "Nota")
+        r.addExercises(id, listOf("quads/barbell-bench-squat"))
+        val reId = r.observeRoutine(id).first()!!.items.single().routineExercise.id
+        r.addSet(reId)
+
+        r.updateExerciseNote(reId, "magnesio")
+
+        val item = r.observeRoutine(id).first()!!.items.single()
+        assertEquals("magnesio", item.routineExercise.note)
+        assertEquals(2, item.sets.size)
+        assertTrue(item.sets.all { it.loadNote == "magnesio" })
+
+        r.updateExerciseNote(reId, "")
+
+        val cleared = r.observeRoutine(id).first()!!.items.single()
+        assertEquals("", cleared.routineExercise.note)
+        assertTrue(cleared.sets.all { it.loadNote == null })
+    }
 }

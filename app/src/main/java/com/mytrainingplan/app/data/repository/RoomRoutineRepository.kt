@@ -145,6 +145,15 @@ class RoomRoutineRepository(
         )
     }
 
+    override suspend fun updateExerciseNote(routineExerciseId: String, note: String) {
+        val cur = items.getById(routineExerciseId)?.toDomain() ?: return
+        items.upsert(cur.copy(note = note).toEntity())
+        // Espejo a todas las series: el prefill de sesión lee `loadNote` por serie.
+        sets.observeByExercise(routineExerciseId).first()
+            .map { it.toDomain().copy(loadNote = note.ifBlank { null }) }
+            .forEach { sets.upsert(it.toEntity()) }
+    }
+
     override suspend fun addSet(routineExerciseId: String) {
         val list = sets.observeByExercise(routineExerciseId).first()
         val first = list.minByOrNull { it.setNumber }?.toDomain()
