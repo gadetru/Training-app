@@ -163,7 +163,8 @@ private fun DetailBody(
             .padding(top = AppDimens.ContentTop, bottom = AppDimens.DetailBottom),
         verticalArrangement = Arrangement.spacedBy(AppDimens.SpaceXxl)
     ) {
-        // GIF grande vía Coil (sin coil-gif: primer frame; sin red usa caché).
+        // GIF grande animado (spec 012, paso 7): usa el loader global de
+        // TrainingApp con decodificador GIF; sin red tira de caché.
         Box(
             modifier = Modifier
                 .fillMaxWidth()

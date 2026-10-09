@@ -1,8 +1,10 @@
 package com.mytrainingplan.app.data.repository
 
+import com.mytrainingplan.app.domain.model.EquipmentGroups
 import com.mytrainingplan.app.domain.model.Exercise
 import com.mytrainingplan.app.domain.model.ExerciseFilter
 import com.mytrainingplan.app.domain.model.ExerciseSource
+import com.mytrainingplan.app.domain.model.MuscleGroups
 import java.text.Normalizer
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -49,7 +51,12 @@ class FakeExerciseRepository : ExerciseRepository {
     }
 }
 
-/** Filtrado en memoria: texto normalizado + intersección músculo/equipamiento. */
+/**
+ * Filtrado en memoria: texto normalizado + intersección músculo/equipamiento.
+ * Spec 012, paso 4: el texto libre también casa con la etiqueta en español
+ * (`Pierna`, `Barra`…) y con el slug API. Misma firma; lo comparten el fake
+ * y el Room (`RoomExerciseRepository`), sin tocar DAOs ni esquema.
+ */
 internal fun List<Exercise>.applyFilter(filter: ExerciseFilter): List<Exercise> {
     val query = filter.query.normalize()
     return this
@@ -59,9 +66,20 @@ internal fun List<Exercise>.applyFilter(filter: ExerciseFilter): List<Exercise> 
             if (query.isBlank()) return@filter true
             exercise.name.normalize().contains(query) ||
                 exercise.muscle.normalize().contains(query) ||
-                exercise.equipment.normalize().contains(query)
+                exercise.equipment.normalize().contains(query) ||
+                exercise.slug.normalize().contains(query) ||
+                exercise.muscle.muscleEsLabel().normalize().contains(query) ||
+                exercise.equipment.equipmentEsLabel().normalize().contains(query)
         }
 }
+
+/** Etiqueta ES del grupo al que pertenece el slug de músculo (clave de chips). */
+internal fun String.muscleEsLabel(): String =
+    MuscleGroups.GROUPS.entries.find { this in it.value }?.key ?: this
+
+/** Etiqueta ES del grupo al que pertenece el valor de equipamiento. */
+internal fun String.equipmentEsLabel(): String =
+    EquipmentGroups.GROUPS.entries.find { this in it.value }?.key ?: this
 
 /** Minúsculas + sin acentos para búsqueda insensible. */
 internal fun String.normalize(): String =

@@ -22,13 +22,20 @@ Mergeados en `main` tras Fase B: `007-catalogo-fork` (PR #8, tag `v1.1.0` del fo
 1323 entradas, `CatalogSync` distingue 404 con `Log` de sin-red, `getById` a `suspend`, DTO camelCase +
 `CatalogResponse`), `008-rutinas-feed` (PR #9, feed único + descarte seguro + `position` sin huecos),
 `009-sesion-persistida` (PR #10, prefill persistido al iniciar + cierre sin fantasmas + log interno).
-En curso `010-detalle-ejercicio` (rama `010-detalle-ejercicio`, sin mergear): ficha `ExerciseDetailScreen` +
+En curso nada: `010-detalle-ejercicio` mergeado en `main` (PR #13): ficha `ExerciseDetailScreen` +
 `ExerciseDetailViewModel`, `instructions` en modelo/entidad/mapper/DTO, DB v2 + `MIGRATION_1_2` y re-descarga
-mismo tag; checklist 6/10 en `[x]`, pendiente sin-red, rotación y edge-to-edge.
+mismo tag; checklist 10/10 en `[x]`.
+Mergeado en `main` tras 010: `011-blindaje-visual-tests-autofix` (PR #14/#15/#16): UI a botes con nombre en
+`ui/theme/` (`Color/Dimensions/Theme/Type`), tests en espejo por paquete y regla en `src/test/` (botes JVM +
+mapper + reglas con falsos + fotos Roborazzi Home y tarjeta) y `src/androidTest/` (DAO + migración + smokes
+movidos a su espejo), puerta de merge `.github/workflows/blindaje.yml` (`assembleDebug` + `testDebugUnitTest`)
+y fix CI autorizado 2026-10-09 (ver abajo): `setup-android@v3` → `@v4` + bit ejecutable en `gradlew`.
 Deuda: los `Fake*Repository` de Fase A conviven con los Room pero ya no se inyectan (Hilt usa los Room);
 marcados como deuda a borrar en cuanto dejen de estar en uso, no borrar aún sin confirmar.
-Siguiente: cerrar 010 y mergear; luego ejercicios propios `CUSTOM` + historial real / Fase D Spring/MySQL.
-Punto de control: `docs/01-punto-actual-2026-10-08.md` (revisión 2026-10-08).
+Siguiente: ejercicios propios `CUSTOM` + historial real / Fase D Spring/MySQL.
+Punto de control: `docs/01-punto-actual-2026-10-08.md` (revisión 2026-10-08, desactualizado: dice 010 sin
+mergear) + `docs/fotos-referencia.md` (dorados Roborazzi + regeneración) y `docs/revision-tarde.md`
+(borrador, hora pendiente) del spec 011.
 `docs/`, `specs/`, `references/` siguen siendo guía objetivo/diseño, no código hecho.
 Desviación conocida: `material-icons-core` solo trae 49 iconos (fallbacks `List/DateRange/Star/Person` en `HomeScreen.kt:67-82`);
 fidelidad exacta a los iconos del spec exigiría `material-icons-extended` (proponer y esperar).
@@ -48,26 +55,39 @@ ya declarados (`app/build.gradle.kts:42-45`) y en uso (navigation, viewmodel, ic
 en picker/detalle/editar para thumbs + GIF grande —sin `coil-gif` = primer frame—; avatar picker pendiente).
 Excepción lote B consumida (spec 006, mergeado): `room, hilt, datastore-preferences, retrofit + converter-gson`
 ya declarados y en uso (Room/Hilt/DataStore/Retrofit). No añadir más dependencias: `material-icons-extended`
-solo proponer línea exacta y esperar. El agente trabaja Kotlin en `app/src/main/`, recursos y documentación.
+solo proponer línea exacta y esperar.
+Excepción lote C consumida (spec 011, mergeado PR #14-16): `roborazzi, roborazzi-compose, robolectric`
+(`testImplementation`) + plugin `io.github.takahirom.roborazzi` (`libs.versions.toml:19-20,50-52,60`,
+`app/build.gradle.kts:7,76-80,89-92`) con `testOptions.unitTests.isIncludeAndroidResources=true` y dorados en
+`app/src/test/screenshots` (solo Home + tarjeta).
+Excepción puntual CI autorizada por el usuario (2026-10-09, PR #16, ya aplicada): `setup-android@v3` → `@v4`
+en `.github/workflows/blindaje.yml` (v3 pedía el paquete obsoleto `tools` → `Failed to find package 'tools'`;
+v4 solo instala `platform-tools` por defecto) + bit ejecutable en `gradlew` (`100644` → `100755`, contenido
+sin cambios). `.github/workflows/` sí lo mantiene el agente; el resto del esqueleto Gradle sigue vetado.
+El agente trabaja Kotlin en `app/src/main/`, recursos y documentación.
 
 ## Comandos
 
 - Compilar: `./gradlew assembleDebug` (requiere Android SDK; `local.properties` con `sdk.dir`, no se versiona).
-- Tests: `./gradlew testDebugUnitTest` (`CatalogMappingTest` 5/5 en verde + `ExampleUnitTest` de plantilla).
+- Tests: `./gradlew testDebugUnitTest` (botes `AppColors/AppDimens` + `CatalogMappingTest` 5/5 en `data/mapper` +
+  reglas `RoutineRules/WorkoutPrefill` con fakes + fotos Roborazzi Home y tarjeta + `ExampleUnitTest` de plantilla).
+- Puerta CI: `.github/workflows/blindaje.yml` (`setup-android@v4`, `assembleDebug` + `testDebugUnitTest` en cada
+  PR/push a `main`; exigir el check en Settings > Branches > main).
 - Verificación: **emulador Pixel 6 API 34** (`emulator-5554`) **+ dispositivo físico, de forma automática**;
   se testea en ambos: `adb` + MCP `mobile-mcp` (`list_available_devices` → `list_elements` por `ref` → `click`/`screenshot`/`logs`)
   y `connectedDebugAndroidTest` como red de seguridad. Si un spec dice explícitamente solo uno, manda el spec y se anota.
-- Tests auto: `testDebugUnitTest` (JVM) + `connectedDebugAndroidTest` (Compose smoke `HomeNav/RoutineEdit/Workout` con `testTag`,
+- Tests auto: `testDebugUnitTest` (JVM) + `connectedDebugAndroidTest` (DAO `ExerciseDaoTest` + `Migration12Test` +
+  smokes `feature/home|routines|workout` movidos a su espejo, con `testTag`;
   smoke detalle pendiente);
   `testTag` en raíces/CTAs (`profileRoot/profileSave`, `homeRoot/homeDock/routineCard:<id>`,
   `routineEditRoot/routineEditAddExercise/routineEditSave`, `workoutRoot/workoutFinish/restOverlay).
-- Proyecto: `applicationId`/`namespace` `com.mytrainingplan.app`, `minSdk 26`, `compileSdk/targetSdk 37`, Java 11.
+- Proyecto: `applicationId`/`namespace` `com.mytrainingplan.app`, `minSdk 26`, `compileSdk/targetSdk 37`, Java 17.
 
 ## Arquitectura objetivo (al implementar)
 
 - Un solo módulo `app`. Flujo final: `feature/* Screen → ViewModel(StateFlow) → Repository → Room`; Retrofit solo rellena la DB.
 - Plan acordado: **Fase A maquetación primero** (5 vistas `references/` UI-first con `ViewModel` fake + repo fake misma firma + `NavHost` condicional `¿hay perfil? home:profile`, sin Room), luego **Fase B Room local (hecha, v2)**, **catálogo hecho (007+010)**, pendiente **CUSTOM + historial real** y **Fase D Spring/MySQL**.
-- Progreso Fase A: 5/5 hechas (las 5 vistas + `NavHost` con `home/calendar/progress/profile/routineEdit/workout/exerciseDetail` ya cableados); Fase B + 007/008/009 mergeados en `main`; en curso 010.
+- Progreso Fase A: 5/5 hechas (las 5 vistas + `NavHost` con `home/calendar/progress/profile/routineEdit/workout/exerciseDetail` ya cableados); Fase B + 007/008/009/010/011 mergeados en `main`; en curso nada, siguiente CUSTOM + historial real.
 - Carpetas: `core/{di,network,datastore,ui}`, `data/{local/{entity,dao},remote/{dto},mapper,repository}`, `domain/model`, `feature/{profile,home,exercises,routines,workout}`. Cada `feature/` = `Screen` + `ViewModel` (`exercises` tiene Picker + Detail). `feature/history/` aún no existe: solo `PlaceholderTabs`.
 - Mapeo `DTO/Entity ⇄ dominio` en `data/mapper`; la UI solo ve `domain/model`, nunca Entity ni DTO.
 - Sin casos de uso ni módulos extra hasta que duelan. Versiones solo vía catálogo `gradle/libs.versions.toml`.

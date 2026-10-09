@@ -38,12 +38,17 @@ import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.ColorPainter
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -52,6 +57,8 @@ import com.mytrainingplan.app.ui.theme.AppDimens
 import com.mytrainingplan.app.ui.theme.AppTextSizes
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
+import coil.decode.BitmapFactoryDecoder
+import coil.request.ImageRequest
 import com.mytrainingplan.app.data.repository.FakeExerciseRepository
 import com.mytrainingplan.app.domain.model.Exercise
 import com.mytrainingplan.app.domain.model.ExercisesUiState
@@ -268,11 +275,17 @@ private fun SearchBar(
     query: String,
     onQueryChange: (String) -> Unit
 ) {
+    // Spec 012, paso 3: la ayuda se oculta al enfocar, antes de escribir.
+    var focused by remember { mutableStateOf(false) }
     TextField(
         value = query,
         onValueChange = onQueryChange,
         singleLine = true,
-        placeholder = { Text("Buscar ejercicio (ej. Sentadilla, Prensa...)", color = AppColors.TextMuted, fontSize = AppTextSizes.TitleSm) },
+        placeholder = {
+            if (!focused) {
+                Text("Buscar ejercicio (ej. Sentadilla, Prensa...)", color = AppColors.TextMuted, fontSize = AppTextSizes.TitleSm)
+            }
+        },
         leadingIcon = { Icon(Icons.Filled.Search, contentDescription = null, tint = AppColors.Orange) },
         trailingIcon = {
             if (query.isNotEmpty()) {
@@ -299,6 +312,7 @@ private fun SearchBar(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = AppDimens.ScreenHorizontal, vertical = AppDimens.SpaceXs)
+            .onFocusChanged { focused = it.isFocused }
     )
 }
 
@@ -376,8 +390,9 @@ private fun ExerciseRow(
             .padding(AppDimens.SpaceLg),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // Thumbnail GIF real vía Coil (Coil sin coil-gif: primer frame estático).
-        // Placeholder y error de color local si la carga falla.
+        // Miniatura quieta (spec 012, paso 7): primer frame estático forzando
+        // BitmapFactoryDecoder por petición; el hero de la ficha anima con el
+        // loader global (TrainingApp). Placeholder/error de color si falla.
         // Docs: /coil-kt/coil (coil-compose AsyncImage + placeholder/error).
         Box(
             modifier = Modifier
@@ -387,7 +402,10 @@ private fun ExerciseRow(
             contentAlignment = Alignment.BottomEnd
         ) {
             AsyncImage(
-                model = exercise.gifUrl,
+                model = ImageRequest.Builder(LocalContext.current)
+                    .data(exercise.gifUrl)
+                    .decoderFactory(BitmapFactoryDecoder.Factory())
+                    .build(),
                 contentDescription = exercise.name,
                 placeholder = ColorPainter(AppColors.CardHigh),
                 error = ColorPainter(AppColors.CardHigh),
