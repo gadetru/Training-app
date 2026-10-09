@@ -283,10 +283,10 @@ private fun SearchBar(
         singleLine = true,
         placeholder = {
             if (!focused) {
-                Text("Buscar ejercicio (ej. Sentadilla, Prensa...)", color = AppColors.TextMuted, fontSize = AppTextSizes.TitleSm)
+                Text("Buscar ejercicio (ej. Sentadilla, Prensa...)", color = AppColors.TextMuted, fontSize = AppTextSizes.Small, maxLines = 1)
             }
         },
-        leadingIcon = { Icon(Icons.Filled.Search, contentDescription = null, tint = AppColors.Orange) },
+        leadingIcon = { Icon(Icons.Filled.Search, contentDescription = null, tint = AppColors.Orange, modifier = Modifier.size(AppDimens.IconMd)) },
         trailingIcon = {
             if (query.isNotEmpty()) {
                 Box(
@@ -311,7 +311,7 @@ private fun SearchBar(
         ),
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = AppDimens.ScreenHorizontal, vertical = AppDimens.SpaceXs)
+            .padding(horizontal = AppDimens.ScreenHorizontal)
             .onFocusChanged { focused = it.isFocused }
     )
 }
@@ -324,8 +324,8 @@ private fun ChipsRow(
 ) {
     LazyRow(
         modifier = Modifier.fillMaxWidth(),
-        contentPadding = PaddingValues(horizontal = AppDimens.ScreenHorizontal, vertical = AppDimens.SpaceSm),
-        horizontalArrangement = Arrangement.spacedBy(AppDimens.SpaceMd)
+        contentPadding = PaddingValues(horizontal = AppDimens.ScreenHorizontal, vertical = AppDimens.SpaceXs),
+        horizontalArrangement = Arrangement.spacedBy(AppDimens.SpaceSm)
     ) {
         items(chips, key = { it.second }) { (key, label) ->
             val active = key == selected
@@ -335,14 +335,14 @@ private fun ChipsRow(
                     .background(if (active) AppColors.Orange else AppColors.Card2)
                     .border(AppDimens.BorderThin, if (active) AppColors.Orange else AppColors.BorderSubtle, RoundedCornerShape(AppDimens.RadiusPill))
                     .clickable(onClick = { onSelected(if (active) null else key) })
-                    .padding(horizontal = AppDimens.SpaceXxl, vertical = AppDimens.SpaceLg)
+                    .padding(horizontal = AppDimens.SpaceXl, vertical = AppDimens.SpaceMd)
                     .sizeIn(minWidth = AppDimens.TouchMin, minHeight = AppDimens.ChipMinHeight),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
                     label,
                     color = if (active) AppColors.OnOrange else AppColors.TextMuted,
-                    fontSize = AppTextSizes.Body,
+                    fontSize = AppTextSizes.Small,
                     fontWeight = if (active) FontWeight.Bold else FontWeight.Medium
                 )
             }
@@ -355,7 +355,7 @@ private fun ResultsCount(count: Int) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = AppDimens.ScreenHorizontal, vertical = AppDimens.SpaceSm),
+            .padding(horizontal = AppDimens.ScreenHorizontal, vertical = AppDimens.SpaceXs),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {

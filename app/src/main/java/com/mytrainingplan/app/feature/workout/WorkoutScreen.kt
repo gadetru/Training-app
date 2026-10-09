@@ -553,6 +553,7 @@ private fun ExerciseAccordion(
                 .background(AppColors.Card)
                 .border(AppDimens.BorderThin, AppColors.BorderSubtle, RoundedCornerShape(AppDimens.RadiusCard))
                 .clickable(onClick = onToggleExpanded)
+                .testTag("exerciseCard:${item.routineExercise.id}")
                 .padding(AppDimens.SpaceXl),
             verticalAlignment = Alignment.CenterVertically
         ) {

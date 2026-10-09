@@ -16,7 +16,7 @@ class AppDimensTest {
     fun margenes_de_pantalla_conservan_sus_dp() {
         assertEquals(20.dp, AppDimens.ScreenHorizontal)
         assertEquals(4.dp, AppDimens.ContentTop)
-        assertEquals(96.dp, AppDimens.HomeBottom)
+        assertEquals(140.dp, AppDimens.HomeBottom)
         assertEquals(110.dp, AppDimens.DetailBottom)
         assertEquals(150.dp, AppDimens.EditBottom)
         assertEquals(170.dp, AppDimens.WorkoutBottom)

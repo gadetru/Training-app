@@ -14,7 +14,9 @@ object AppDimens {
     // Márgenes de pantalla.
     val ScreenHorizontal: Dp = 20.dp
     val ContentTop: Dp = 4.dp
-    val HomeBottom: Dp = 96.dp
+    // Dock flotante del Home: con 3 botones suma ~132dp
+    // (nav + margen + contenido); 140dp lo despeja con aire.
+    val HomeBottom: Dp = 140.dp
     val DetailBottom: Dp = 110.dp
     val EditBottom: Dp = 150.dp
     val WorkoutBottom: Dp = 170.dp

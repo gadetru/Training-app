@@ -55,11 +55,11 @@ Toca `feature/workout`: `WorkoutScreen.kt` (SetRow, Stepper, SessionBar, Exercis
 ## Preguntas abiertas
 Ninguna (interrogatorio respondido 2026-10-09).
 ## 11. Checklist verificación (última, checkboxes listos para /verifier)
-- [ ] Pulsar KG abre modal con valor actual y confirmar lo cambia.
-- [ ] REPS y PAUSA editables desde el mismo modal.
-- [ ] Cronómetro quieto en 00:00 al abrir con botón Comenzar.
-- [ ] Comenzar arranca conteo y pasa a Pausar.
-- [ ] Pausar congela y Reanudar retoma.
-- [ ] 1 tap expande colapsado; nombre abre ficha.
-- [ ] `./gradlew assembleDebug` OK.
-- [ ] Probado en emulador Pixel 6 API 34 + físico automático.
+- [x] Pulsar KG abre modal con valor actual y confirmar lo cambia.
+- [x] REPS y PAUSA editables desde el mismo modal.
+- [x] Cronómetro quieto en 00:00 al abrir con botón Comenzar.
+- [x] Comenzar arranca conteo y pasa a Pausar.
+- [x] Pausar congela y Reanudar retoma.
+- [x] 1 tap expande colapsado; nombre abre ficha.
+- [x] `./gradlew assembleDebug` OK.
+- [x] Probado en emulador Pixel 6 API 34 + físico automático.

@@ -12,11 +12,14 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.relocation.BringIntoViewRequester
+import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
@@ -46,11 +49,13 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.focus.focusRequester
@@ -88,6 +93,7 @@ import com.mytrainingplan.app.domain.model.RoutineExercise
 import com.mytrainingplan.app.domain.model.RoutineExerciseUi
 import com.mytrainingplan.app.domain.model.RoutineMuscleLabels
 import com.mytrainingplan.app.feature.exercises.ExercisePickerSheet
+import kotlinx.coroutines.launch
 
 // Colores y medidas desde ui/theme (spec 011): sin tokens locales.
 
@@ -141,6 +147,7 @@ fun RoutineEditScreen(
         onDeleteExercise = viewModel::onDeleteExercise,
         onSetFieldChange = viewModel::onSetFieldChange,
         onRirChange = viewModel::onRirChange,
+        onExerciseNoteChange = viewModel::onExerciseNoteChange,
         onAddSet = viewModel::onAddSet,
         onDeleteSet = viewModel::onDeleteSet,
         onSave = { viewModel.onSave(onSaved) },
@@ -172,6 +179,7 @@ fun RoutineEditContent(
     onDeleteExercise: (String) -> Unit = {},
     onSetFieldChange: (String, String, SetField, String) -> Unit = { _, _, _, _ -> },
     onRirChange: (String, String, Int?) -> Unit = { _, _, _ -> },
+    onExerciseNoteChange: (String, String) -> Unit = { _, _ -> },
     onAddSet: (String) -> Unit = {},
     onDeleteSet: (String, String) -> Unit = { _, _ -> },
     onSave: () -> Unit = {},
@@ -197,8 +205,11 @@ fun RoutineEditContent(
                 modifier = Modifier
                     .weight(1f)
                     .verticalScroll(rememberScrollState())
+                    // Con el teclado abierto el rango de scroll sube sobre él;
+                    // si no, "Añadir Serie" y el campo enfocado quedan tapados.
+                    .imePadding()
                     .padding(horizontal = AppDimens.ScreenHorizontal)
-                    .padding(top = AppDimens.SpaceXs, bottom = AppDimens.EditBottom),
+                    .padding(top = AppDimens.SpaceXs, bottom = AppDimens.WorkoutBottom),
                 verticalArrangement = Arrangement.spacedBy(AppDimens.SpaceHuge)
             ) {
                 MetaCard(
@@ -222,6 +233,9 @@ fun RoutineEditContent(
                         },
                         onRirChange = { setId, rir ->
                             onRirChange(item.routineExercise.id, setId, rir)
+                        },
+                        onExerciseNoteChange = { note ->
+                            onExerciseNoteChange(item.routineExercise.id, note)
                         },
                         onAddSet = { onAddSet(item.routineExercise.id) },
                         onDeleteSet = { setId -> onDeleteSet(item.routineExercise.id, setId) }
@@ -536,6 +550,7 @@ private fun ExerciseAccordion(
     onExerciseClick: (String) -> Unit = {},
     onSetFieldChange: (String, SetField, String) -> Unit,
     onRirChange: (String, Int?) -> Unit,
+    onExerciseNoteChange: (String) -> Unit,
     onAddSet: () -> Unit,
     onDeleteSet: (String) -> Unit
 ) {
@@ -548,6 +563,7 @@ private fun ExerciseAccordion(
             onExerciseClick = onExerciseClick,
             onSetFieldChange = onSetFieldChange,
             onRirChange = onRirChange,
+            onExerciseNoteChange = onExerciseNoteChange,
             onAddSet = onAddSet,
             onDeleteSet = onDeleteSet
         )
@@ -571,6 +587,7 @@ private fun ExpandedExerciseCard(
     onExerciseClick: (String) -> Unit = {},
     onSetFieldChange: (String, SetField, String) -> Unit,
     onRirChange: (String, Int?) -> Unit,
+    onExerciseNoteChange: (String) -> Unit,
     onAddSet: () -> Unit,
     onDeleteSet: (String) -> Unit
 ) {
@@ -688,12 +705,18 @@ private fun ExpandedExerciseCard(
                     onRepsChange = { onSetFieldChange(set.id, SetField.TARGET_REPS, it) },
                     restText = set.restSeconds.toString(),
                     onRestChange = { onSetFieldChange(set.id, SetField.REST_SECONDS, it) },
-                    noteText = set.loadNote.orEmpty(),
-                    onNoteChange = { onSetFieldChange(set.id, SetField.LOAD_NOTE, it) },
                     onDelete = { onDeleteSet(set.id) }
                 )
                 Spacer(Modifier.height(AppDimens.SpaceMd))
             }
+            // Nota única del ejercicio (con adopción de notas viejas por
+            // serie); antes había un campo por serie.
+            ExerciseNoteField(
+                note = effectiveExerciseNote(item),
+                onNoteChange = onExerciseNoteChange,
+                modifier = Modifier.testTag("exerciseNote:${item.routineExercise.id}")
+            )
+            Spacer(Modifier.height(AppDimens.SpaceMd))
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -851,8 +874,6 @@ private fun SetRow(
     onRepsChange: (String) -> Unit,
     restText: String,
     onRestChange: (String) -> Unit,
-    noteText: String,
-    onNoteChange: (String) -> Unit,
     onDelete: () -> Unit
 ) {
     val isFailure = rir == 0
@@ -922,27 +943,53 @@ private fun SetRow(
                 Icon(Icons.Filled.Close, contentDescription = "Eliminar serie", tint = AppColors.TextMuted)
             }
         }
-        Spacer(Modifier.height(AppDimens.SpaceMd))
-        BasicTextField(
-            value = noteText,
-            onValueChange = onNoteChange,
-            singleLine = true,
-            textStyle = TextStyle(color = AppColors.TextPrimary, fontSize = AppTextSizes.Body),
-            modifier = Modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(AppDimens.RadiusMd))
-                .background(AppColors.CardHigh)
-                .padding(vertical = AppDimens.SpaceMd, horizontal = AppDimens.SpaceLg),
-            decorationBox = { inner ->
-                Box {
-                    if (noteText.isEmpty()) {
-                        Text("Nota (ej. goma amarilla)", color = AppColors.TextMuted, fontSize = AppTextSizes.Body)
-                    }
-                    inner()
-                }
-            }
-        )
     }
+}
+
+/**
+ * Nota efectiva del ejercicio: la propia (`RoutineExercise.note`); si está
+ * vacía se adopta la primera nota no vacía de sus series (notas viejas por
+ * serie). Al guardar se espeja a todas (`onExerciseNoteChange`).
+ */
+private fun effectiveExerciseNote(item: RoutineExerciseUi): String {
+    if (item.routineExercise.note.isNotBlank()) return item.routineExercise.note
+    return item.sets.firstNotNullOfOrNull { it.loadNote?.ifBlank { null } }.orEmpty()
+}
+
+/**
+ * Campo único de nota por ejercicio (antes uno por serie). Trae a la vista
+ * el campo al enfocarlo, para que el teclado no lo tape.
+ */
+@Composable
+private fun ExerciseNoteField(
+    note: String,
+    onNoteChange: (String) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val bringIntoView = remember { BringIntoViewRequester() }
+    val scope = rememberCoroutineScope()
+    BasicTextField(
+        value = note,
+        onValueChange = onNoteChange,
+        singleLine = true,
+        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+        textStyle = TextStyle(color = AppColors.TextPrimary, fontSize = AppTextSizes.Body),
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(AppDimens.RadiusMd))
+            .background(AppColors.CardHigh)
+            .bringIntoViewRequester(bringIntoView)
+            .onFocusChanged { if (it.isFocused) scope.launch { bringIntoView.bringIntoView() } }
+            .padding(vertical = AppDimens.SpaceMd, horizontal = AppDimens.SpaceLg),
+        decorationBox = { inner ->
+            Box {
+                if (note.isEmpty()) {
+                    Text("Nota del ejercicio (ej. goma amarilla)", color = AppColors.TextMuted, fontSize = AppTextSizes.Body)
+                }
+                inner()
+            }
+        }
+    )
 }
 
 @Composable
@@ -952,6 +999,8 @@ private fun CellInput(
     keyboardType: KeyboardType,
     modifier: Modifier = Modifier
 ) {
+    val bringIntoView = remember { BringIntoViewRequester() }
+    val scope = rememberCoroutineScope()
     BasicTextField(
         value = value,
         onValueChange = onValueChange,
@@ -966,6 +1015,8 @@ private fun CellInput(
         modifier = modifier
             .clip(RoundedCornerShape(AppDimens.RadiusMd))
             .background(AppColors.CardHigh)
+            .bringIntoViewRequester(bringIntoView)
+            .onFocusChanged { if (it.isFocused) scope.launch { bringIntoView.bringIntoView() } }
             .padding(vertical = AppDimens.SpaceLg, horizontal = AppDimens.SpaceXs),
         decorationBox = { inner ->
             Box(contentAlignment = Alignment.Center) {
