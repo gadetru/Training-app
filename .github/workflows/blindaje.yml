@@ -16,7 +16,14 @@ jobs:
         with:
           distribution: temurin
           java-version: 17
-      - uses: android-actions/setup-android@v3
+      - uses: android-actions/setup-android@v4
+        with:
+          # v4 ya no pide el paquete obsoleto `tools` (Google dejó de servirlo:
+          # `Failed to find package 'tools'`). Default = solo `platform-tools`.
+          # Se silencian los textos de licencias para no inundar el log.
+          log-accepted-android-sdk-licenses: false
+      - name: Dar permiso a gradlew
+        run: chmod +x ./gradlew
       - name: Compilar
         run: ./gradlew assembleDebug --console=plain
       - name: Tests JVM (botes, mapper, reglas + fotos Roborazzi)
