@@ -225,6 +225,7 @@ fun WorkoutContent(
         }
         SessionBar(
             isPaused = uiState.isPaused,
+            elapsedSec = uiState.elapsedSec,
             isSaving = uiState.isSaving,
             onPauseToggle = onPauseToggle,
             onFinish = onFinish,
@@ -995,7 +996,9 @@ private fun SessionBar(
     onPauseToggle: () -> Unit,
     onFinish: () -> Unit,
     onBack: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    // Spec 013 paso 3: 0 y en pausa = aún no empezado → "Comenzar".
+    elapsedSec: Int = 0
 ) {
     Row(
         modifier = modifier
@@ -1010,26 +1013,30 @@ private fun SessionBar(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(AppDimens.SpaceMd)
     ) {
-        // Pausar/Reanudar.
+        // Spec 013 paso 3: Comenzar (sin arrancar) → Pausar → Reanudar.
+        // Sin arrancar = 0 y en pausa; el tick solo avanza sin pausa.
+        val notStarted = isPaused && elapsedSec <= 0
+        val pauseLabel = if (notStarted) "Comenzar" else if (isPaused) "Reanudar" else "Pausar"
         Row(
             modifier = Modifier
                 .clip(RoundedCornerShape(AppDimens.RadiusPill))
                 .background(AppColors.CardHigh)
                 .border(AppDimens.BorderThin, AppColors.BorderSubtle, RoundedCornerShape(AppDimens.RadiusPill))
                 .clickable(onClick = onPauseToggle)
-                .padding(horizontal = AppDimens.SpaceHuge, vertical = AppDimens.SpaceXl),
+                .padding(horizontal = AppDimens.SpaceHuge, vertical = AppDimens.SpaceXl)
+                .testTag("workoutPauseToggle"),
             verticalAlignment = Alignment.CenterVertically
         ) {
             // Pause no está en material-icons-core → fallback Menu.
             Icon(
                 if (isPaused) Icons.Filled.PlayArrow else Icons.Filled.Menu,
-                contentDescription = if (isPaused) "Reanudar" else "Pausar",
+                contentDescription = pauseLabel,
                 tint = AppColors.TextPrimary,
                 modifier = Modifier.size(AppDimens.IconXl)
             )
             Spacer(Modifier.width(AppDimens.SpaceSm))
             Text(
-                if (isPaused) "Reanudar" else "Pausar",
+                pauseLabel,
                 color = AppColors.TextPrimary,
                 fontSize = AppTextSizes.Body,
                 fontWeight = FontWeight.Bold

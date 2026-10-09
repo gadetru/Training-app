@@ -29,7 +29,9 @@ import kotlinx.coroutines.launch
  */
 private data class Ephemeral(
     val elapsedSec: Int = 0,
-    val isPaused: Boolean = false,
+    // Spec 013 paso 3: arranque detenido (el cronómetro no auto-arranca;
+    // el botón Comenzar lo pone en marcha vía onPauseToggle).
+    val isPaused: Boolean = true,
     val restRemainingSec: Int? = null,
     val restTotalSec: Int = 0,
     val restEntryId: String? = null,
@@ -217,6 +219,7 @@ class WorkoutViewModel @Inject constructor(
         ephemeral.update { it.copy(restRemainingSec = null, restEntryId = null) }
     }
 
+    /** Spec 013 paso 3: alterna Comenzar → Pausar → Reanudar (sin lógica de repo). */
     fun onPauseToggle() {
         ephemeral.update { it.copy(isPaused = !it.isPaused) }
     }
