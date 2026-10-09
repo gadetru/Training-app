@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -21,6 +22,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckCircle
@@ -35,6 +37,8 @@ import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -42,6 +46,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -50,6 +55,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -163,6 +169,20 @@ fun WorkoutContent(
 ) {
     // Confirmación de descarte: overlay propio (AlertDialog gestiona insets solo).
     var showDiscardDialog by rememberSaveable { mutableStateOf(false) }
+    // Spec 013 paso 1: qué serie se edita en el modal (id, sobrevive a rotación).
+    // El objeto fresco se resuelve desde uiState en cada recomposición.
+    var editingEntryId by rememberSaveable { mutableStateOf<String?>(null) }
+    val editingEntry = remember(uiState, editingEntryId) {
+        editingEntryId?.let { id ->
+            uiState.exercises.flatMap { it.entries }.find { it.id == id }
+        }
+    }
+    val editingPlanned = remember(uiState, editingEntry) {
+        editingEntry?.let { entry ->
+            uiState.exercises.flatMap { it.planned }.find { it.id == entry.plannedSetId }
+        }
+    }
+    val editingRestSec = editingEntry?.restSeconds ?: editingPlanned?.restSeconds ?: 90
     Box(modifier = Modifier.fillMaxSize().background(AppColors.Bg).testTag("workoutRoot")) {
         Column(modifier = Modifier.fillMaxSize()) {
             SessionHeader(
@@ -195,10 +215,9 @@ fun WorkoutContent(
                         item = item,
                         isActive = index + 1 == uiState.currentExerciseIndex,
                         onToggleExpanded = { onToggleExpanded(item.routineExercise.id) },
-                        onKgChange = onKgChange,
-                        onRepsChange = onRepsChange,
                         onToggleDone = onToggleDone,
-                        onExerciseClick = onExerciseClick
+                        onExerciseClick = onExerciseClick,
+                        onEditClick = { entryId -> editingEntryId = entryId }
                     )
                 }
                 item {
@@ -260,6 +279,24 @@ fun WorkoutContent(
                     ) {
                         Text("Descartar", fontSize = AppTextSizes.Body, fontWeight = FontWeight.Bold)
                     }
+                }
+            )
+        }
+        // Spec 013 paso 1: modal de edición KG/REPS/PAUSA (AlertDialog gestiona
+        // insets solo). Guardado temporal vía deltas existentes (KG/REPS);
+        // PAUSA se cablea en el paso 2 (TODO).
+        val editing = editingEntry
+        if (editing != null) {
+            SetEditDialog(
+                entry = editing,
+                restSec = editingRestSec,
+                onDismiss = { editingEntryId = null },
+                onConfirm = { kg, reps, _ ->
+                    val dKg = kg - editing.weightKg
+                    val dReps = reps - editing.reps
+                    if (dKg != 0.0) onKgChange(editing.id, dKg)
+                    if (dReps != 0) onRepsChange(editing.id, dReps)
+                    editingEntryId = null
                 }
             )
         }
@@ -452,10 +489,9 @@ private fun ExerciseAccordion(
     item: WorkoutExerciseUi,
     isActive: Boolean,
     onToggleExpanded: () -> Unit,
-    onKgChange: (String, Double) -> Unit,
-    onRepsChange: (String, Int) -> Unit,
     onToggleDone: (String) -> Unit,
-    onExerciseClick: (String) -> Unit = {}
+    onExerciseClick: (String) -> Unit = {},
+    onEditClick: (String) -> Unit = {}
 ) {
     val doneCount = item.entries.count { it.done }
     val total = item.entries.size
@@ -501,9 +537,8 @@ private fun ExerciseAccordion(
                         entry = entry,
                         planned = planned,
                         isNext = !entry.done && entry.id == nextPendingId,
-                        onKgChange = { onKgChange(entry.id, it) },
-                        onRepsChange = { onRepsChange(entry.id, it) },
-                        onToggleDone = { onToggleDone(entry.id) }
+                        onToggleDone = { onToggleDone(entry.id) },
+                        onEditClick = { onEditClick(entry.id) }
                     )
                     Spacer(Modifier.height(AppDimens.SpaceMd))
                 }
@@ -661,9 +696,8 @@ private fun SetRow(
     entry: SetEntry,
     planned: PlannedSet?,
     isNext: Boolean,
-    onKgChange: (Double) -> Unit,
-    onRepsChange: (Int) -> Unit,
-    onToggleDone: () -> Unit
+    onToggleDone: () -> Unit,
+    onEditClick: () -> Unit
 ) {
     val restSec = entry.restSeconds ?: planned?.restSeconds ?: 90
     val objective = if (planned != null) {
@@ -722,28 +756,33 @@ private fun SetRow(
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier.weight(1f)
         )
-        // Stepper KG (±2.5).
-        Stepper(
+        // Spec 013: celdas de valor pulsables (abren el modal). Sin steppers.
+        ValueCell(
             value = formatWeight(entry.weightKg),
-            onMinus = { onKgChange(-KG_STEP) },
-            onPlus = { onKgChange(KG_STEP) },
-            modifier = Modifier.weight(1f)
+            contentDescription = "Editar peso serie ${entry.setNumber}",
+            onClick = onEditClick,
+            modifier = Modifier
+                .weight(1f)
+                .testTag("setKg:${entry.id}")
         )
         Spacer(Modifier.width(AppDimens.SpaceXs))
-        // Stepper REPS (±1).
-        Stepper(
+        ValueCell(
             value = "${entry.reps}",
-            onMinus = { onRepsChange(-1) },
-            onPlus = { onRepsChange(1) },
-            modifier = Modifier.weight(1f)
+            contentDescription = "Editar repeticiones serie ${entry.setNumber}",
+            onClick = onEditClick,
+            modifier = Modifier
+                .weight(1f)
+                .testTag("setReps:${entry.id}")
         )
         Spacer(Modifier.width(AppDimens.SpaceXs))
-        Text(
-            "${restSec}s",
-            color = AppColors.TextMuted,
-            fontSize = AppTextSizes.Small,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.width(AppDimens.PauseWidth)
+        ValueCell(
+            value = "${restSec}s",
+            contentDescription = "Editar pausa serie ${entry.setNumber}",
+            small = true,
+            onClick = onEditClick,
+            modifier = Modifier
+                .width(AppDimens.PauseWidth)
+                .testTag("setRest:${entry.id}")
         )
         // Estado: pendiente → botón naranja `done`; hecha → check volt.
         Box(
@@ -777,46 +816,161 @@ private fun SetRow(
     }
 }
 
+/**
+ * Spec 013 paso 1: celda de valor pulsable (KG/REPS/PAUSA). Hit target
+ * ≥ 48dp vía `heightIn(min = TouchMin)`.
+ */
 @Composable
-private fun Stepper(
+private fun ValueCell(
     value: String,
-    onMinus: () -> Unit,
-    onPlus: () -> Unit,
-    modifier: Modifier = Modifier
+    contentDescription: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    small: Boolean = false
 ) {
-    Row(
+    Box(
         modifier = modifier
+            .heightIn(min = AppDimens.TouchMin)
             .clip(RoundedCornerShape(AppDimens.RadiusMd))
             .background(AppColors.CardHigh)
-            .padding(horizontal = AppDimens.SpaceXxs, vertical = AppDimens.SpaceXs),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween
+            .clickable(onClickLabel = contentDescription, onClick = onClick),
+        contentAlignment = Alignment.Center
     ) {
-        // Remove no está en material-icons-core → texto −/+ simétrico.
-        Box(
-            modifier = Modifier
-                .size(AppDimens.TouchMin)
-                .clickable(onClick = onMinus),
-            contentAlignment = Alignment.Center
-        ) {
-            Text("−", color = AppColors.TextMuted, fontSize = AppTextSizes.TitleLg, fontWeight = FontWeight.Bold)
-        }
         Text(
             value,
-            color = AppColors.TextPrimary,
-            fontSize = AppTextSizes.BodyLg,
+            color = if (small) AppColors.TextMuted else AppColors.TextPrimary,
+            fontSize = if (small) AppTextSizes.Small else AppTextSizes.BodyLg,
             fontWeight = FontWeight.Bold,
             textAlign = TextAlign.Center,
             maxLines = 1
         )
-        Box(
-            modifier = Modifier
-                .size(AppDimens.TouchMin)
-                .clickable(onClick = onPlus),
-            contentAlignment = Alignment.Center
-        ) {
-            Text("+", color = AppColors.TextMuted, fontSize = AppTextSizes.TitleLg, fontWeight = FontWeight.Bold)
+    }
+}
+
+/**
+ * Spec 013 paso 1: modal de edición de serie (KG con signo, REPS entero,
+ * PAUSA en segundos) con teclado numérico y confirmación. `AlertDialog`
+ * gestiona insets solo (regla edge-to-edge). Estado solo de pantalla;
+ * el guardado lo hace el llamador en `onConfirm` (paso 2: rutas reales).
+ */
+@Composable
+private fun SetEditDialog(
+    entry: SetEntry,
+    restSec: Int,
+    onDismiss: () -> Unit,
+    onConfirm: (kg: Double, reps: Int, rest: Int) -> Unit
+) {
+    var kgText by rememberSaveable(entry.id) { mutableStateOf(formatWeight(entry.weightKg)) }
+    var repsText by rememberSaveable(entry.id) { mutableStateOf("${entry.reps}") }
+    var restText by rememberSaveable(entry.id) { mutableStateOf("$restSec") }
+    val kg = kgText.replace(',', '.').toDoubleOrNull()
+    val reps = repsText.toIntOrNull()
+    val rest = restText.toIntOrNull()
+    val valid = kg != null && reps != null && reps >= 0 && rest != null && rest >= 0
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        containerColor = AppColors.Card,
+        shape = RoundedCornerShape(AppDimens.RadiusCard),
+        title = {
+            Text(
+                "Editar serie ${entry.setNumber}",
+                color = AppColors.TextPrimary,
+                fontSize = AppTextSizes.Headline,
+                fontWeight = FontWeight.Bold
+            )
+        },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(AppDimens.SpaceXl)) {
+                SetEditField(
+                    label = "KG (con signo: + lastre, - ayuda)",
+                    value = kgText,
+                    onValue = { kgText = it },
+                    keyboardType = KeyboardType.Decimal,
+                    testTag = "setEditKg"
+                )
+                SetEditField(
+                    label = "REPS",
+                    value = repsText,
+                    onValue = { repsText = it },
+                    keyboardType = KeyboardType.Number,
+                    testTag = "setEditReps"
+                )
+                SetEditField(
+                    label = "PAUSA (segundos)",
+                    value = restText,
+                    onValue = { restText = it },
+                    keyboardType = KeyboardType.Number,
+                    testTag = "setEditRest"
+                )
+            }
+        },
+        dismissButton = {
+            TextButton(
+                onClick = onDismiss,
+                shape = RoundedCornerShape(AppDimens.RadiusPill),
+                colors = ButtonDefaults.textButtonColors(
+                    containerColor = AppColors.CardHigh,
+                    contentColor = AppColors.TextPrimary
+                )
+            ) {
+                Text("Cancelar", fontSize = AppTextSizes.Body, fontWeight = FontWeight.Bold)
+            }
+        },
+        confirmButton = {
+            TextButton(
+                onClick = {
+                    if (valid) onConfirm(kg!!, reps!!, rest!!)
+                },
+                enabled = valid,
+                shape = RoundedCornerShape(AppDimens.RadiusPill),
+                colors = ButtonDefaults.textButtonColors(
+                    containerColor = AppColors.Orange,
+                    contentColor = AppColors.OnOrange,
+                    disabledContainerColor = AppColors.CardHigh,
+                    disabledContentColor = AppColors.TextMuted
+                )
+            ) {
+                Text("Guardar", fontSize = AppTextSizes.Body, fontWeight = FontWeight.Bold)
+            }
         }
+    )
+}
+
+@Composable
+private fun SetEditField(
+    label: String,
+    value: String,
+    onValue: (String) -> Unit,
+    keyboardType: KeyboardType,
+    testTag: String
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(AppDimens.SpaceSm)) {
+        Text(
+            label,
+            color = AppColors.TextMuted,
+            fontSize = AppTextSizes.Caption,
+            fontWeight = FontWeight.SemiBold
+        )
+        OutlinedTextField(
+            value = value,
+            onValueChange = onValue,
+            singleLine = true,
+            keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
+            textStyle = androidx.compose.ui.text.TextStyle(
+                color = AppColors.TextPrimary,
+                fontSize = AppTextSizes.TitleSm,
+                fontWeight = FontWeight.Bold
+            ),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedContainerColor = AppColors.InputBg,
+                unfocusedContainerColor = AppColors.InputBg,
+                focusedBorderColor = AppColors.Orange,
+                unfocusedBorderColor = AppColors.BorderSubtle,
+                cursorColor = AppColors.Orange
+            ),
+            shape = RoundedCornerShape(AppDimens.RadiusMd),
+            modifier = Modifier.fillMaxWidth().testTag(testTag)
+        )
     }
 }
 
