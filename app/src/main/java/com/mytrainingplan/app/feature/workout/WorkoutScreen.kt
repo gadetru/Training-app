@@ -540,6 +540,9 @@ private fun ExerciseAccordion(
             }
         }
     } else {
+        // Spec 013 paso 4: un solo clickable por tarjeta (1 tap expande);
+        // el nombre lleva su propio tap a la ficha y consume el evento
+        // (abre el detalle sin expandir a la vez).
         Row(
             modifier = Modifier
                 .fillMaxWidth()

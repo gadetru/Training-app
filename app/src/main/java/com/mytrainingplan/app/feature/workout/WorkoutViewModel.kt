@@ -146,11 +146,24 @@ class WorkoutViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Spec 013 paso 4: niega el estado EFECTIVO (toque previo o defecto
+     * primer pendiente, igual que el `combine`), no `?: true`: si no,
+     * expandir una tarjeta colapsada por defecto costaba 2 taps (el 1º
+     * guardaba `false`, que ya era su estado visible).
+     */
     fun onToggleExpanded(routineExerciseId: String) {
+        val items = detail.value?.items ?: emptyList()
+        val firstPending = items.indexOfFirst { item ->
+            item.entries.any { !it.done }
+        }
         ephemeral.update { cur ->
+            val index = items.indexOfFirst { it.routineExercise.id == routineExerciseId }
+            val current = cur.expanded[routineExerciseId]
+                ?: (index != -1 && index == firstPending)
             cur.copy(
                 expanded = cur.expanded +
-                    (routineExerciseId to !(cur.expanded[routineExerciseId] ?: true))
+                    (routineExerciseId to !current)
             )
         }
     }
