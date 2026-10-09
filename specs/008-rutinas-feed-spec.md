@@ -1,5 +1,5 @@
 # Feed único + descarte seguro + orden real
-Estado: aprobado
+Estado: implementado
 Depende de: specs/007-catalogo-fork-spec.md (asume catálogo y repos Room ya en `main`)
 Fecha de creación: 2026-10-05
 Descripción: Cada rutina guardada aparece dos veces en home, salir sin guardar puede borrar la guardada y el orden no es real. Este spec deja un solo feed, un descarte que no pierde datos y posición de verdad. Sin cambios visuales salvo que todo sale una vez y en orden.

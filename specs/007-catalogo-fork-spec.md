@@ -1,5 +1,5 @@
 git# Catálogo desde el fork + `getById` async
-Estado: aprobado
+Estado: implementado
 
 Depende de: specs/006-fase-b-room-local-spec.md (usa su Room, DAOs, sync y DTO ya implementados en rama `006-fase-b-room-local`)
 Fecha de creación: 2026-10-05
