@@ -1,5 +1,5 @@
 # Fixes sesión en vivo: modal numérico + Comenzar + tap único
-Estado: aprobado
+Estado: implementado
 Depende de: Ninguno (sigue a 005/009/011 ya en main)
 Fecha de creación: 2026-10-09
 Descripción: Quitar los steppers −/+ de KG/REPS/PAUSA por un modal de edición al pulsar el número, que el cronómetro arranque detenido con botón Comenzar, y que abrir un ejercicio colapsado cueste un solo tap.
