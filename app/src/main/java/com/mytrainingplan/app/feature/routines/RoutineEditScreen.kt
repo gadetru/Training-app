@@ -51,6 +51,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.draw.clip
@@ -78,6 +79,8 @@ import com.mytrainingplan.app.ui.theme.AppDimens
 import com.mytrainingplan.app.ui.theme.AppTextSizes
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
+import coil.decode.BitmapFactoryDecoder
+import coil.request.ImageRequest
 import com.mytrainingplan.app.domain.model.Exercise
 import com.mytrainingplan.app.domain.model.PlannedSet
 import com.mytrainingplan.app.domain.model.RoutineEditUiState
@@ -610,8 +613,13 @@ private fun ExpandedExerciseCard(
                     .clickable(onClick = { onExerciseClick(item.exercise.id) }),
                 contentAlignment = Alignment.BottomEnd
             ) {
+                // Miniatura quieta (spec 012, paso 7): primer frame estático;
+                // fuera de este spec animar lista/editar/sesión.
                 AsyncImage(
-                    model = item.exercise.gifUrl,
+                    model = ImageRequest.Builder(LocalContext.current)
+                        .data(item.exercise.gifUrl)
+                        .decoderFactory(BitmapFactoryDecoder.Factory())
+                        .build(),
                     contentDescription = item.exercise.name,
                     placeholder = ColorPainter(AppColors.CardHigh),
                     error = ColorPainter(AppColors.CardHigh),

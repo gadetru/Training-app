@@ -48,6 +48,7 @@ import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.ColorPainter
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -56,6 +57,8 @@ import com.mytrainingplan.app.ui.theme.AppDimens
 import com.mytrainingplan.app.ui.theme.AppTextSizes
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
+import coil.decode.BitmapFactoryDecoder
+import coil.request.ImageRequest
 import com.mytrainingplan.app.data.repository.FakeExerciseRepository
 import com.mytrainingplan.app.domain.model.Exercise
 import com.mytrainingplan.app.domain.model.ExercisesUiState
@@ -387,8 +390,9 @@ private fun ExerciseRow(
             .padding(AppDimens.SpaceLg),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // Thumbnail GIF real vía Coil (Coil sin coil-gif: primer frame estático).
-        // Placeholder y error de color local si la carga falla.
+        // Miniatura quieta (spec 012, paso 7): primer frame estático forzando
+        // BitmapFactoryDecoder por petición; el hero de la ficha anima con el
+        // loader global (TrainingApp). Placeholder/error de color si falla.
         // Docs: /coil-kt/coil (coil-compose AsyncImage + placeholder/error).
         Box(
             modifier = Modifier
@@ -398,7 +402,10 @@ private fun ExerciseRow(
             contentAlignment = Alignment.BottomEnd
         ) {
             AsyncImage(
-                model = exercise.gifUrl,
+                model = ImageRequest.Builder(LocalContext.current)
+                    .data(exercise.gifUrl)
+                    .decoderFactory(BitmapFactoryDecoder.Factory())
+                    .build(),
                 contentDescription = exercise.name,
                 placeholder = ColorPainter(AppColors.CardHigh),
                 error = ColorPainter(AppColors.CardHigh),
