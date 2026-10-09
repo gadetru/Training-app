@@ -81,14 +81,14 @@ Toca `feature/exercises`: buscador (`ExercisePickerSheet.kt:267-303`) + caja obs
 - ¿Causa raíz del no-escribe? (se sabrá al diagnosticar en el paso 1).
 - ¿Botón Buscar explícito en el siguiente spec tras este?
 ## 11. Checklist verificación (última, checkboxes listos para /verifier)
-- [ ] Abrir la lista, pulsar el buscador y escribir `sentadilla` muestra su fila.
-- [ ] Al pulsar el campo, el texto de ayuda desaparece antes de escribir.
-- [ ] Escribir `pierna` encuentra ejercicios de quads.
-- [ ] `press` + chip Pecho filtra combinado.
-- [ ] GIF de la ficha se mueve con red.
-- [ ] Ficha sin red y con caché muestra el GIF sin caerse.
-- [ ] Miniaturas de la lista siguen quietas.
-- [ ] `./gradlew assembleDebug` termina OK.
-- [ ] `./gradlew testDebugUnitTest` termina en verde.
-- [ ] Fotos Home y tarjeta iguales a sus dorados.
-- [ ] En emulador y en físico nada tapa el campo al escribir.
+- [x] Abrir la lista, pulsar el buscador y escribir `sentadilla` muestra su fila.
+- [x] Al pulsar el campo, el texto de ayuda desaparece antes de escribir.
+- [x] Escribir `pierna` encuentra ejercicios de quads.
+- [x] `press` + chip Pecho filtra combinado.
+- [x] GIF de la ficha se mueve con red.
+- [x] Ficha sin red y con caché muestra el GIF sin caerse.
+- [x] Miniaturas de la lista siguen quietas.
+- [x] `./gradlew assembleDebug` termina OK.
+- [x] `./gradlew testDebugUnitTest` termina en verde.
+- [x] Fotos Home y tarjeta iguales a sus dorados.
+- [x] En emulador y en físico nada tapa el campo al escribir.

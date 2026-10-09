@@ -11,11 +11,13 @@ import com.mytrainingplan.app.domain.model.MuscleGroups
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -24,7 +26,7 @@ import kotlinx.coroutines.flow.update
  * Selector de ejercicios con Room (Paso 11 spec 006, Fase B).
  * Misma forma por fuera; repo real inyectado con Hilt.
  */
-@OptIn(ExperimentalCoroutinesApi::class)
+@OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
 @HiltViewModel
 class ExercisesViewModel @Inject constructor(
     private val repository: ExerciseRepository
@@ -35,6 +37,14 @@ class ExercisesViewModel @Inject constructor(
     private val selectedEquipment = MutableStateFlow<String?>(null)
     private val selectedIds = MutableStateFlow<Set<String>>(emptySet())
 
+    /**
+     * El texto filtra al parar de escribir (300 ms): teclear `pierna` de
+     * corrido lanza una sola búsqueda en vez de una por tecla. El campo
+     * sigue pintando `query` al instante (sin retardo visual) y los chips
+     * no pasan por aquí: filtran al momento.
+     */
+    private val debouncedQuery: Flow<String> = query.debounce(300)
+
     private data class FilterParams(
         val query: String,
         val muscle: String?,
@@ -42,7 +52,7 @@ class ExercisesViewModel @Inject constructor(
     )
 
     private val filterParams: Flow<FilterParams> = combine(
-        query,
+        debouncedQuery,
         selectedMuscle,
         selectedEquipment
     ) { q, m, e -> FilterParams(q, m, e) }
