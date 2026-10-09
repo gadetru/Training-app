@@ -132,8 +132,7 @@ fun WorkoutScreen(
             WorkoutContent(
                 uiState = uiState,
                 onToggleExpanded = viewModel::onToggleExpanded,
-                onKgChange = viewModel::onKgChange,
-                onRepsChange = viewModel::onRepsChange,
+                onUpdateEntry = viewModel::onUpdateEntry,
                 onToggleDone = viewModel::onToggleDone,
                 onPauseToggle = viewModel::onPauseToggle,
                 onFinish = { viewModel.onFinish(onFinished) },
@@ -158,8 +157,7 @@ fun WorkoutScreen(
 fun WorkoutContent(
     uiState: WorkoutUiState,
     onToggleExpanded: (String) -> Unit = {},
-    onKgChange: (String, Double) -> Unit = { _, _ -> },
-    onRepsChange: (String, Int) -> Unit = { _, _ -> },
+    onUpdateEntry: (String, Double, Int, Int) -> Unit = { _, _, _, _ -> },
     onToggleDone: (String) -> Unit = {},
     onPauseToggle: () -> Unit = {},
     onFinish: () -> Unit = {},
@@ -282,20 +280,16 @@ fun WorkoutContent(
                 }
             )
         }
-        // Spec 013 paso 1: modal de edición KG/REPS/PAUSA (AlertDialog gestiona
-        // insets solo). Guardado temporal vía deltas existentes (KG/REPS);
-        // PAUSA se cablea en el paso 2 (TODO).
+        // Spec 013 paso 2: guardado de golpe vía onUpdateEntry (KG con signo,
+        // REPS/PAUSA); cancelar no guarda (onDismiss).
         val editing = editingEntry
         if (editing != null) {
             SetEditDialog(
                 entry = editing,
                 restSec = editingRestSec,
                 onDismiss = { editingEntryId = null },
-                onConfirm = { kg, reps, _ ->
-                    val dKg = kg - editing.weightKg
-                    val dReps = reps - editing.reps
-                    if (dKg != 0.0) onKgChange(editing.id, dKg)
-                    if (dReps != 0) onRepsChange(editing.id, dReps)
+                onConfirm = { kg, reps, rest ->
+                    onUpdateEntry(editing.id, kg, reps, rest)
                     editingEntryId = null
                 }
             )
