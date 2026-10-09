@@ -1,5 +1,5 @@
 # Detalle de ejercicio con instrucciones
-Estado: aprobado
+Estado: implementado
 Depende de: specs/007-catalogo-fork-spec.md, specs/008-rutinas-feed-spec.md, specs/009-sesion-persistida-spec.md (asume catálogo y rutinas y sesiones estables en main)
 Fecha de creación: 2026-10-06
 Descripción: Al pulsar un ejercicio se abre su ficha con GIF grande, secundarios e instrucciones paso a paso. Rescata las instrucciones que hoy se pierden entre la descarga y la pantalla.

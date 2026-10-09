@@ -1,5 +1,5 @@
 # Fase B Room local
-Estado: aprobado
+Estado: implementado
 Depende de: specs/001-plantilla-usuario-spec.md, specs/002-vista-principal-spec.md, specs/003-lista-ejercicios-spec.md, specs/004-editar-rutina-spec.md, specs/005-rutina-spec.md (mantienen la forma de los repos falsos y el arranque ¿hay perfil? home:profile)
 Fecha de creación: 2026-10-04
 Descripción: Guardar perfil, ejercicios, rutinas y sesiones en la base local del móvil. La red solo rellena esa base. Por fuera la app se ve igual.
@@ -109,8 +109,8 @@ DTOs espejo del JSON con nombres con guion bajo (`body_part`, `gif_url`) en `dat
 - ¿Semilla inicial de ejercicios si no hay red en primer arranque?
 ## 11. Checklist verificación (última, checkboxes listos para /verifier)
 - [x] Perfil editado sigue ahí tras cerrar y abrir la app en el móvil.
-- [ ] Rutina creada con 2 ejercicios y 3 series sigue intacta tras reinicio.
-- [ ] Sesión terminada aparece en el historial tras reinicio.
+- [X] Rutina creada con 2 ejercicios y 3 series sigue intacta tras reinicio.
+- [X] Sesión terminada aparece en el historial tras reinicio.
 - [x] Próxima sesión del mismo día rellena con lo hecho la última vez, no con el plan.
 - [x] Sin red la lista de ejercicios abre con lo guardado y no se cae.
 - [x] Con red y tag nuevo el catálogo se actualiza sin duplicar propios.
