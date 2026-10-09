@@ -38,9 +38,13 @@ import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.ColorPainter
 import androidx.compose.ui.layout.ContentScale
@@ -268,11 +272,17 @@ private fun SearchBar(
     query: String,
     onQueryChange: (String) -> Unit
 ) {
+    // Spec 012, paso 3: la ayuda se oculta al enfocar, antes de escribir.
+    var focused by remember { mutableStateOf(false) }
     TextField(
         value = query,
         onValueChange = onQueryChange,
         singleLine = true,
-        placeholder = { Text("Buscar ejercicio (ej. Sentadilla, Prensa...)", color = AppColors.TextMuted, fontSize = AppTextSizes.TitleSm) },
+        placeholder = {
+            if (!focused) {
+                Text("Buscar ejercicio (ej. Sentadilla, Prensa...)", color = AppColors.TextMuted, fontSize = AppTextSizes.TitleSm)
+            }
+        },
         leadingIcon = { Icon(Icons.Filled.Search, contentDescription = null, tint = AppColors.Orange) },
         trailingIcon = {
             if (query.isNotEmpty()) {
@@ -299,6 +309,7 @@ private fun SearchBar(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = AppDimens.ScreenHorizontal, vertical = AppDimens.SpaceXs)
+            .onFocusChanged { focused = it.isFocused }
     )
 }
 
