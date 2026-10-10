@@ -193,11 +193,14 @@ class WorkoutViewModel @Inject constructor(
      * Completa/desmarca una serie: al marcar volt arranca el descanso
      * flotante con la cuenta atrás de `restSeconds` de esa serie (si null,
      * el del plan; si también null, 90 s como el defecto del constructor).
+     * Marcar exige cronómetro activo (no en pausa / sin comenzar);
+     * desmarcar siempre está permitido.
      */
     fun onToggleDone(entryId: String) {
         val d = detail.value ?: return
         val sid = sessionId.value ?: return
         val entry = d.items.flatMap { it.entries }.find { it.id == entryId } ?: return
+        if (!entry.done && ephemeral.value.isPaused) return
         viewModelScope.launch {
             repository.toggleSetDone(sid, entryId, !entry.done)
             if (!entry.done) {

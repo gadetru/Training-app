@@ -45,9 +45,9 @@ Toca `feature/profile` (`ProfileScreen.kt` chips + preview) y navegación (`Main
 ## Preguntas abiertas
 Ninguna (interrogatorio respondido 2026-10-09).
 ## 11. Checklist verificación (última, checkboxes listos para /verifier)
-- [ ] Resistencia legible entera sin cortes.
-- [ ] Cambio de enfoque marca y guarda igual.
-- [ ] Preview Crear Rutina + abre constructor vacío.
-- [ ] Sin cortes ni solapes a 360dp.
-- [ ] `./gradlew assembleDebug` OK.
-- [ ] Probado en emulador Pixel 6 API 34 + físico automático.
+- [x] Resistencia legible entera sin cortes.
+- [x] Cambio de enfoque marca y guarda igual.
+- [x] Preview Crear Rutina + abre constructor vacío.
+- [x] Sin cortes ni solapes a 360dp.
+- [x] `./gradlew assembleDebug` OK.
+- [x] Probado en emulador Pixel 6 API 34 + físico automático.

@@ -959,6 +959,9 @@ private fun effectiveExerciseNote(item: RoutineExerciseUi): String {
 /**
  * Campo único de nota por ejercicio (antes uno por serie). Trae a la vista
  * el campo al enfocarlo, para que el teclado no lo tape.
+ * Borrador local: el texto vive en el campo mientras se edita y solo se
+ * persiste al perder el foco o pulsar Done (antes cada letra era una
+ * escritura Room + recomposición desde el flow, lo que rompía el tecleo).
  */
 @Composable
 private fun ExerciseNoteField(
@@ -968,22 +971,32 @@ private fun ExerciseNoteField(
 ) {
     val bringIntoView = remember { BringIntoViewRequester() }
     val scope = rememberCoroutineScope()
+    var draft by remember(note) { mutableStateOf(note) }
     BasicTextField(
-        value = note,
-        onValueChange = onNoteChange,
+        value = draft,
+        onValueChange = { draft = it },
         singleLine = true,
         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+        keyboardActions = KeyboardActions(
+            onDone = { if (draft != note) onNoteChange(draft) }
+        ),
         textStyle = TextStyle(color = AppColors.TextPrimary, fontSize = AppTextSizes.Body),
         modifier = modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(AppDimens.RadiusMd))
             .background(AppColors.CardHigh)
             .bringIntoViewRequester(bringIntoView)
-            .onFocusChanged { if (it.isFocused) scope.launch { bringIntoView.bringIntoView() } }
+            .onFocusChanged {
+                if (it.isFocused) {
+                    scope.launch { bringIntoView.bringIntoView() }
+                } else if (draft != note) {
+                    onNoteChange(draft)
+                }
+            }
             .padding(vertical = AppDimens.SpaceMd, horizontal = AppDimens.SpaceLg),
         decorationBox = { inner ->
             Box {
-                if (note.isEmpty()) {
+                if (draft.isEmpty()) {
                     Text("Nota del ejercicio (ej. goma amarilla)", color = AppColors.TextMuted, fontSize = AppTextSizes.Body)
                 }
                 inner()
@@ -1001,9 +1014,14 @@ private fun CellInput(
 ) {
     val bringIntoView = remember { BringIntoViewRequester() }
     val scope = rememberCoroutineScope()
+    // Borrador local (igual que la nota): el texto vive en el campo y solo
+    // se vuelca al perder el foco, para no escribir en Room por cada letra.
+    // En blanco se revierte al valor guardado (nunca es válido y el parser
+    // lo rechazaría, dejando el campo y la DB divergentes).
+    var draft by remember(value) { mutableStateOf(value) }
     BasicTextField(
-        value = value,
-        onValueChange = onValueChange,
+        value = draft,
+        onValueChange = { draft = it },
         singleLine = true,
         keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
         textStyle = TextStyle(
@@ -1016,7 +1034,14 @@ private fun CellInput(
             .clip(RoundedCornerShape(AppDimens.RadiusMd))
             .background(AppColors.CardHigh)
             .bringIntoViewRequester(bringIntoView)
-            .onFocusChanged { if (it.isFocused) scope.launch { bringIntoView.bringIntoView() } }
+            .onFocusChanged {
+                if (it.isFocused) {
+                    scope.launch { bringIntoView.bringIntoView() }
+                } else if (draft != value) {
+                    if (draft.isBlank()) draft = value
+                    else onValueChange(draft)
+                }
+            }
             .padding(vertical = AppDimens.SpaceLg, horizontal = AppDimens.SpaceXs),
         decorationBox = { inner ->
             Box(contentAlignment = Alignment.Center) {

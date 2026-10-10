@@ -212,6 +212,7 @@ fun WorkoutContent(
                         index = index,
                         item = item,
                         isActive = index + 1 == uiState.currentExerciseIndex,
+                        timerRunning = !uiState.isPaused,
                         onToggleExpanded = { onToggleExpanded(item.routineExercise.id) },
                         onToggleDone = onToggleDone,
                         onExerciseClick = onExerciseClick,
@@ -486,6 +487,7 @@ private fun ExerciseAccordion(
     index: Int,
     item: WorkoutExerciseUi,
     isActive: Boolean,
+    timerRunning: Boolean = true,
     onToggleExpanded: () -> Unit,
     onToggleDone: (String) -> Unit,
     onExerciseClick: (String) -> Unit = {},
@@ -535,6 +537,7 @@ private fun ExerciseAccordion(
                         entry = entry,
                         planned = planned,
                         isNext = !entry.done && entry.id == nextPendingId,
+                        timerRunning = timerRunning,
                         onToggleDone = { onToggleDone(entry.id) },
                         onEditClick = { onEditClick(entry.id) }
                     )
@@ -698,6 +701,7 @@ private fun SetRow(
     entry: SetEntry,
     planned: PlannedSet?,
     isNext: Boolean,
+    timerRunning: Boolean = true,
     onToggleDone: () -> Unit,
     onEditClick: () -> Unit
 ) {
@@ -786,11 +790,13 @@ private fun SetRow(
                 .width(AppDimens.PauseWidth)
                 .testTag("setRest:${entry.id}")
         )
-        // Estado: pendiente → botón naranja `done`; hecha → check volt.
+        // Estado: pendiente → botón naranja `done` (atenuado si el
+        // cronómetro está parado: marcar exige contador activo); hecha →
+        // check volt (desmarcar siempre permitido).
         Box(
             modifier = Modifier
                 .size(AppDimens.TouchMin)
-                .clickable(onClick = onToggleDone),
+                .clickable(enabled = entry.done || timerRunning, onClick = onToggleDone),
             contentAlignment = Alignment.Center
         ) {
             if (entry.done) {
@@ -808,7 +814,10 @@ private fun SetRow(
                     modifier = Modifier
                         .size(AppDimens.SetCell)
                         .clip(RoundedCornerShape(AppDimens.RadiusLg))
-                        .background(AppColors.Orange),
+                        .background(
+                            if (timerRunning) AppColors.Orange
+                            else AppColors.TextMuted.copy(alpha = 0.4f)
+                        ),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(Icons.Filled.Done, contentDescription = "Completar serie", tint = AppColors.OnOrange, modifier = Modifier.size(AppDimens.IconXl))
