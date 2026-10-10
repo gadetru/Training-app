@@ -197,7 +197,9 @@ fun TrainingNav() {
                 onSave = {
                     vm.onSave(it)
                     navController.navigateToTab(HomeTab.RUTINAS)
-                }
+                },
+                // Spec 014: la preview crea rutina como el CTA de Home.
+                onCreate = { navController.navigate(ROUTE_ROUTINE_EDIT_NEW) }
             )
         }
     }

@@ -6,6 +6,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -68,7 +70,8 @@ private val InputBg = Color(0xFF0C0E11)
 fun ProfileScreen(
     initial: Profile? = null,
     onBack: () -> Unit = {},
-    onSave: (Profile) -> Unit = {}
+    onSave: (Profile) -> Unit = {},
+    onCreate: () -> Unit = {}
 ) {
     var displayName by rememberSaveable(initial) { mutableStateOf(initial?.displayName ?: "Carlos Mendoza") }
     var ageText by rememberSaveable(initial) { mutableStateOf((initial?.age ?: 28).toString()) }
@@ -112,11 +115,13 @@ fun ProfileScreen(
         onGoal = { goalIndex = it.ordinal },
         onAvatarClick = { /* TODO picker + Coil */ },
         onBack = onBack,
-        onSave = { onSave(profile) }
+        onSave = { onSave(profile) },
+        onCreate = onCreate
     )
 }
 
 @Composable
+@OptIn(ExperimentalLayoutApi::class)
 private fun ProfileContent(
     profile: Profile,
     displayName: String,
@@ -131,7 +136,8 @@ private fun ProfileContent(
     onGoal: (TrainingGoal) -> Unit,
     onAvatarClick: () -> Unit,
     onBack: () -> Unit,
-    onSave: () -> Unit
+    onSave: () -> Unit,
+    onCreate: () -> Unit
 ) {
     Box(
         modifier = Modifier
@@ -410,9 +416,10 @@ private fun ProfileContent(
                             .background(BorderSubtle)
                     )
                     Text("ENFOQUE DE ENTRENAMIENTO", color = TextMuted, fontSize = 10.sp, letterSpacing = 1.sp)
-                    Row(
+                    FlowRow(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         TrainingGoal.entries.forEach { g ->
                             val selected = g == profile.goal
@@ -495,6 +502,11 @@ private fun ProfileContent(
                                 .clip(RoundedCornerShape(999.dp))
                                 .background(Card)
                                 .border(1.dp, BorderSubtle, RoundedCornerShape(999.dp))
+                                .clickable(
+                                    onClickLabel = "Crear rutina",
+                                    role = Role.Button,
+                                    onClick = onCreate
+                                )
                                 .padding(horizontal = 12.dp, vertical = 6.dp)
                         ) {
                             Text("Crear Rutina +", color = Orange, fontSize = 11.sp, fontWeight = FontWeight.Bold)
