@@ -6,6 +6,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -328,6 +330,7 @@ private fun RoutineFeed(
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun RoutineCard(
     routine: RoutineSummary,
@@ -359,7 +362,13 @@ private fun RoutineCard(
                 Column(modifier = Modifier.weight(1f)) {
                     Text(routine.title, color = AppColors.TextPrimary, fontSize = AppTextSizes.TitleLg, fontWeight = FontWeight.SemiBold)
                     Spacer(Modifier.height(AppDimens.SpaceMd))
-                    Row(horizontalArrangement = Arrangement.spacedBy(AppDimens.SpaceSm)) {
+                    // FlowRow con wrap: con 5 grupos salta a 2 líneas en vez
+                    // de recortar el último tag fuera de la tarjeta.
+                    FlowRow(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(AppDimens.SpaceSm),
+                        verticalArrangement = Arrangement.spacedBy(AppDimens.SpaceSm)
+                    ) {
                         routine.tags.forEach { tag ->
                             Box(
                                 modifier = Modifier
