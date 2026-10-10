@@ -7,6 +7,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -57,6 +59,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.draw.clip
@@ -189,6 +193,9 @@ fun RoutineEditContent(
     // Modal de nombre: se abre desde el lápiz (o el propio título); overlay
     // sobre el constructor, que conserva su posición/scroll al cerrar.
     var showNameDialog by rememberSaveable { mutableStateOf(false) }
+    // Cabecera MetaCard colapsable: por defecto expandida; colapsada deja
+    // solo el título para que el constructor respire con rutinas grandes.
+    var metaExpanded by rememberSaveable { mutableStateOf(true) }
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -218,7 +225,9 @@ fun RoutineEditContent(
                     exerciseCount = uiState.exercises.size,
                     durationMin = uiState.durationMin,
                     onDurationChange = onDurationChange,
-                    tags = uiState.tags
+                    tags = uiState.tags,
+                    expanded = metaExpanded,
+                    onToggleExpanded = { metaExpanded = !metaExpanded }
                 )
                 AddExerciseButton(onClick = onAddClick)
                 uiState.exercises.forEachIndexed { index, item ->
@@ -319,6 +328,7 @@ private fun EditHeader(
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun MetaCard(
     name: String,
@@ -326,7 +336,9 @@ private fun MetaCard(
     exerciseCount: Int,
     durationMin: Int,
     onDurationChange: (Int) -> Unit,
-    tags: List<String>
+    tags: List<String>,
+    expanded: Boolean = true,
+    onToggleExpanded: () -> Unit = {}
 ) {
     Column(
         modifier = Modifier
@@ -334,7 +346,7 @@ private fun MetaCard(
             .clip(RoundedCornerShape(AppDimens.RadiusCard))
             .background(AppColors.Card)
             .border(AppDimens.BorderThin, AppColors.BorderSubtle, RoundedCornerShape(AppDimens.RadiusCard))
-            .padding(AppDimens.SpaceHuge)
+            .padding(AppDimens.SpaceXl)
     ) {
         // Título de solo lectura: el lápiz (y el propio título) abren el modal.
         Row(
@@ -365,6 +377,21 @@ private fun MetaCard(
             ) {
                 Icon(Icons.Filled.Edit, contentDescription = "Editar nombre", tint = AppColors.Orange)
             }
+            // Chevron colapsar/expandir (hit target >= 48dp).
+            Box(
+                modifier = Modifier
+                    .size(AppDimens.TouchMin)
+                    .clip(RoundedCornerShape(AppDimens.RadiusPill))
+                    .clickable(onClick = onToggleExpanded)
+                    .testTag("metaCardToggle"),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    if (expanded) Icons.Filled.KeyboardArrowUp else Icons.Filled.KeyboardArrowDown,
+                    contentDescription = if (expanded) "Colapsar resumen" else "Expandir resumen",
+                    tint = AppColors.TextMuted
+                )
+            }
         }
         Spacer(Modifier.height(AppDimens.SpaceSm))
         Text(
@@ -372,7 +399,8 @@ private fun MetaCard(
             color = AppColors.TextMuted,
             fontSize = AppTextSizes.Body
         )
-        Spacer(Modifier.height(AppDimens.SpaceXl))
+        if (!expanded) return@Column
+        Spacer(Modifier.height(AppDimens.SpaceMd))
         // Duración editable + tags automáticos por músculo (no editables).
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -400,7 +428,7 @@ private fun MetaCard(
             Spacer(Modifier.width(AppDimens.SpaceSm))
             Text("min", color = AppColors.TextMuted, fontSize = AppTextSizes.Body)
         }
-        Spacer(Modifier.height(AppDimens.SpaceXl))
+        Spacer(Modifier.height(AppDimens.SpaceMd))
         if (tags.isEmpty()) {
             Text(
                 "Sin ejercicios: añade uno para ver los grupos musculares",
@@ -408,9 +436,12 @@ private fun MetaCard(
                 fontSize = AppTextSizes.Small
             )
         } else {
-            Row(
+            // FlowRow con wrap (patrón ProfileScreen): nunca recorta tags;
+            // con 1-2 ocupa 1 línea, con 5 salta a 2 líneas.
+            FlowRow(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(AppDimens.SpaceSm)
+                horizontalArrangement = Arrangement.spacedBy(AppDimens.SpaceSm),
+                verticalArrangement = Arrangement.spacedBy(AppDimens.SpaceSm)
             ) {
                 tags.forEach { tag ->
                     Box(
@@ -971,6 +1002,9 @@ private fun ExerciseNoteField(
 ) {
     val bringIntoView = remember { BringIntoViewRequester() }
     val scope = rememberCoroutineScope()
+    // Done estándar: persistir + soltar foco + ocultar teclado.
+    val focusManager = LocalFocusManager.current
+    val keyboard = LocalSoftwareKeyboardController.current
     var draft by remember(note) { mutableStateOf(note) }
     BasicTextField(
         value = draft,
@@ -978,7 +1012,11 @@ private fun ExerciseNoteField(
         singleLine = true,
         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
         keyboardActions = KeyboardActions(
-            onDone = { if (draft != note) onNoteChange(draft) }
+            onDone = {
+                if (draft != note) onNoteChange(draft)
+                focusManager.clearFocus(force = true)
+                keyboard?.hide()
+            }
         ),
         textStyle = TextStyle(color = AppColors.TextPrimary, fontSize = AppTextSizes.Body),
         modifier = modifier
@@ -1019,11 +1057,23 @@ private fun CellInput(
     // En blanco se revierte al valor guardado (nunca es válido y el parser
     // lo rechazaría, dejando el campo y la DB divergentes).
     var draft by remember(value) { mutableStateOf(value) }
+    val focusManager = LocalFocusManager.current
+    val keyboard = LocalSoftwareKeyboardController.current
     BasicTextField(
         value = draft,
         onValueChange = { draft = it },
         singleLine = true,
-        keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
+        keyboardOptions = KeyboardOptions(keyboardType = keyboardType, imeAction = ImeAction.Done),
+        keyboardActions = KeyboardActions(
+            onDone = {
+                if (draft != value) {
+                    if (draft.isBlank()) draft = value
+                    else onValueChange(draft)
+                }
+                focusManager.clearFocus(force = true)
+                keyboard?.hide()
+            }
+        ),
         textStyle = TextStyle(
             color = AppColors.TextPrimary,
             fontSize = AppTextSizes.BodyLg,
