@@ -4,9 +4,12 @@ App Android para planificar rutinas y registrar entrenos de fuerza. Funciona sin
 
 > **Estado:** Fase A hecha (5/5 vistas UI-first en memoria) + Fase B Room local (v2) mergeada en `main`
 > (PR #7) + catálogo (PR #8, fork `gadetru` tag `v1.1.0`), rutinas-feed (PR #9), sesión persistida (PR #10),
-> detalle-ejercicio con `instructions` + `MIGRATION_1_2` (PR #13) y blindaje visual + tests espejo + autofix
+> detalle-ejercicio con `instructions` + `MIGRATION_1_2` (PR #13), blindaje visual + tests espejo + autofix
 > (PR #14/#15/#16: botes con nombre en `ui/theme/`, tests espejo JVM + DAO/migración, fotos Roborazzi Home y
-> tarjeta, puerta CI `blindaje.yml` con `setup-android@v4`).
+> tarjeta, puerta CI `blindaje.yml` con `setup-android@v4`), buscador-GIF (PR #17: buscador escribible + filtro
+> ES + `coil-gif` lote D + hero animado en ficha), sesión-vivo-fixes (PR #18: modal numérico + Comenzar/Pausar/Reanudar
+> + tap único), perfil-enfoque-crear-rutina (PR #19: chips legibles + preview→`routineEdit` nuevo) y
+> reparación-bugs (PR #20, sin spec: retoques `HomeScreen` + `RoutineEditScreen`, ver apéndice abajo).
 > Puerta de merge: `assembleDebug` + `testDebugUnitTest` en cada PR/push a `main`.
 > Este README y `docs/` fijan las decisiones de partida; `specs/` recoge lo ya implementado.
 
@@ -30,7 +33,7 @@ App Android para planificar rutinas y registrar entrenos de fuerza. Funciona sin
 | Base de datos local | Room (sobre SQLite) |
 | Inyección de dependencias | Hilt |
 | Red | Retrofit + Gson (`converter-gson`, solo rellena Room vía `CatalogSync`) |
-| Imágenes y GIFs | Coil (con soporte GIF) |
+| Imágenes y GIFs | Coil + `coil-gif` (lote D: `ImageLoaderFactory` global en `TrainingApp` con `GifDecoder`; hero animado en ficha, thumbs quietos en lista) |
 | Ajustes | DataStore |
 | Tareas en segundo plano | WorkManager (más adelante) |
 | Build | Gradle (Kotlin DSL + catálogo de versiones) |
@@ -63,7 +66,7 @@ App Android para planificar rutinas y registrar entrenos de fuerza. Funciona sin
 - Git y GitHub.
 - Gradle Wrapper (`gradlew`), que fija la versión de Gradle del proyecto.
 
-## Estado actual (Fases A + B, 007–011 mergeados)
+## Estado actual (Fases A + B, 007–014 mergeados + reparación-bugs)
 
 Fase A: cada pantalla es `Screen` (stateful + stateless) + `ViewModel` con `StateFlow` + repositorio fake
 con la misma firma que el real. Fase B (mergeada): los fakes conviven con repositorios Room con la misma
@@ -83,9 +86,18 @@ firma; Retrofit solo rellena la DB. La UI solo ve `domain/model`. Spec 011: toda
 | Sesión persistida (prefill persistido al iniciar + cierre sin fantasmas) | Hecha y mergeada (PR #10, `specs/009-sesion-persistida-spec.md`) |
 | Detalle ejercicio (ficha + `instructions` en modelo/entidad/mapper/DTO, DB v2 + `MIGRATION_1_2`) | Hecha y mergeada (PR #13, `specs/010-detalle-ejercicio-spec.md`) |
 | Blindaje visual + tests espejo + autofix (botes, `AppColors/AppDimens`, reglas, DAO/migración, fotos Roborazzi Home y tarjeta, puerta `blindaje.yml`) | Hecha y mergeada (PR #14/#15/#16, `specs/011-blindaje-visual-tests-autofix-spec.md`; fix CI `setup-android@v4` + `gradlew` ejecutable) |
+| Buscador escribible + filtro ES + GIF animado en ficha (hero, thumbs quietos, `coil-gif` lote D, test JVM del filtro) | Hecha y mergeada (PR #17, `specs/012-buscador-gifs-spec.md`) |
+| Sesión-vivo-fixes (modal numérico KG/REPS/PAUSA + cronómetro detenido con Comenzar/Pausar/Reanudar + tap único para expandir) | Hecha y mergeada (PR #18, `specs/013-sesion-vivo-fixes-spec.md`) |
+| Perfil-enfoque-crear-rutina (chips legibles a 360dp + preview que navega a `routineEdit` nuevo) | Hecha y mergeada (PR #19, `specs/014-perfil-enfoque-crear-rutina-spec.md`) |
 
 Desviación conocida: `material-icons-core` solo trae 49 iconos, así que el dock usa fallbacks
 (`List`/`DateRange`/`Star`/`Person`); la fidelidad exacta a los iconos del diseño exigiría `material-icons-extended`.
+
+### Apéndice — Reparación bugs post-014 (PR #20, sin spec)
+
+Retoques en `HomeScreen.kt` (+11) + `RoutineEditScreen.kt` (+68/-10), commit `589a594 bugs retocados`.
+Sin cambio de esquema ni dependencias. Riesgo: puede haber movido los dorados Home/tarjeta → re-verificar
+fotos (`testDebugUnitTest` + revisión visual) antes de arrancar `015-custom`.
 
 ## MVP (Fase 1)
 
@@ -122,7 +134,7 @@ Requisitos: Android Studio, Android SDK y **emulador Pixel 6 API 34** (`emulator
 El SDK se apunta en `local.properties` con `sdk.dir` (no se versiona).
 
 - Compilar: `./gradlew assembleDebug`
-- Tests: `./gradlew testDebugUnitTest` (botes `AppColors/AppDimens` + `CatalogMappingTest` 5/5 en `data/mapper` + reglas `RoutineRules/WorkoutPrefill` + fotos Roborazzi Home y tarjeta + `ExampleUnitTest` de plantilla)
+- Tests: `./gradlew testDebugUnitTest` (botes `AppColors/AppDimens` + `CatalogMappingTest` 5/5 en `data/mapper` + reglas `RoutineRules/WorkoutPrefill` + filtro ES en `data/repository` + fotos Roborazzi Home y tarjeta + `ExampleUnitTest` de plantilla)
 - Tests vistas (emulador encendido): `./gradlew connectedDebugAndroidTest` (DAO `ExerciseDaoTest` + `Migration12Test` + smokes `feature/home|routines|workout` en su espejo, con `testTag`)
 - CI (puerta de merge `.github/workflows/blindaje.yml`, `setup-android@v4`): `assembleDebug` + `testDebugUnitTest` en cada PR/push a `main`; exigir el check en Settings > Branches > main
 - Fotos de referencia: solo Home y tarjeta (`docs/fotos-referencia.md`); regenerar con `./gradlew recordRoborazziDebug` solo ante cambio visual legal
@@ -136,13 +148,17 @@ plugins y librerías) lo crea y mantiene Android Studio, no el agente. No crear,
 `gradlew`, `gradlew.bat`, la carpeta `gradle/wrapper/`, `settings.gradle.kts`, `gradle.properties`,
 `gradle/libs.versions.toml` ni los `build.gradle.kts` (el de la raíz y el de `app`). Excepción ya consumida
 (lote A): `navigation-compose, lifecycle-viewmodel-compose, material-icons-core, coil-compose` están declarados
-(`app/build.gradle.kts`) y en uso salvo Coil (picker de foto pendiente). Si una tarea necesita otra dependencia
+(`app/build.gradle.kts`) y en uso (navigation, viewmodel, icons; Coil vía `AsyncImage` en picker/detalle/editar
+para thumbs + GIF grande; avatar picker pendiente). Si una tarea necesita otra dependencia
 o plugin nuevo, indícalo y propón la línea exacta a añadir, pero no la escribas en esos archivos: las versiones las confirma
 el desarrollador desde la documentación oficial o desde Android Studio. Excepción lote B ya consumida
 (spec 006, mergeado): `room, hilt, datastore-preferences, retrofit + converter-gson` están declarados y en uso.
 Excepción lote C ya consumida (spec 011, mergeado PR #14-16): `roborazzi, roborazzi-compose, robolectric`
 (`testImplementation`) + plugin `io.github.takahirom.roborazzi`, con `testOptions.unitTests.isIncludeAndroidResources=true`
 y dorados en `app/src/test/screenshots` (solo Home + tarjeta).
+Excepción lote D ya consumida (spec 012, mergeado PR #17, autorizada 2026-10-09): `coil-gif` misma versión que
+`coil` (2.6.0) en `libs.versions.toml:41` + `app/build.gradle.kts`, con `ImageLoaderFactory` global en
+`TrainingApp.kt` (`GifDecoder.Factory()`); hero animado en ficha, thumbs quietos en lista.
 Excepción puntual CI autorizada por el usuario (2026-10-09, PR #16, ya aplicada): `setup-android@v3` → `@v4`
 en `.github/workflows/blindaje.yml` (v3 pedía el paquete obsoleto `tools` → `Failed to find package 'tools'`)
 + bit ejecutable en `gradlew` (`100644` → `100755`, contenido sin cambios).
@@ -168,11 +184,12 @@ Para que una versión actualice a la anterior (y no borre datos):
 - [ ] Verificado en emulador Pixel 6 API 34: menú, cancelar, eliminar, editar, rotación, gestos/3 botones (el diálogo gestiona insets solo).
 
 ### P1 — MVP bloqueantes
-- [x] Detalle ejercicio (MVP-2): hecho y mergeado (PR #13, `specs/010-detalle-ejercicio-spec.md`): tap fila → GIF grande + instrucciones + secundarios, `instructions` rescatadas (`DTO→Entity→dominio`, DB v2 + `MIGRATION_1_2`) + ruta detalle.
-- [ ] Ejercicios propios CUSTOM (MVP-3): crear/editar desde app (`insert` en `ExerciseRepository` + UI formulario); `CatalogSync` ya protege `CUSTOM`.
-- [ ] Historial + `home-post-sesion` (MVP-7): ruta `history`, lista sesiones, `lastDoneLabel`/racha/progreso reales (hoy fijos `Home.kt:40-47`, `RoomHomeRepository.kt:35,38-43`); `Ver mes` cableado.
+- [x] Detalle ejercicio (MVP-2): hecho y mergeado (PR #13, `specs/010-detalle-ejercicio-spec.md`): tap fila → GIF grande + instrucciones + secundarios, `instructions` rescatadas (`DTO→Entity→dominio`, DB v2 + `MIGRATION_1_2`) + ruta detalle. Animación del hero + buscador ES van en PR #17 (spec 012).
+- [ ] Ejercicios propios CUSTOM (MVP-3, siguiente: spec `015-custom`): crear/editar desde app (`insert` en `ExerciseRepository` + UI formulario); `CatalogSync` ya protege `CUSTOM`.
+- [ ] Historial + `home-post-sesion` (MVP-7, después: spec `016-historial`): ruta `history`, lista sesiones, `lastDoneLabel`/racha/progreso reales (hoy fijos `Home.kt:40-47`, `RoomHomeRepository.kt:35,38-43`); `Ver mes` cableado.
 
 ### P2 — Sesión en vivo
+- [x] Modal numérico KG/REPS/PAUSA + cronómetro detenido con Comenzar/Pausar/Reanudar + tap único para expandir (PR #18, spec 013).
 - [ ] `Añadir Ejercicio/Serie en vivo` (picker `003` reutilizado).
 - [ ] Notas/`loadNote` + RPE/DROP en vivo (modelo `Workout.kt:45` lo tiene, UI no).
 - [ ] Descanso avanzado: sonido/vibración, presets (hoy bloqueante + `±10s`).
