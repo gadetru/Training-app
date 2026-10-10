@@ -1,5 +1,5 @@
 # Perfil: enfoque sin cortes + Crear Rutina vinculado
-Estado: aprobado
+Estado: implementado
 Depende de: Ninguno (paralelo a 013; sigue a 001/002 ya en main)
 Fecha de creación: 2026-10-09
 Descripción: Que Hipertrofia/Fuerza & Potencia/Resistencia quepan legibles sin apilarse cortados, y que el botón Crear Rutina + de la vista previa abra crear rutina como el de Home.
