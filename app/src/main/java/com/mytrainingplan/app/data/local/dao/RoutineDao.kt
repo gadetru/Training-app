@@ -21,6 +21,14 @@ interface RoutineDao {
     @Query("SELECT * FROM routines WHERE id = :id AND deleted = 0")
     suspend fun getById(id: String): RoutineEntity?
 
+    /**
+     * Todas incluidas borradas (Paso 5 spec 015): el historial de una rutina
+     * borrada sobrevive y el mes resuelve su nombre aunque ya no esté en el
+     * feed. Los apuntes futuros de borradas se ocultan en el repositorio.
+     */
+    @Query("SELECT * FROM routines")
+    fun observeAllIncludingDeleted(): Flow<List<RoutineEntity>>
+
     @Upsert
     suspend fun upsert(routine: RoutineEntity)
 }

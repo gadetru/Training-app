@@ -2,6 +2,7 @@ package com.mytrainingplan.app.domain.model
 
 import java.time.Instant
 import java.time.LocalDate
+import java.time.YearMonth
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
@@ -134,4 +135,87 @@ object HistoryCalcs {
     fun sumMinutes(sessions: List<WorkoutSession>): Int =
         sessions.filter { it.endedAt != null && !it.deleted }
             .sumOf { minutesOf(it.startedAt, it.endedAt) }
+
+    /** Inicio del día local en milisegundos (rango día para el repositorio). */
+    fun startOfDayMillis(date: LocalDate, zone: ZoneId = ZoneId.systemDefault()): Long =
+        date.atStartOfDay(zone).toInstant().toEpochMilli()
+
+    /**
+     * Rango del mes en milisegundos `[primero, primero-del-siguiente)`.
+     * El repositorio filtra sesiones por `startedAt` con este rango.
+     */
+    fun monthBoundsMillis(
+        year: Int,
+        month: Int,
+        zone: ZoneId = ZoneId.systemDefault()
+    ): Pair<Long, Long> {
+        val first = LocalDate.of(year, month, 1)
+        return startOfDayMillis(first, zone) to
+            startOfDayMillis(first.plusMonths(1), zone)
+    }
+
+    /** Clave del día 1 del mes (`yyyy-MM-dd`), para filtrar apuntes. */
+    fun monthFirstKey(year: Int, month: Int): String =
+        LocalDate.of(year, month, 1).format(DATE_FMT)
+
+    /** Clave del día 1 del mes siguiente (límite exclusivo de apuntes). */
+    fun nextMonthFirstKey(year: Int, month: Int): String =
+        LocalDate.of(year, month, 1).plusMonths(1).format(DATE_FMT)
+
+    /**
+     * Resuelve los días del mes combinando apuntes y hecho.
+     * `scheduled`: fecha → (routineId, nombre o null si se oculta por borrada).
+     * `done`: fecha → (routineId, nombre; incluye borradas: el historial sobrevive).
+     */
+    fun resolveMonthDays(
+        year: Int,
+        month: Int,
+        todayKey: String,
+        scheduled: Map<String, Pair<String, String?>>,
+        done: Map<String, Pair<String, String>>
+    ): List<MonthDay> {
+        val length = YearMonth.of(year, month).lengthOfMonth()
+        return (1..length).map { day ->
+            val key = LocalDate.of(year, month, day).format(DATE_FMT)
+            val s = scheduled[key]
+            val d = done[key]
+            MonthDay(
+                date = key,
+                dayOfMonth = day,
+                isCurrentMonth = true,
+                isToday = key == todayKey,
+                scheduledRoutineId = s?.first,
+                scheduledRoutineName = s?.second,
+                doneRoutineId = d?.first,
+                doneRoutineName = d?.second
+            )
+        }
+    }
+
+    /**
+     * Progreso real desde sesiones finalizadas (spec §4): racha hasta hoy,
+     * sesiones y minutos de la semana lunes-domingo, semana L–D.
+     * El objetivo sigue fijo en 4 y `volumeDeltaPct` sin calcular (no entra).
+     */
+    fun buildProgress(
+        finished: List<WorkoutSession>,
+        nowMillis: Long = System.currentTimeMillis(),
+        zone: ZoneId = ZoneId.systemDefault()
+    ): WeeklyProgress {
+        val valid = finished.filter { it.endedAt != null && !it.deleted }
+        val now = Instant.ofEpochMilli(nowMillis).atZone(zone).toLocalDate()
+        val doneKeys = valid.map { dateKeyOf(it.startedAt, zone) }.toSet()
+        val monday = mondayOf(now)
+        val weekStart = startOfDayMillis(monday, zone)
+        val weekEnd = startOfDayMillis(monday.plusDays(7), zone)
+        val week = valid.filter { it.startedAt >= weekStart && it.startedAt < weekEnd }
+        return WeeklyProgress(
+            streakDays = streakDays(doneKeys, now),
+            sessionsDone = week.size,
+            sessionsGoal = 4,
+            minutes = sumMinutes(week),
+            volumeDeltaPct = 12,
+            weekChecks = weekChecks(doneKeys, monday)
+        )
+    }
 }

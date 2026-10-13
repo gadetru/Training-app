@@ -10,6 +10,7 @@ import com.mytrainingplan.app.data.local.dao.PlannedSetDao
 import com.mytrainingplan.app.data.local.dao.ProfileDao
 import com.mytrainingplan.app.data.local.dao.RoutineDao
 import com.mytrainingplan.app.data.local.dao.RoutineExerciseDao
+import com.mytrainingplan.app.data.local.dao.ScheduledDayDao
 import com.mytrainingplan.app.data.local.dao.SetEntryDao
 import com.mytrainingplan.app.data.local.dao.WorkoutSessionDao
 import com.mytrainingplan.app.data.local.entity.ExerciseEntity
@@ -17,12 +18,14 @@ import com.mytrainingplan.app.data.local.entity.PlannedSetEntity
 import com.mytrainingplan.app.data.local.entity.ProfileEntity
 import com.mytrainingplan.app.data.local.entity.RoutineEntity
 import com.mytrainingplan.app.data.local.entity.RoutineExerciseEntity
+import com.mytrainingplan.app.data.local.entity.ScheduledDayEntity
 import com.mytrainingplan.app.data.local.entity.SetEntryEntity
 import com.mytrainingplan.app.data.local.entity.WorkoutSessionEntity
 
 /**
- * Base Room v2 (Paso 3 spec 006, Fase B; v2 spec 010: +`instructions`).
- * 7 tablas espejo del dominio. `exportSchema = true`, esquemas en
+ * Base Room v3 (Paso 3 spec 006, Fase B; v2 spec 010: +`instructions`;
+ * v3 spec 015: +`scheduled_days`).
+ * 8 tablas espejo del dominio. `exportSchema = true`, esquemas en
  * `app/schemas/` (se generan al sincronizar en Android Studio con red;
  * aquí se deja la carpeta lista). `fallbackToDestructiveMigration()` solo
  * en desarrollo (no incluido). Siempre `@Upsert`, nunca REPLACE.
@@ -35,9 +38,10 @@ import com.mytrainingplan.app.data.local.entity.WorkoutSessionEntity
         RoutineExerciseEntity::class,
         PlannedSetEntity::class,
         WorkoutSessionEntity::class,
-        SetEntryEntity::class
+        SetEntryEntity::class,
+        ScheduledDayEntity::class
     ],
-    version = 2,
+    version = 3,
     exportSchema = true
 )
 @TypeConverters(Converters::class)
@@ -49,6 +53,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun plannedSetDao(): PlannedSetDao
     abstract fun workoutSessionDao(): WorkoutSessionDao
     abstract fun setEntryDao(): SetEntryDao
+    abstract fun scheduledDayDao(): ScheduledDayDao
 }
 
 /**
@@ -59,5 +64,23 @@ abstract class AppDatabase : RoomDatabase() {
 val MIGRATION_1_2 = object : Migration(1, 2) {
     override fun migrate(db: SupportSQLiteDatabase) {
         db.execSQL("ALTER TABLE exercises ADD COLUMN instructions TEXT NOT NULL DEFAULT '[]'")
+    }
+}
+
+/**
+ * Migración 2→3 (spec 015): crea `scheduled_days` (apunte día + rutina
+ * con borrado lógico). Sin tocar sesiones ni rutinas existentes.
+ */
+val MIGRATION_2_3 = object : Migration(2, 3) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL(
+            "CREATE TABLE IF NOT EXISTS `scheduled_days` (" +
+                "`id` TEXT NOT NULL, " +
+                "`routineId` TEXT NOT NULL, " +
+                "`date` TEXT NOT NULL, " +
+                "`updatedAt` INTEGER NOT NULL, " +
+                "`deleted` INTEGER NOT NULL, " +
+                "PRIMARY KEY(`id`))"
+        )
     }
 }
