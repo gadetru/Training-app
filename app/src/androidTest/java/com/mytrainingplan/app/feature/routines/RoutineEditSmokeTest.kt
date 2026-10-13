@@ -10,6 +10,7 @@ import androidx.compose.ui.test.assertTextContains
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performImeAction
 import androidx.compose.ui.test.performTextClearance
 import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.performTextReplacement
@@ -134,6 +135,9 @@ class RoutineEditSmokeTest {
         rule.onNodeWithTag("exerciseNote:re1").assertTextContains("goma amarilla")
         rule.onNodeWithTag("exerciseNote:re1").performTextClearance()
         rule.onNodeWithTag("exerciseNote:re1").performTextReplacement("magnesio")
+        // El campo vuelca al commit (IME Done o perder foco, ver
+        // ExerciseNoteField): sin esto el callback nunca se dispara.
+        rule.onNodeWithTag("exerciseNote:re1").performImeAction()
         assertEquals("re1" to "magnesio", captured)
     }
 }

@@ -36,17 +36,26 @@ Mergeados en `main` tras 011: `012-buscador-gifs` (PR #17, buscador escribible +
 expandir), `014-perfil-enfoque-crear-rutina` (PR #19, chips de enfoque legibles a 360dp + preview que navega a
 `routineEdit` nuevo) y `01-reparacion-bugs` (PR #20, sin spec: retoques `HomeScreen` + `RoutineEditScreen`,
 ver apéndice en `README.md`).
+En rama `015-calendario-progreso` (verificado 13/13, pendiente merge): `015-calendario-progreso`
+(`feature/history/` nuevo con `CalendarScreen`/`ProgressScreen` + ViewModels, `domain/model/History.kt`
+con `ScheduledDay`/`MonthDay`/`HistoryCalcs`, tabla `scheduled_days` + `ScheduledDayDao`, DB v3 +
+`MIGRATION_2_3`, `ScheduleRepository` Room + falso + `ScheduleMapper`, progreso y etiquetas reales en
+`RoomHomeRepository`, `calendar`/`progress` reales en `MainActivity` + `Ver mes`, `PlaceholderTabs` borrado;
+tests `HistoryCalcsTest`/`ScheduleFakeTest` + `ScheduledDayDaoTest`/`Migration23Test` + `CalendarSmokeTest`;
+36/36 instrumentados en emulador y en físico —físico vía `am instrument` porque MIUI rechaza el `-g` de AGP—;
+fix mínimo ajeno al spec: `performImeAction()` en `RoutineEditSmokeTest`).
 Deuda: los `Fake*Repository` de Fase A conviven con los Room pero ya no se inyectan (Hilt usa los Room);
 marcados como deuda a borrar en cuanto dejen de estar en uso, no borrar aún sin confirmar.
-Siguiente: `015-custom` (ejercicios propios CUSTOM, MVP-3) y luego `016-historial` (historial real, MVP-7) / Fase D Spring/MySQL.
+(`FakeScheduleRepository` es nuevo del 015 y sí se usa en tests JVM.)
+Siguiente: mergear 015, luego `016-sesion-edicion` (Borrador en `specs/`, ⋮ en vivo + añadir serie +
+swipe borrar + auto-reemplazo apunte) y `017-picker-alto-completo`, más tarde CUSTOM (MVP-3) / Fase D Spring/MySQL.
 Punto de control: `docs/01-punto-actual-2026-10-08.md` (revisión 2026-10-08, desactualizado: dice 010 sin
 mergear) + `docs/fotos-referencia.md` (dorados Roborazzi + regeneración) y `docs/revision-tarde.md`
 (borrador, hora pendiente) del spec 011.
 `docs/`, `specs/`, `references/` siguen siendo guía objetivo/diseño, no código hecho.
 Desviación conocida: `material-icons-core` solo trae 49 iconos (fallbacks `List/DateRange/Star/Person` en `HomeScreen.kt:67-82`);
 fidelidad exacta a los iconos del spec exigiría `material-icons-extended` (proponer y esperar).
-Antes de editar, comprueba con `Glob`/`Grep` que el fichero existe; los specs pueden citar rutas futuras
-(`feature/history/` aún no existe: solo `PlaceholderTabs`).
+Antes de editar, comprueba con `Glob`/`Grep` que el fichero existe; los specs pueden citar rutas futuras.
 
 Fuente de verdad: `README.md` (principios + restricción Gradle), `docs/ARQUITECTURA.md` (capas y carpetas),
 `docs/MODELO_DE_DATOS.md` (entidades y series). Si un spec contradice a estos o al código, avisa y sigue al código.
@@ -86,8 +95,11 @@ El agente trabaja Kotlin en `app/src/main/`, recursos y documentación.
 - Verificación: **emulador Pixel 6 API 34** (`emulator-5554`) **+ dispositivo físico, de forma automática**;
   se testea en ambos: `adb` + MCP `mobile-mcp` (`list_available_devices` → `list_elements` por `ref` → `click`/`screenshot`/`logs`)
   y `connectedDebugAndroidTest` como red de seguridad. Si un spec dice explícitamente solo uno, manda el spec y se anota.
+  En físico Xiaomi/MIUI: activar "Instalar vía USB" (si no, `INSTALL_FAILED_USER_RESTRICTED`); AGP instala el APK
+  de test con `-g` y MIUI lo rechaza (`SecurityException`) → fallback: `adb install` manual + `am instrument`
+  (verificado 36/36 en 015).
 - Tests auto: `testDebugUnitTest` (JVM) + `connectedDebugAndroidTest` (DAO `ExerciseDaoTest` + `Migration12Test` +
-  smokes `feature/home|routines|workout` movidos a su espejo, con `testTag`;
+  `ScheduledDayDaoTest` + `Migration23Test` + smokes `feature/home|routines|workout|history` movidos a su espejo, con `testTag`;
   smoke detalle pendiente);
   `testTag` en raíces/CTAs (`profileRoot/profileSave`, `homeRoot/homeDock/routineCard:<id>`,
   `routineEditRoot/routineEditAddExercise/routineEditSave`, `workoutRoot/workoutFinish/restOverlay).
@@ -96,9 +108,9 @@ El agente trabaja Kotlin en `app/src/main/`, recursos y documentación.
 ## Arquitectura objetivo (al implementar)
 
 - Un solo módulo `app`. Flujo final: `feature/* Screen → ViewModel(StateFlow) → Repository → Room`; Retrofit solo rellena la DB.
-- Plan acordado: **Fase A maquetación primero** (5 vistas `references/` UI-first con `ViewModel` fake + repo fake misma firma + `NavHost` condicional `¿hay perfil? home:profile`, sin Room), luego **Fase B Room local (hecha, v2)**, **catálogo hecho (007+010)**, **buscador+GIF hecho (012)**, **sesión-vivo-fixes hecho (013)**, **perfil-enfoque hecho (014)**, pendiente **015-CUSTOM + 016-historial real** y **Fase D Spring/MySQL**.
-- Progreso Fase A: 5/5 hechas (las 5 vistas + `NavHost` con `home/calendar/progress/profile/routineEdit/workout/exerciseDetail` ya cableados); Fase B + 007/008/009/010/011/012/013/014 mergeados en `main`; en curso nada (rama `docs-actualizacion`), siguiente 015-CUSTOM + 016-historial real.
-- Carpetas: `core/{di,network,datastore,ui}`, `data/{local/{entity,dao},remote/{dto},mapper,repository}`, `domain/model`, `feature/{profile,home,exercises,routines,workout}`. Cada `feature/` = `Screen` + `ViewModel` (`exercises` tiene Picker + Detail). `feature/history/` aún no existe: solo `PlaceholderTabs`.
+- Plan acordado: **Fase A maquetación primero** (5 vistas `references/` UI-first con `ViewModel` fake + repo fake misma firma + `NavHost` condicional `¿hay perfil? home:profile`, sin Room), luego **Fase B Room local (hecha, v3)**, **catálogo hecho (007+010)**, **buscador+GIF hecho (012)**, **sesión-vivo-fixes hecho (013)**, **perfil-enfoque hecho (014)**, **calendario-progreso hecho (015, pendiente merge)** y **Fase D Spring/MySQL**.
+- Progreso Fase A: 5/5 hechas (las 5 vistas + `NavHost` con `home/calendar/progress/profile/routineEdit/workout/exerciseDetail` ya cableados); Fase B + 007/008/009/010/011/012/013/014 mergeados en `main`; en curso 015 en rama `015-calendario-progreso` (verificado 13/13, pendiente merge), siguiente `016-sesion-edicion` + `017-picker-alto-completo`.
+- Carpetas: `core/{di,network,datastore,ui}`, `data/{local/{entity,dao},remote/{dto},mapper,repository}`, `domain/model`, `feature/{profile,home,exercises,routines,workout,history}`. Cada `feature/` = `Screen` + `ViewModel` (`exercises` tiene Picker + Detail; `history` tiene Calendar + Progress).
 - Mapeo `DTO/Entity ⇄ dominio` en `data/mapper`; la UI solo ve `domain/model`, nunca Entity ni DTO.
 - Sin casos de uso ni módulos extra hasta que duelan. Versiones solo vía catálogo `gradle/libs.versions.toml`.
 - Catálogo: fork ExerciseGymGifsDB por jsDelivr con **tag fijo** (`CATALOG_TAG` + DataStore), nunca rama; solo URLs de GIF en DB (Coil cachea); update por `upsert` y solo filas `source=CATALOG`.
@@ -109,7 +121,7 @@ El agente trabaja Kotlin en `app/src/main/`, recursos y documentación.
 - Toda entidad de usuario lleva `updatedAt` + `deleted` (borrado lógico, sync-ready Fase 2) desde el día uno.
 - Catálogo y propios comparten tabla con `source` (`CATALOG`/`CUSTOM`).
 - **Siempre `@Upsert`, nunca `@Insert(onConflict = REPLACE)`** (REPLACE borra la fila y arrastra hijas).
-- `exportSchema = true`; cada cambio de esquema sube versión + `Migration` real; `fallbackToDestructiveMigration()` solo en desarrollo. Estado: DB **v2** + `MIGRATION_1_2` (`instructions TEXT DEFAULT '[]'`; la re-descarga con el mismo tag rellena las viejas vía `upsert`).
+- `exportSchema = true`; cada cambio de esquema sube versión + `Migration` real; `fallbackToDestructiveMigration()` solo en desarrollo. Estado: DB **v3** + `MIGRATION_1_2` (`instructions TEXT DEFAULT '[]'`; la re-descarga con el mismo tag rellena las viejas vía `upsert`) + `MIGRATION_2_3` (crea `scheduled_days`).
 - `weightKg` con signo (`+` lastre, `0` corporal, `-` ayuda) + `loadNote` libre; `restSeconds` vive en **cada serie**, no en el ejercicio.
 - Comportamiento series (`docs/MODELO_DE_DATOS.md`): al crear N series se copian valores de la 1ª; editar propaga solo a siguientes **no editadas a mano** (estado solo de pantalla); día nuevo = valores por defecto de ajustes, sin copiar de otros días; al iniciar sesión, prefill con **última sesión** de ese ejercicio en ese día, si no con lo planificado.
 

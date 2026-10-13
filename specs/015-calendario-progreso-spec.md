@@ -85,16 +85,16 @@ Toca `feature/home` (tarjetas + `Ver mes` en `HomeScreen.kt`, quita fijos de `Ro
 - Supuesto: lunes como primer día de semana y de racha (coherente con el heatmap L–D actual, `Home.kt:47`); si se quiere domingo, decirlo antes de implementar.
 - ¿El día futuro con apunte muestra cuenta atrás o texto ("En 3 días") o solo el nombre? Supuesto: solo el nombre.
 ## 11. Checklist verificación (última, checkboxes listos para /verifier)
-- [ ] Apuntar "Torso" al día 15 muestra "Torso" en la casilla del 15.
-- [ ] Cambiar el apunte del 15 a "Pierna" muestra "Pierna" y no duplica.
-- [ ] Quitar el apunte deja la casilla vacía sin borrado de nada más.
-- [ ] Finalizar la sesión de "Torso" hoy marca ✓ "Torso" en el día de hoy.
-- [ ] Un día pasado con sesión finalizada y sin apunte muestra su ✓.
-- [ ] La racha sube en 1 tras finalizar el primer entreno de un día nuevo.
-- [ ] Progreso muestra sesiones, minutos y semana calculados (ningún 4/3/185 fijo).
-- [ ] Cada tarjeta de Home muestra su "Hoy / Ayer / Hace X días" real.
-- [ ] `Ver mes` abre el tab Calendario.
-- [ ] `./gradlew assembleDebug` termina OK.
-- [ ] `./gradlew testDebugUnitTest` termina en verde.
-- [ ] `./gradlew connectedDebugAndroidTest` en verde en emulador y en físico.
-- [ ] Fotos Home y tarjeta iguales a sus dorados.
+- [x] Apuntar "Torso" al día 15 muestra "Torso" en la casilla del 15.
+- [x] Cambiar el apunte del 15 a "Pierna" muestra "Pierna" y no duplica.
+- [x] Quitar el apunte deja la casilla vacía sin borrado de nada más.
+- [x] Finalizar la sesión de "Torso" hoy marca ✓ "Torso" en el día de hoy.
+- [x] Un día pasado con sesión finalizada y sin apunte muestra su ✓.
+- [x] La racha sube en 1 tras finalizar el primer entreno de un día nuevo.
+- [x] Progreso muestra sesiones, minutos y semana calculados (ningún 4/3/185 fijo).
+- [x] Cada tarjeta de Home muestra su "Hoy / Ayer / Hace X días" real.
+- [x] `Ver mes` abre el tab Calendario.
+- [x] `./gradlew assembleDebug` termina OK.
+- [x] `./gradlew testDebugUnitTest` termina en verde.
+- [x] `./gradlew connectedDebugAndroidTest` en verde en emulador y en físico.
+- [x] Fotos Home y tarjeta iguales a sus dorados.

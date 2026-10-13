@@ -8,8 +8,11 @@ App Android para planificar rutinas y registrar entrenos de fuerza. Funciona sin
 > (PR #14/#15/#16: botes con nombre en `ui/theme/`, tests espejo JVM + DAO/migración, fotos Roborazzi Home y
 > tarjeta, puerta CI `blindaje.yml` con `setup-android@v4`), buscador-GIF (PR #17: buscador escribible + filtro
 > ES + `coil-gif` lote D + hero animado en ficha), sesión-vivo-fixes (PR #18: modal numérico + Comenzar/Pausar/Reanudar
-> + tap único), perfil-enfoque-crear-rutina (PR #19: chips legibles + preview→`routineEdit` nuevo) y
-> reparación-bugs (PR #20, sin spec: retoques `HomeScreen` + `RoutineEditScreen`, ver apéndice abajo).
+> + tap único), perfil-enfoque-crear-rutina (PR #19: chips legibles + preview→`routineEdit` nuevo),
+> reparación-bugs (PR #20, sin spec: retoques `HomeScreen` + `RoutineEditScreen`, ver apéndice abajo) y
+> calendario-progreso (rama `015-calendario-progreso`, verificado 13/13, pendiente merge: mes + progreso
+> reales, `scheduled_days`, DB v3 + `MIGRATION_2_3`, `PlaceholderTabs` borrado, 36/36 instrumentados en
+> emulador y en físico).
 > Puerta de merge: `assembleDebug` + `testDebugUnitTest` en cada PR/push a `main`.
 > Este README y `docs/` fijan las decisiones de partida; `specs/` recoge lo ya implementado.
 
@@ -66,7 +69,7 @@ App Android para planificar rutinas y registrar entrenos de fuerza. Funciona sin
 - Git y GitHub.
 - Gradle Wrapper (`gradlew`), que fija la versión de Gradle del proyecto.
 
-## Estado actual (Fases A + B, 007–014 mergeados + reparación-bugs)
+## Estado actual (Fases A + B, 007–014 mergeados + 015 en rama)
 
 Fase A: cada pantalla es `Screen` (stateful + stateless) + `ViewModel` con `StateFlow` + repositorio fake
 con la misma firma que el real. Fase B (mergeada): los fakes conviven con repositorios Room con la misma
@@ -79,7 +82,7 @@ firma; Retrofit solo rellena la DB. La UI solo ve `domain/model`. Spec 011: toda
 | Home Mis Rutinas (`feature/home`, `domain/model/Home.kt`, `FakeHomeRepository`) + `NavHost` condicional + dock de 4 tabs | Hecha y verificada (`specs/002-vista-principal-spec.md`) |
 | Lista de ejercicios (`ExercisePickerSheet` + `FakeExerciseRepository`) | Hecha (`specs/003`) |
 | Editar rutina (`feature/routines`, borradores separados de guardadas) | Hecha (`specs/004`) |
-| Sesión en vivo (`feature/workout`, prefill última-vs-plan) | Hecha (`specs/005`, `assembleDebug` OK, resto pendiente de móvil físico) |
+| Sesión en vivo (`feature/workout`, prefill última-vs-plan) | Hecha (`specs/005`, verificada en emulador y en físico) |
 | Room local (entidades + DAOs `@Upsert`, Hilt, DataStore, Retrofit + Gson, `CatalogSync`, `CatalogMappingTest`) | Hecha y mergeada (`specs/006-fase-b-room-local-spec.md`, PR #7) |
 | Catálogo desde el fork + `getById` async | Hecha y mergeada (PR #8, `specs/007-catalogo-fork-spec.md`, tag `v1.1.0`, 1323 entradas) |
 | Rutinas-feed (feed único + descarte seguro + `position` sin huecos) | Hecha y mergeada (PR #9, `specs/008-rutinas-feed-spec.md`) |
@@ -89,6 +92,7 @@ firma; Retrofit solo rellena la DB. La UI solo ve `domain/model`. Spec 011: toda
 | Buscador escribible + filtro ES + GIF animado en ficha (hero, thumbs quietos, `coil-gif` lote D, test JVM del filtro) | Hecha y mergeada (PR #17, `specs/012-buscador-gifs-spec.md`) |
 | Sesión-vivo-fixes (modal numérico KG/REPS/PAUSA + cronómetro detenido con Comenzar/Pausar/Reanudar + tap único para expandir) | Hecha y mergeada (PR #18, `specs/013-sesion-vivo-fixes-spec.md`) |
 | Perfil-enfoque-crear-rutina (chips legibles a 360dp + preview que navega a `routineEdit` nuevo) | Hecha y mergeada (PR #19, `specs/014-perfil-enfoque-crear-rutina-spec.md`) |
+| Calendario-progreso (mes + progreso reales, `scheduled_days`, DB v3 + `MIGRATION_2_3`, `PlaceholderTabs` borrado) | En rama `015-calendario-progreso`, verificado 13/13, pendiente merge (`specs/015-calendario-progreso-spec.md`; 36/36 instrumentados en emulador y en físico) |
 
 Desviación conocida: `material-icons-core` solo trae 49 iconos, así que el dock usa fallbacks
 (`List`/`DateRange`/`Star`/`Person`); la fidelidad exacta a los iconos del diseño exigiría `material-icons-extended`.
@@ -97,7 +101,7 @@ Desviación conocida: `material-icons-core` solo trae 49 iconos, así que el doc
 
 Retoques en `HomeScreen.kt` (+11) + `RoutineEditScreen.kt` (+68/-10), commit `589a594 bugs retocados`.
 Sin cambio de esquema ni dependencias. Riesgo: puede haber movido los dorados Home/tarjeta → re-verificar
-fotos (`testDebugUnitTest` + revisión visual) antes de arrancar `015-custom`.
+fotos (`testDebugUnitTest` + revisión visual) antes de arrancar CUSTOM.
 
 ## MVP (Fase 1)
 
@@ -135,7 +139,7 @@ El SDK se apunta en `local.properties` con `sdk.dir` (no se versiona).
 
 - Compilar: `./gradlew assembleDebug`
 - Tests: `./gradlew testDebugUnitTest` (botes `AppColors/AppDimens` + `CatalogMappingTest` 5/5 en `data/mapper` + reglas `RoutineRules/WorkoutPrefill` + filtro ES en `data/repository` + fotos Roborazzi Home y tarjeta + `ExampleUnitTest` de plantilla)
-- Tests vistas (emulador encendido): `./gradlew connectedDebugAndroidTest` (DAO `ExerciseDaoTest` + `Migration12Test` + smokes `feature/home|routines|workout` en su espejo, con `testTag`)
+- Tests vistas (emulador encendido): `./gradlew connectedDebugAndroidTest` (DAO `ExerciseDaoTest` + `Migration12Test` + `ScheduledDayDaoTest` + `Migration23Test` + smokes `feature/home|routines|workout|history` en su espejo, con `testTag`; en físico Xiaomi activar "Instalar vía USB" y usar `adb install` + `am instrument` si AGP falla con `-g`)
 - CI (puerta de merge `.github/workflows/blindaje.yml`, `setup-android@v4`): `assembleDebug` + `testDebugUnitTest` en cada PR/push a `main`; exigir el check en Settings > Branches > main
 - Fotos de referencia: solo Home y tarjeta (`docs/fotos-referencia.md`); regenerar con `./gradlew recordRoborazziDebug` solo ante cambio visual legal
 - Verificación: **emulador Pixel 6 API 34 + móvil físico, de forma automática** (`adb` + `mobile-mcp`).
@@ -185,8 +189,8 @@ Para que una versión actualice a la anterior (y no borre datos):
 
 ### P1 — MVP bloqueantes
 - [x] Detalle ejercicio (MVP-2): hecho y mergeado (PR #13, `specs/010-detalle-ejercicio-spec.md`): tap fila → GIF grande + instrucciones + secundarios, `instructions` rescatadas (`DTO→Entity→dominio`, DB v2 + `MIGRATION_1_2`) + ruta detalle. Animación del hero + buscador ES van en PR #17 (spec 012).
-- [ ] Ejercicios propios CUSTOM (MVP-3, siguiente: spec `015-custom`): crear/editar desde app (`insert` en `ExerciseRepository` + UI formulario); `CatalogSync` ya protege `CUSTOM`.
-- [ ] Historial + `home-post-sesion` (MVP-7, después: spec `016-historial`): ruta `history`, lista sesiones, `lastDoneLabel`/racha/progreso reales (hoy fijos `Home.kt:40-47`, `RoomHomeRepository.kt:35,38-43`); `Ver mes` cableado.
+- [ ] Ejercicios propios CUSTOM (MVP-3, siguiente tras mergear 015): crear/editar desde app (`insert` en `ExerciseRepository` + UI formulario); `CatalogSync` ya protege `CUSTOM`.
+- [x] Historial + `home-post-sesion` (MVP-7, spec `015-calendario-progreso-spec.md`, checklist 13/13 en rama `015-calendario-progreso`, pendiente merge): tabs `calendar`/`progress` reales, lista de hechos por día, `lastDoneLabel`/racha/progreso reales; `Ver mes` cableado.
 
 ### P2 — Sesión en vivo
 - [x] Modal numérico KG/REPS/PAUSA + cronómetro detenido con Comenzar/Pausar/Reanudar + tap único para expandir (PR #18, spec 013).
