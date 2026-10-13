@@ -38,6 +38,8 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.SwipeToDismissBox
+import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
@@ -47,8 +49,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -72,6 +76,7 @@ import com.mytrainingplan.app.domain.model.SetEntry
 import com.mytrainingplan.app.domain.model.WorkoutExerciseUi
 import com.mytrainingplan.app.domain.model.WorkoutUiState
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 // Colores y medidas desde ui/theme (spec 011): sin tokens locales.
 
@@ -144,7 +149,8 @@ fun WorkoutScreen(
                 onBack = onBack,
                 onExerciseClick = onExerciseClick,
                 onEditRoutine = { routineId?.let(onEditRoutine) },
-                onAddLiveSet = viewModel::onAddLiveSet
+                onAddLiveSet = viewModel::onAddLiveSet,
+                onDeleteLiveSet = viewModel::onDeleteLiveSet
             )
         }
         if (restVisible) {
@@ -173,7 +179,9 @@ fun WorkoutContent(
     // Spec 016 paso 3: abre el constructor con la rutina en curso.
     onEditRoutine: () -> Unit = {},
     // Spec 016 paso 4: añade una serie viva calcada de la última.
-    onAddLiveSet: (String) -> Unit = {}
+    onAddLiveSet: (String) -> Unit = {},
+    // Spec 016 paso 5: borra una serie viva pendiente.
+    onDeleteLiveSet: (String) -> Unit = {}
 ) {
     // Confirmación de descarte: overlay propio (AlertDialog gestiona insets solo).
     var showDiscardDialog by rememberSaveable { mutableStateOf(false) }
@@ -228,7 +236,8 @@ fun WorkoutContent(
                         onToggleDone = onToggleDone,
                         onExerciseClick = onExerciseClick,
                         onEditClick = { entryId -> editingEntryId = entryId },
-                        onAddSet = { onAddLiveSet(item.routineExercise.id) }
+                        onAddSet = { onAddLiveSet(item.routineExercise.id) },
+                        onDeleteEntry = onDeleteLiveSet
                     )
                 }
                 item {
@@ -538,7 +547,9 @@ private fun ExerciseAccordion(
     onExerciseClick: (String) -> Unit = {},
     onEditClick: (String) -> Unit = {},
     // Spec 016 paso 4: añade una serie calcada de la última.
-    onAddSet: () -> Unit = {}
+    onAddSet: () -> Unit = {},
+    // Spec 016 paso 5: borra una serie pendiente (por id de entrada).
+    onDeleteEntry: (String) -> Unit = {}
 ) {
     val doneCount = item.entries.count { it.done }
     val total = item.entries.size
@@ -580,14 +591,19 @@ private fun ExerciseAccordion(
                 item.entries.forEach { entry ->
                     val planned = item.planned.find { it.id == entry.plannedSetId }
                         ?: item.planned.find { it.setNumber == entry.setNumber }
-                    SetRow(
-                        entry = entry,
-                        planned = planned,
-                        isNext = !entry.done && entry.id == nextPendingId,
-                        timerRunning = timerRunning,
-                        onToggleDone = { onToggleDone(entry.id) },
-                        onEditClick = { onEditClick(entry.id) }
-                    )
+                    // `key` estable: añadir/borrar reordena la lista y el
+                    // estado del swipe no debe pegarse a otra fila.
+                    key(entry.id) {
+                        SwipeableSetRow(
+                            entry = entry,
+                            planned = planned,
+                            isNext = !entry.done && entry.id == nextPendingId,
+                            timerRunning = timerRunning,
+                            onToggleDone = { onToggleDone(entry.id) },
+                            onEditClick = { onEditClick(entry.id) },
+                            onDelete = { onDeleteEntry(entry.id) }
+                        )
+                    }
                     Spacer(Modifier.height(AppDimens.SpaceMd))
                 }
                 // Spec 016 paso 4: bajo la última serie; crea la viva + la
@@ -778,6 +794,83 @@ private fun SetsHeaderRow() {
         Text("REPS", color = AppColors.TextMuted, fontSize = AppTextSizes.Caption, fontWeight = FontWeight.SemiBold, textAlign = TextAlign.Center, modifier = Modifier.weight(1f))
         Text("PAUSA", color = AppColors.TextMuted, fontSize = AppTextSizes.Caption, fontWeight = FontWeight.SemiBold, textAlign = TextAlign.Center, modifier = Modifier.width(AppDimens.PauseWidth))
         Spacer(Modifier.width(AppDimens.TouchMin))
+    }
+}
+
+/**
+ * Spec 016 paso 5: swipe a la izquierda en serie pendiente que revela
+ * "¿Borrar?" (patrón Context7 `SwipeToDismissBox`: sin `confirmValueChange`
+ * —deprecated—, `onDismiss` que se queda revelado + `reset()` para cancelar;
+ * solo dirección fin-a-inicio). Tap en "¿Borrar?" borra; tap fuera cancela;
+ * soltar antes del umbral cancela solo. En serie hecha no hay swipe.
+ * Botes `ui/theme`, sin iconos nuevos.
+ */
+@Composable
+private fun SwipeableSetRow(
+    entry: SetEntry,
+    planned: PlannedSet?,
+    isNext: Boolean,
+    timerRunning: Boolean,
+    onToggleDone: () -> Unit,
+    onEditClick: () -> Unit,
+    onDelete: () -> Unit
+) {
+    if (entry.done) {
+        SetRow(
+            entry = entry,
+            planned = planned,
+            isNext = isNext,
+            timerRunning = timerRunning,
+            onToggleDone = onToggleDone,
+            onEditClick = onEditClick
+        )
+        return
+    }
+    val dismissState = rememberSwipeToDismissBoxState()
+    val scope = rememberCoroutineScope()
+    SwipeToDismissBox(
+        state = dismissState,
+        enableDismissFromStartToEnd = false,
+        // Al pasar el umbral se queda revelado (no borra solo): el tap en
+        // "¿Borrar?" borra y cualquier otro gesto cancela vía `reset()`.
+        onDismiss = { },
+        backgroundContent = {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .clip(RoundedCornerShape(AppDimens.RadiusXl))
+                    .background(AppColors.ErrorRed.copy(alpha = 0.15f))
+                    .clickable(onClick = { scope.launch { dismissState.reset() } })
+                    .padding(horizontal = AppDimens.SpaceXl),
+                contentAlignment = Alignment.CenterEnd
+            ) {
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(AppDimens.RadiusPill))
+                        .background(AppColors.ErrorRed)
+                        .clickable(onClick = onDelete)
+                        .testTag("deleteLiveSet:${entry.id}")
+                        .padding(horizontal = AppDimens.SpaceXl, vertical = AppDimens.SpaceMd),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        "¿Borrar?",
+                        color = AppColors.OnOrange,
+                        fontSize = AppTextSizes.BodyLg,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+        }
+    ) {
+        SetRow(
+            entry = entry,
+            planned = planned,
+            isNext = isNext,
+            timerRunning = timerRunning,
+            onToggleDone = onToggleDone,
+            onEditClick = onEditClick
+        )
     }
 }
 

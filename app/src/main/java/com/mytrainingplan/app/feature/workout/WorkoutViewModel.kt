@@ -272,6 +272,16 @@ class WorkoutViewModel @Inject constructor(
         viewModelScope.launch { repository.addLiveSet(sid, routineExerciseId) }
     }
 
+    /**
+     * Spec 016 paso 5: borra una serie viva pendiente (+ su planificada).
+     * Sin lógica de datos: vive en el repositorio
+     * ([WorkoutRepository.deleteLiveSet]).
+     */
+    fun onDeleteLiveSet(entryId: String) {
+        val sid = sessionId.value ?: return
+        viewModelScope.launch { repository.deleteLiveSet(sid, entryId) }
+    }
+
     /** Flujo crudo para previsualización o depuración. */
     internal fun observeDetail(): Flow<WorkoutSessionDetail?> = detail
 }
