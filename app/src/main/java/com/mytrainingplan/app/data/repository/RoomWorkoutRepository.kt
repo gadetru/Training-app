@@ -155,6 +155,19 @@ class RoomWorkoutRepository(
         entries.upsert(cur.copy(restSeconds = (base + deltaSec).coerceAtLeast(0)).toEntity())
     }
 
+    /**
+     * Stub temporal (spec 016 paso 1): la doble escritura atómica con
+     * transacción se implementa en el paso 2. Solo compila el contrato.
+     */
+    override suspend fun addLiveSet(sessionId: String, routineExerciseId: String) {
+        Log.w(TAG, "addLiveSet: pendiente paso 2 sessionId=$sessionId routineExerciseId=$routineExerciseId")
+    }
+
+    /** Stub temporal (spec 016 paso 1): ver [addLiveSet]. */
+    override suspend fun deleteLiveSet(sessionId: String, entryId: String) {
+        Log.w(TAG, "deleteLiveSet: pendiente paso 2 sessionId=$sessionId entryId=$entryId")
+    }
+
     override suspend fun finishSession(sessionId: String) {
         val cur = sessions.observeById(sessionId).first()?.toDomain()
         if (cur == null) {
