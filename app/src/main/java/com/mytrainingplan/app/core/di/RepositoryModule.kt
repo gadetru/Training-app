@@ -6,6 +6,7 @@ import com.mytrainingplan.app.data.local.dao.PlannedSetDao
 import com.mytrainingplan.app.data.local.dao.ProfileDao
 import com.mytrainingplan.app.data.local.dao.RoutineDao
 import com.mytrainingplan.app.data.local.dao.RoutineExerciseDao
+import com.mytrainingplan.app.data.local.dao.ScheduledDayDao
 import com.mytrainingplan.app.data.local.dao.SetEntryDao
 import com.mytrainingplan.app.data.local.dao.WorkoutSessionDao
 import com.mytrainingplan.app.data.remote.ExerciseApi
@@ -16,8 +17,10 @@ import com.mytrainingplan.app.data.repository.ProfileRepository
 import com.mytrainingplan.app.data.repository.RoomExerciseRepository
 import com.mytrainingplan.app.data.repository.RoomProfileRepository
 import com.mytrainingplan.app.data.repository.RoomRoutineRepository
+import com.mytrainingplan.app.data.repository.RoomScheduleRepository
 import com.mytrainingplan.app.data.repository.RoomWorkoutRepository
 import com.mytrainingplan.app.data.repository.RoutineRepository
+import com.mytrainingplan.app.data.repository.ScheduleRepository
 import com.mytrainingplan.app.data.repository.WorkoutRepository
 import dagger.Module
 import dagger.Provides
@@ -75,6 +78,15 @@ object RepositoryModule {
     @Singleton
     fun provideHomeRepository(
         routineRepo: RoutineRepository,
-        profileRepo: ProfileRepository
-    ): HomeRepository = com.mytrainingplan.app.data.repository.RoomHomeRepository(routineRepo, profileRepo)
+        profileRepo: ProfileRepository,
+        sessions: WorkoutSessionDao
+    ): HomeRepository = com.mytrainingplan.app.data.repository.RoomHomeRepository(routineRepo, profileRepo, sessions)
+
+    @Provides
+    @Singleton
+    fun provideScheduleRepository(
+        scheduled: ScheduledDayDao,
+        sessions: WorkoutSessionDao,
+        routines: RoutineDao
+    ): ScheduleRepository = RoomScheduleRepository(scheduled, sessions, routines)
 }

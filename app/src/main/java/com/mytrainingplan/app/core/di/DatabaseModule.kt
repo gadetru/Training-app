@@ -4,11 +4,13 @@ import android.content.Context
 import androidx.room.Room
 import com.mytrainingplan.app.data.local.AppDatabase
 import com.mytrainingplan.app.data.local.MIGRATION_1_2
+import com.mytrainingplan.app.data.local.MIGRATION_2_3
 import com.mytrainingplan.app.data.local.dao.ExerciseDao
 import com.mytrainingplan.app.data.local.dao.PlannedSetDao
 import com.mytrainingplan.app.data.local.dao.ProfileDao
 import com.mytrainingplan.app.data.local.dao.RoutineDao
 import com.mytrainingplan.app.data.local.dao.RoutineExerciseDao
+import com.mytrainingplan.app.data.local.dao.ScheduledDayDao
 import com.mytrainingplan.app.data.local.dao.SetEntryDao
 import com.mytrainingplan.app.data.local.dao.WorkoutSessionDao
 import dagger.Module
@@ -31,7 +33,7 @@ object DatabaseModule {
     @Singleton
     fun provideDatabase(@ApplicationContext ctx: Context): AppDatabase =
         Room.databaseBuilder(ctx, AppDatabase::class.java, "training.db")
-            .addMigrations(MIGRATION_1_2)
+            .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
             .build()
 
     @Provides fun provideProfileDao(db: AppDatabase): ProfileDao = db.profileDao()
@@ -41,4 +43,5 @@ object DatabaseModule {
     @Provides fun providePlannedSetDao(db: AppDatabase): PlannedSetDao = db.plannedSetDao()
     @Provides fun provideWorkoutSessionDao(db: AppDatabase): WorkoutSessionDao = db.workoutSessionDao()
     @Provides fun provideSetEntryDao(db: AppDatabase): SetEntryDao = db.setEntryDao()
+    @Provides fun provideScheduledDayDao(db: AppDatabase): ScheduledDayDao = db.scheduledDayDao()
 }

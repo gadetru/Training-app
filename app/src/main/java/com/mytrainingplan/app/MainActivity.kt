@@ -27,10 +27,10 @@ import com.mytrainingplan.app.domain.model.Profile
 import com.mytrainingplan.app.data.repository.CatalogSync
 import com.mytrainingplan.app.feature.exercises.ExerciseDetailScreen
 import com.mytrainingplan.app.feature.home.BottomDock
-import com.mytrainingplan.app.feature.home.CalendarPlaceholder
 import com.mytrainingplan.app.feature.home.HomeScreen
 import com.mytrainingplan.app.feature.home.HomeTab
-import com.mytrainingplan.app.feature.home.ProgressPlaceholder
+import com.mytrainingplan.app.feature.history.CalendarScreen
+import com.mytrainingplan.app.feature.history.ProgressScreen
 import com.mytrainingplan.app.feature.profile.ProfileScreen
 import com.mytrainingplan.app.feature.profile.ProfileViewModel
 import com.mytrainingplan.app.feature.routines.RoutineEditScreen
@@ -102,6 +102,8 @@ fun TrainingNav() {
                 onCreate = { navController.navigate(ROUTE_ROUTINE_EDIT_NEW) },
                 // Spec 005: `Iniciar` abre la sesión en vivo de esa rutina.
                 onStart = { navController.navigate("workout?$ARG_ROUTINE_ID=$it") },
+                // Spec 015: `Ver mes` abre el tab Calendario.
+                onSeeMonth = { navController.navigateToTab(HomeTab.CALENDARIO) },
                 // Menú ··· (P0 TODO vivo): `Editar` abre el constructor con esa
                 // rutina (la ruta ya aceptaba routineId); `Eliminar` lo gestiona
                 // Home internamente con confirmación + borrado lógico.
@@ -174,7 +176,10 @@ fun TrainingNav() {
                 selectedTab = HomeTab.CALENDARIO,
                 onTabSelected = { navController.navigateToTab(it) }
             ) {
-                CalendarPlaceholder()
+                // Spec 015: mes real; sin rutinas la hoja lleva al constructor.
+                CalendarScreen(
+                    onCreate = { navController.navigate(ROUTE_ROUTINE_EDIT_NEW) }
+                )
             }
         }
         composable(ROUTE_PROGRESS) {
@@ -182,7 +187,8 @@ fun TrainingNav() {
                 selectedTab = HomeTab.PROGRESO,
                 onTabSelected = { navController.navigateToTab(it) }
             ) {
-                ProgressPlaceholder()
+                // Spec 015: progreso real desde finalizadas.
+                ProgressScreen()
             }
         }
         composable(ROUTE_PROFILE) {
