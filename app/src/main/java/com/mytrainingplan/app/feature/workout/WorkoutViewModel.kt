@@ -262,6 +262,16 @@ class WorkoutViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Spec 016 paso 4: añade una serie viva calcada de la última (+ su
+     * planificada en la rutina). Sin lógica de datos: la doble escritura
+     * vive en el repositorio ([WorkoutRepository.addLiveSet]).
+     */
+    fun onAddLiveSet(routineExerciseId: String) {
+        val sid = sessionId.value ?: return
+        viewModelScope.launch { repository.addLiveSet(sid, routineExerciseId) }
+    }
+
     /** Flujo crudo para previsualización o depuración. */
     internal fun observeDetail(): Flow<WorkoutSessionDetail?> = detail
 }

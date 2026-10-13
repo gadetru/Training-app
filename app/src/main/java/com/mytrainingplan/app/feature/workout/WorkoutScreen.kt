@@ -143,7 +143,8 @@ fun WorkoutScreen(
                 onDiscard = { viewModel.onDiscard(onDiscard) },
                 onBack = onBack,
                 onExerciseClick = onExerciseClick,
-                onEditRoutine = { routineId?.let(onEditRoutine) }
+                onEditRoutine = { routineId?.let(onEditRoutine) },
+                onAddLiveSet = viewModel::onAddLiveSet
             )
         }
         if (restVisible) {
@@ -170,7 +171,9 @@ fun WorkoutContent(
     onBack: () -> Unit = {},
     onExerciseClick: (String) -> Unit = {},
     // Spec 016 paso 3: abre el constructor con la rutina en curso.
-    onEditRoutine: () -> Unit = {}
+    onEditRoutine: () -> Unit = {},
+    // Spec 016 paso 4: añade una serie viva calcada de la última.
+    onAddLiveSet: (String) -> Unit = {}
 ) {
     // Confirmación de descarte: overlay propio (AlertDialog gestiona insets solo).
     var showDiscardDialog by rememberSaveable { mutableStateOf(false) }
@@ -224,7 +227,8 @@ fun WorkoutContent(
                         onToggleExpanded = { onToggleExpanded(item.routineExercise.id) },
                         onToggleDone = onToggleDone,
                         onExerciseClick = onExerciseClick,
-                        onEditClick = { entryId -> editingEntryId = entryId }
+                        onEditClick = { entryId -> editingEntryId = entryId },
+                        onAddSet = { onAddLiveSet(item.routineExercise.id) }
                     )
                 }
                 item {
@@ -532,7 +536,9 @@ private fun ExerciseAccordion(
     onToggleExpanded: () -> Unit,
     onToggleDone: (String) -> Unit,
     onExerciseClick: (String) -> Unit = {},
-    onEditClick: (String) -> Unit = {}
+    onEditClick: (String) -> Unit = {},
+    // Spec 016 paso 4: añade una serie calcada de la última.
+    onAddSet: () -> Unit = {}
 ) {
     val doneCount = item.entries.count { it.done }
     val total = item.entries.size
@@ -584,6 +590,13 @@ private fun ExerciseAccordion(
                     )
                     Spacer(Modifier.height(AppDimens.SpaceMd))
                 }
+                // Spec 016 paso 4: bajo la última serie; crea la viva + la
+                // planificada con los valores de la última (luego se retoca
+                // con el modal existente). Botes ui/theme, sin iconos nuevos.
+                AddLiveSetButton(
+                    routineExerciseId = item.routineExercise.id,
+                    onClick = onAddSet
+                )
             }
         }
     } else {
@@ -657,6 +670,37 @@ private fun ExerciseAccordion(
                 Icon(Icons.Filled.KeyboardArrowDown, contentDescription = "Expandir", tint = AppColors.TextMuted)
             }
         }
+    }
+}
+
+@Composable
+private fun AddLiveSetButton(
+    routineExerciseId: String,
+    onClick: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .heightIn(min = AppDimens.TouchMin)
+            .clip(RoundedCornerShape(AppDimens.RadiusPill))
+            .background(AppColors.CardHigh)
+            .border(
+                AppDimens.BorderThin,
+                AppColors.Orange.copy(alpha = 0.4f),
+                RoundedCornerShape(AppDimens.RadiusPill)
+            )
+            .clickable(onClick = onClick)
+            .testTag("addLiveSet:$routineExerciseId")
+            .padding(vertical = AppDimens.SpaceMd),
+        horizontalArrangement = Arrangement.Center,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            "+ Añadir serie",
+            color = AppColors.Orange,
+            fontSize = AppTextSizes.BodyLg,
+            fontWeight = FontWeight.Bold
+        )
     }
 }
 
