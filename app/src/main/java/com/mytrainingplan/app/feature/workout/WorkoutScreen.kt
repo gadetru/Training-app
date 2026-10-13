@@ -36,6 +36,8 @@ import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
@@ -107,7 +109,9 @@ fun WorkoutScreen(
     onDiscard: () -> Unit = {},
     onBack: () -> Unit = {},
     // Spec 010: la ficha abre desde la sesión (nombre del ejercicio).
-    onExerciseClick: (String) -> Unit = {}
+    onExerciseClick: (String) -> Unit = {},
+    // Spec 016 paso 3: el ⋮ abre el constructor con esa rutina.
+    onEditRoutine: (String) -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
     LaunchedEffect(routineId) { viewModel.openSession(routineId) }
@@ -138,7 +142,8 @@ fun WorkoutScreen(
                 onFinish = { viewModel.onFinish(onFinished) },
                 onDiscard = { viewModel.onDiscard(onDiscard) },
                 onBack = onBack,
-                onExerciseClick = onExerciseClick
+                onExerciseClick = onExerciseClick,
+                onEditRoutine = { routineId?.let(onEditRoutine) }
             )
         }
         if (restVisible) {
@@ -163,7 +168,9 @@ fun WorkoutContent(
     onFinish: () -> Unit = {},
     onDiscard: () -> Unit = {},
     onBack: () -> Unit = {},
-    onExerciseClick: (String) -> Unit = {}
+    onExerciseClick: (String) -> Unit = {},
+    // Spec 016 paso 3: abre el constructor con la rutina en curso.
+    onEditRoutine: () -> Unit = {}
 ) {
     // Confirmación de descarte: overlay propio (AlertDialog gestiona insets solo).
     var showDiscardDialog by rememberSaveable { mutableStateOf(false) }
@@ -187,7 +194,8 @@ fun WorkoutContent(
                 routineName = uiState.routineName,
                 elapsedSec = uiState.elapsedSec,
                 isPaused = uiState.isPaused,
-                onBack = onBack
+                onBack = onBack,
+                onEditRoutine = onEditRoutine
             )
             LazyColumn(
                 modifier = Modifier
@@ -340,7 +348,9 @@ private fun SessionHeader(
     routineName: String,
     elapsedSec: Int,
     isPaused: Boolean,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    // Spec 016 paso 3: el ⋮ abre el constructor (sin acción destructiva).
+    onEditRoutine: () -> Unit = {}
 ) {
     Column(
         modifier = Modifier
@@ -393,17 +403,48 @@ private fun SessionHeader(
                     fontWeight = FontWeight.Bold
                 )
             }
-            // Ajustes (TODO visual sin crash).
+            // Menú ⋮ (spec 016 paso 3, patrón del ⋯ de Home): Editar rutina
+            // abre el constructor (al volver la sesión sigue viva en el repo);
+            // Salir vuelve atrás sin finalizar ni descartar (igual que ←).
+            // Sin acción destructiva en el menú. El DropdownMenu gestiona
+            // insets solo (regla edge-to-edge).
+            var menuExpanded by remember { mutableStateOf(false) }
             Box(
-                modifier = Modifier
-                    .size(AppDimens.TouchMin)
-                    .clip(RoundedCornerShape(AppDimens.RadiusPill))
-                    .background(AppColors.Card)
-                    .border(AppDimens.BorderThin, AppColors.BorderSubtle, RoundedCornerShape(AppDimens.RadiusPill))
-                    .clickable(onClick = {}),
-                contentAlignment = Alignment.Center
+                modifier = Modifier.size(AppDimens.TouchMin),
+                contentAlignment = Alignment.TopCenter
             ) {
-                Icon(Icons.Filled.MoreVert, contentDescription = "Ajustes", tint = AppColors.TextPrimary)
+                Box(
+                    modifier = Modifier
+                        .size(AppDimens.TouchMin)
+                        .clip(RoundedCornerShape(AppDimens.RadiusPill))
+                        .background(AppColors.Card)
+                        .border(AppDimens.BorderThin, AppColors.BorderSubtle, RoundedCornerShape(AppDimens.RadiusPill))
+                        .clickable(onClick = { menuExpanded = true })
+                        .testTag("workoutMenuButton"),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(Icons.Filled.MoreVert, contentDescription = "Ajustes", tint = AppColors.TextPrimary)
+                }
+                DropdownMenu(
+                    expanded = menuExpanded,
+                    onDismissRequest = { menuExpanded = false },
+                    modifier = Modifier.background(AppColors.Card2)
+                ) {
+                    DropdownMenuItem(
+                        text = { Text("Editar rutina", color = AppColors.TextPrimary) },
+                        onClick = {
+                            menuExpanded = false
+                            onEditRoutine()
+                        }
+                    )
+                    DropdownMenuItem(
+                        text = { Text("Salir del entrenamiento", color = AppColors.TextPrimary) },
+                        onClick = {
+                            menuExpanded = false
+                            onBack()
+                        }
+                    )
+                }
             }
         }
         Column {

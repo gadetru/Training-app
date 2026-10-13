@@ -153,7 +153,10 @@ fun TrainingNav() {
                 },
                 onBack = { navController.popBackStack() },
                 // Spec 010: la ficha abre desde la sesión.
-                onExerciseClick = { navController.navigateToExercise(it) }
+                onExerciseClick = { navController.navigateToExercise(it) },
+                // Spec 016 paso 3: el ⋮ abre el constructor con esa rutina;
+                // al volver (←) la sesión sigue viva con su tiempo y series.
+                onEditRoutine = { navController.navigate("routineEdit?$ARG_ROUTINE_ID=$it") }
             )
         }
         composable(
