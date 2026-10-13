@@ -1,10 +1,12 @@
 package com.mytrainingplan.app.data.repository
 
 import com.mytrainingplan.app.domain.model.Exercise
+import com.mytrainingplan.app.domain.model.HistoryCalcs
 import com.mytrainingplan.app.domain.model.PlannedSet
 import com.mytrainingplan.app.domain.model.RoutineExercise
 import com.mytrainingplan.app.domain.model.SetEntry
 import com.mytrainingplan.app.domain.model.WorkoutSession
+import java.time.ZoneId
 import java.util.UUID
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -87,7 +89,11 @@ interface WorkoutRepository {
  */
 class FakeWorkoutRepository(
     private val routines: RoutineRepository = FakeRoutineRepository.shared,
-    private val exercises: ExerciseRepository = FakeExerciseRepository()
+    private val exercises: ExerciseRepository = FakeExerciseRepository(),
+    // Spec 016 paso 6: espejo del auto-reemplazo (opcional para no romper los
+    // tests existentes que no cablean apuntes).
+    private val schedule: ScheduleRepository? = null,
+    private val zone: ZoneId = ZoneId.systemDefault()
 ) : WorkoutRepository {
 
     private val sessions = MutableStateFlow<Map<String, WorkoutSessionDetail>>(emptyMap())
@@ -267,6 +273,13 @@ class FakeWorkoutRepository(
     override suspend fun finishSession(sessionId: String) {
         val detail = sessions.value[sessionId] ?: return
         val now = System.currentTimeMillis()
+        // Spec 016 paso 6 (espejo): lo hecho manda sobre lo apuntado.
+        if (schedule != null) {
+            schedule.setScheduled(
+                HistoryCalcs.dateKeyOf(detail.session.startedAt, zone),
+                detail.session.routineId
+            )
+        }
         // El historial alimenta el prefill de la próxima apertura.
         history.update { map ->
             var next = map

@@ -11,9 +11,11 @@ import com.mytrainingplan.app.data.local.dao.SetEntryDao
 import com.mytrainingplan.app.data.local.dao.WorkoutSessionDao
 import com.mytrainingplan.app.data.mapper.toDomain
 import com.mytrainingplan.app.data.mapper.toEntity
+import com.mytrainingplan.app.domain.model.HistoryCalcs
 import com.mytrainingplan.app.domain.model.PlannedSet
 import com.mytrainingplan.app.domain.model.SetEntry
 import com.mytrainingplan.app.domain.model.WorkoutSession
+import java.time.ZoneId
 import java.util.UUID
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
@@ -41,7 +43,12 @@ class RoomWorkoutRepository(
     // DB para la transacción y los DAOs de ambas tablas.
     private val db: AppDatabase,
     private val routineExercises: RoutineExerciseDao,
-    private val plannedSets: PlannedSetDao
+    private val plannedSets: PlannedSetDao,
+    // Spec 016 paso 6: el auto-reemplazo del apunte al finalizar necesita el
+    // repo de apuntes (sin ciclo: ese repo solo depende de DAOs). La zona es
+    // la del sistema por defecto (día local `yyyy-MM-dd`, como el spec 015).
+    private val schedule: ScheduleRepository,
+    private val zone: ZoneId = ZoneId.systemDefault()
 ) : WorkoutRepository {
 
     /**
@@ -265,6 +272,10 @@ class RoomWorkoutRepository(
             return
         }
         sessions.upsert(cur.copy(endedAt = System.currentTimeMillis()).toEntity())
+        // Spec 016 paso 6: lo hecho manda sobre lo apuntado. El apunte del
+        // día (fecha local del inicio, como el spec 015) pasa a ser la rutina
+        // realizada; `setScheduled` sustituye en la misma fila, sin duplicar.
+        schedule.setScheduled(HistoryCalcs.dateKeyOf(cur.startedAt, zone), cur.routineId)
         Log.i(TAG, "finishSession: sessionId=$sessionId")
     }
 
