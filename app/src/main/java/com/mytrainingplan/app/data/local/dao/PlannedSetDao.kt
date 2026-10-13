@@ -15,6 +15,14 @@ interface PlannedSetDao {
     @Query("SELECT * FROM planned_sets WHERE routineExerciseId = :routineExerciseId AND deleted = 0 ORDER BY setNumber")
     fun observeByExercise(routineExerciseId: String): Flow<List<PlannedSetEntity>>
 
+    /**
+     * Serie planificada por id (spec 016: el borrado doble resuelve la
+     * planificada desde `SetEntry.plannedSetId`). Espejo de
+     * `RoutineExerciseDao.getById`.
+     */
+    @Query("SELECT * FROM planned_sets WHERE id = :id AND deleted = 0")
+    suspend fun getById(id: String): PlannedSetEntity?
+
     @Upsert
     suspend fun upsert(set: PlannedSetEntity)
 

@@ -62,9 +62,13 @@ object RepositoryModule {
         entries: SetEntryDao,
         routines: RoutineDao,
         routineRepo: RoutineRepository,
-        exercises: ExerciseDao
+        exercises: ExerciseDao,
+        // Spec 016 paso 2: la doble escritura atómica necesita la DB y ambas tablas.
+        db: com.mytrainingplan.app.data.local.AppDatabase,
+        routineExercises: RoutineExerciseDao,
+        plannedSets: PlannedSetDao
     ): WorkoutRepository =
-        RoomWorkoutRepository(sessions, entries, routines, routineRepo, exercises)
+        RoomWorkoutRepository(sessions, entries, routines, routineRepo, exercises, db, routineExercises, plannedSets)
 
     @Provides
     @Singleton
