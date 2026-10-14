@@ -1,5 +1,5 @@
 # Edición de rutina desde la sesión en vivo
-Estado: aprobado
+Estado: implementado
 Depende de: specs/009-sesion-persistida-spec.md (la sesión viva y su cierre), specs/004-editar-rutina-spec.md (el constructor que se abre desde el menú) y specs/015-calendario-progreso-spec.md (los apuntes que se auto-sustituyen)
 Fecha de creación: 2026-10-13
 Descripción: El ⋮ de la sesión deja de ser un botón muerto y permite editar la rutina o salir. Cada ejercicio gana un botón para añadir una serie calcada de la última y el swipe a la izquierda borra pendientes con confirmación. Añadir y borrar editan también la rutina guardada. Si se termina haciendo otra rutina, el apunte del día se actualiza solo.
@@ -75,14 +75,14 @@ Toca `feature/workout` (menú en `WorkoutScreen.kt:396-407`, hoy con `onClick` v
 - Supuesto: el modal de serie sirve para retocar la añadida sin cambios.
 - ¿El "¿Borrar?" necesita segundo tap de confirmación o basta con el tap único?
 ## 11. Checklist verificación (última, checkboxes listos para /verifier)
-- [ ] El ⋮ muestra "Editar rutina" y "Salir del entrenamiento".
-- [ ] "Editar rutina" abre el constructor y al volver la sesión sigue con su tiempo y series.
-- [ ] "+ Añadir serie" crea una serie con los valores de la última.
-- [ ] Al abrir la rutina otro día trae las series añadidas en vivo.
-- [ ] Swipe en pendiente muestra "¿Borrar?"; tap borra; soltar antes cancela.
-- [ ] Swipe en serie hecha no ofrece borrar.
-- [ ] Descartar tras editar conserva las series en la rutina.
-- [ ] Finalizar otra rutina sustituye el apunte del día sin duplicar.
-- [ ] `./gradlew assembleDebug` termina OK.
-- [ ] `./gradlew testDebugUnitTest` termina en verde.
-- [ ] `./gradlew connectedDebugAndroidTest` en verde en emulador y en físico.
+- [x] El ⋮ muestra "Editar rutina" y "Salir del entrenamiento".
+- [x] "Editar rutina" abre el constructor y al volver la sesión sigue con su tiempo y series.
+- [x] "+ Añadir serie" crea una serie con los valores de la última.
+- [x] Al abrir la rutina otro día trae las series añadidas en vivo.
+- [x] Swipe en pendiente muestra "¿Borrar?"; tap borra; soltar antes cancela.
+- [x] Swipe en serie hecha no ofrece borrar.
+- [x] Descartar tras editar conserva las series en la rutina.
+- [x] Finalizar otra rutina sustituye el apunte del día sin duplicar.
+- [x] `./gradlew assembleDebug` termina OK.
+- [x] `./gradlew testDebugUnitTest` termina en verde.
+- [x] `./gradlew connectedDebugAndroidTest` en verde en emulador y en físico.
