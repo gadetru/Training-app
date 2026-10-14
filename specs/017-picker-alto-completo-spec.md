@@ -1,5 +1,5 @@
 # Picker de ejercicios a alto completo
-Estado: aprobado
+Estado: implementado
 Depende de: specs/003-lista-ejercicios-spec.md (el picker con su buscador y filtros); se implementa sobre la rama 016-sesion-edicion
 Fecha de creación: 2026-10-14
 Descripción: La hoja del picker se queda al 88% y muestra poca lista. Pasa a alto completo (100%) manteniendo gestos y piezas.
@@ -48,9 +48,9 @@ Solo UI de `feature/exercises` (`ExercisePickerSheet.kt:136-162`: `ModalBottomSh
 ## Preguntas abiertas
 - Decidido: 100% (no 95%), gestos intactos, solo altura, verificación en ambos.
 ## 11. Checklist verificación (última, checkboxes listos para /verifier)
-- [ ] La hoja abre a alto completo con varias rutinas de lista visible.
-- [ ] El arrastre cierra igual que antes.
-- [ ] Buscar, filtrar por chip y Confirmar funcionan igual.
-- [ ] `./gradlew assembleDebug` termina OK.
-- [ ] `./gradlew testDebugUnitTest` termina en verde.
-- [ ] `./gradlew connectedDebugAndroidTest` en verde en emulador y en físico.
+- [x] La hoja abre a alto completo con varias rutinas de lista visible.
+- [x] El arrastre cierra igual que antes.
+- [x] Buscar, filtrar por chip y Confirmar funcionan igual.
+- [x] `./gradlew assembleDebug` termina OK.
+- [x] `./gradlew testDebugUnitTest` termina en verde.
+- [x] `./gradlew connectedDebugAndroidTest` en verde en emulador y en físico.
