@@ -4,6 +4,12 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.AnchoredDraggableDefaults
+import androidx.compose.foundation.gestures.AnchoredDraggableState
+import androidx.compose.foundation.gestures.DraggableAnchors
+import androidx.compose.foundation.gestures.Orientation
+import androidx.compose.foundation.gestures.anchoredDraggable
+import androidx.compose.foundation.gestures.animateTo
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -14,6 +20,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
@@ -38,8 +45,6 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.SwipeToDismissBox
-import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
@@ -47,6 +52,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
@@ -57,7 +63,10 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
@@ -65,6 +74,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.IntOffset
 import com.mytrainingplan.app.ui.theme.AppColors
 import com.mytrainingplan.app.ui.theme.AppDimens
 import com.mytrainingplan.app.ui.theme.AppTextSizes
@@ -77,6 +87,7 @@ import com.mytrainingplan.app.domain.model.WorkoutExerciseUi
 import com.mytrainingplan.app.domain.model.WorkoutUiState
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlin.math.roundToInt
 
 // Colores y medidas desde ui/theme (spec 011): sin tokens locales.
 
@@ -269,7 +280,7 @@ fun WorkoutContent(
                 },
                 text = {
                     Text(
-                        "La sesión se descarta sin guardar y no contará como prefill.",
+                        "La sesión se descarta sin guardar y no contará como prefill. Lo añadido o borrado en vivo sí queda en la rutina.",
                         color = AppColors.TextMuted,
                         fontSize = AppTextSizes.TitleSm
                     )
@@ -798,12 +809,21 @@ private fun SetsHeaderRow() {
 }
 
 /**
- * Spec 016 paso 5: swipe a la izquierda en serie pendiente que revela
- * "¿Borrar?" (patrón Context7 `SwipeToDismissBox`: sin `confirmValueChange`
- * —deprecated—, `onDismiss` que se queda revelado + `reset()` para cancelar;
- * solo dirección fin-a-inicio). Tap en "¿Borrar?" borra; tap fuera cancela;
- * soltar antes del umbral cancela solo. En serie hecha no hay swipe.
- * Botes `ui/theme`, sin iconos nuevos.
+ * Anclas del revelado parcial (fix del despiste total + fantasma):
+ * la fila solo viaja hasta dejar visible la píldora.
+ */
+private enum class RowSwipe { Settled, Revealed }
+
+/**
+ * Spec 016 paso 5 (fix revelado parcial): swipe a la izquierda en serie
+ * pendiente con recorrido topado al ancho de la píldora "¿Borrar?" más su
+ * aire derecho (`AnchoredDraggable` de Foundation con anclas
+ * Settled/Revealed, Context7
+ * `/websites/developer_android_develop_ui_compose`). El fondo va con alfa 0
+ * en reposo: no hay nada visible detrás (cero fantasma) sin tocar colores.
+ * Tap en "¿Borrar?" borra; tap en la fila revelada o swipe de vuelta cancela
+ * (el tap no edita ni marca); soltar va al ancla más cercana. En serie hecha
+ * no hay swipe. Botes `ui/theme`, sin iconos nuevos.
  */
 @Composable
 private fun SwipeableSetRow(
@@ -826,51 +846,86 @@ private fun SwipeableSetRow(
         )
         return
     }
-    val dismissState = rememberSwipeToDismissBoxState()
+    // API vigente (Foundation 1.10, verificado en el sources.jar): el estado
+    // solo lleva el valor inicial; umbrales y animación van en el
+    // `flingBehavior` del modifier (defecto: umbral 50% = ancla más cercana).
+    val swipe = remember {
+        AnchoredDraggableState(initialValue = RowSwipe.Settled)
+    }
+    val fling = AnchoredDraggableDefaults.flingBehavior(state = swipe)
     val scope = rememberCoroutineScope()
-    SwipeToDismissBox(
-        state = dismissState,
-        enableDismissFromStartToEnd = false,
-        // Al pasar el umbral se queda revelado (no borra solo): el tap en
-        // "¿Borrar?" borra y cualquier otro gesto cancela vía `reset()`.
-        onDismiss = { },
-        backgroundContent = {
+    // Ancho real de la píldora (px): el revelado viaja exactamente eso más
+    // el inset derecho (SpaceXl + SpaceMd de aire para que la serie no la
+    // solape). Botes `AppDimens`, sin dp sueltos.
+    var actionWidthPx by remember { mutableStateOf(0f) }
+    val density = LocalDensity.current
+    val endInsetPx = with(density) { (AppDimens.SpaceXl + AppDimens.SpaceMd).toPx() }
+    SideEffect {
+        if (actionWidthPx > 0f) {
+            swipe.updateAnchors(
+                DraggableAnchors {
+                    RowSwipe.Settled at 0f
+                    RowSwipe.Revealed at -(actionWidthPx + endInsetPx)
+                }
+            )
+        }
+    }
+    val settle: () -> Unit = { scope.launch { swipe.animateTo(RowSwipe.Settled) } }
+    val revealed = swipe.currentValue == RowSwipe.Revealed
+    // `offset` es NaN hasta que hay anclas: en composición se lee sin lanzar.
+    val offsetPx = swipe.offset.let { if (it.isNaN()) 0f else it }
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .testTag("setRow:${entry.id}")
+    ) {
+        Box(
+            modifier = Modifier
+                .matchParentSize()
+                .clip(RoundedCornerShape(AppDimens.RadiusXl))
+                .background(AppColors.ErrorRed.copy(alpha = 0.15f))
+                .alpha(if (offsetPx != 0f || revealed) 1f else 0f)
+                .clickable(onClick = settle)
+                .padding(start = AppDimens.SpaceXl, end = AppDimens.SpaceXl + AppDimens.SpaceMd),
+            contentAlignment = Alignment.CenterEnd
+        ) {
             Box(
                 modifier = Modifier
-                    .fillMaxSize()
-                    .clip(RoundedCornerShape(AppDimens.RadiusXl))
-                    .background(AppColors.ErrorRed.copy(alpha = 0.15f))
-                    .clickable(onClick = { scope.launch { dismissState.reset() } })
-                    .padding(horizontal = AppDimens.SpaceXl),
-                contentAlignment = Alignment.CenterEnd
+                    .onSizeChanged { actionWidthPx = it.width.toFloat() }
+                    .clip(RoundedCornerShape(AppDimens.RadiusPill))
+                    .background(AppColors.ErrorRed)
+                    .clickable(onClick = onDelete)
+                    .testTag("deleteLiveSet:${entry.id}")
+                    .padding(horizontal = AppDimens.SpaceXl, vertical = AppDimens.SpaceMd),
+                contentAlignment = Alignment.Center
             ) {
-                Box(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(AppDimens.RadiusPill))
-                        .background(AppColors.ErrorRed)
-                        .clickable(onClick = onDelete)
-                        .testTag("deleteLiveSet:${entry.id}")
-                        .padding(horizontal = AppDimens.SpaceXl, vertical = AppDimens.SpaceMd),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        "¿Borrar?",
-                        color = AppColors.OnOrange,
-                        fontSize = AppTextSizes.BodyLg,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
+                Text(
+                    "¿Borrar?",
+                    color = AppColors.OnOrange,
+                    fontSize = AppTextSizes.BodyLg,
+                    fontWeight = FontWeight.Bold
+                )
             }
         }
-    ) {
-        SetRow(
-            entry = entry,
-            planned = planned,
-            isNext = isNext,
-            timerRunning = timerRunning,
-            onToggleDone = onToggleDone,
-            onEditClick = onEditClick
-        )
+        Box(
+            modifier = Modifier
+                .offset { IntOffset(offsetPx.roundToInt(), 0) }
+                .anchoredDraggable(
+                    state = swipe,
+                    orientation = Orientation.Horizontal,
+                    flingBehavior = fling
+                )
+        ) {
+            SetRow(
+                entry = entry,
+                planned = planned,
+                isNext = isNext,
+                timerRunning = timerRunning,
+                // En revelado el tap solo cancela (decidido con el usuario).
+                onToggleDone = { if (revealed) settle() else onToggleDone() },
+                onEditClick = { if (revealed) settle() else onEditClick() }
+            )
+        }
     }
 }
 
