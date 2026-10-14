@@ -156,7 +156,7 @@ fun ExercisePickerSheet(
             onConfirm = { onConfirm(uiState.selectedIds.toList()) },
             onDismiss = onDismiss,
             onExerciseClick = onExerciseClick,
-            modifier = Modifier.fillMaxHeight(0.88f)
+            modifier = Modifier.fillMaxHeight(1f)
         )
     }
 }
