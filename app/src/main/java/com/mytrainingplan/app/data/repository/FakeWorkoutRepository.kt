@@ -1,10 +1,12 @@
 package com.mytrainingplan.app.data.repository
 
 import com.mytrainingplan.app.domain.model.Exercise
+import com.mytrainingplan.app.domain.model.HistoryCalcs
 import com.mytrainingplan.app.domain.model.PlannedSet
 import com.mytrainingplan.app.domain.model.RoutineExercise
 import com.mytrainingplan.app.domain.model.SetEntry
 import com.mytrainingplan.app.domain.model.WorkoutSession
+import java.time.ZoneId
 import java.util.UUID
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -52,6 +54,19 @@ interface WorkoutRepository {
     /** Ajusta el descanso de una entrada en pasos de 10 s. */
     suspend fun adjustRest(sessionId: String, entryId: String, deltaSec: Int)
 
+    /**
+     * Añade una serie viva calcada de la última (nº siguiente, sin marcar)
+     * y su serie planificada en la rutina (doble escritura, spec 016).
+     * Reutiliza `SetEntry`/`PlannedSet` y borrado lógico; sin cambio de esquema.
+     */
+    suspend fun addLiveSet(sessionId: String, routineExerciseId: String)
+
+    /**
+     * Borra una serie viva pendiente y su planificada (borrado lógico en
+     * ambas, spec 016). Solo pendientes: la hecha se ignora.
+     */
+    suspend fun deleteLiveSet(sessionId: String, entryId: String)
+
     /** Guarda la sesión (alimenta el prefill futuro) y la cierra. */
     suspend fun finishSession(sessionId: String)
 
@@ -74,7 +89,11 @@ interface WorkoutRepository {
  */
 class FakeWorkoutRepository(
     private val routines: RoutineRepository = FakeRoutineRepository.shared,
-    private val exercises: ExerciseRepository = FakeExerciseRepository()
+    private val exercises: ExerciseRepository = FakeExerciseRepository(),
+    // Spec 016 paso 6: espejo del auto-reemplazo (opcional para no romper los
+    // tests existentes que no cablean apuntes).
+    private val schedule: ScheduleRepository? = null,
+    private val zone: ZoneId = ZoneId.systemDefault()
 ) : WorkoutRepository {
 
     private val sessions = MutableStateFlow<Map<String, WorkoutSessionDetail>>(emptyMap())
@@ -159,9 +178,108 @@ class FakeWorkoutRepository(
         }
     }
 
+    /**
+     * Espejo falso de la doble escritura (spec 016, opción B: vive en el
+     * repo, no en el ViewModel). Planificada vía `addSet` + `updateSet`
+     * existentes del repo de rutinas (se publica con `saveRoutine` si la
+     * rutina ya estaba guardada, como en Room donde no hay borrador);
+     * viva calcada de la última (reps, kg, pausa, nota).
+     */
+    override suspend fun addLiveSet(sessionId: String, routineExerciseId: String) {
+        val detail = sessions.value[sessionId] ?: return
+        val item = detail.items.find { it.routineExercise.id == routineExerciseId } ?: return
+        val last = item.entries.maxByOrNull { it.setNumber } ?: return
+        val now = System.currentTimeMillis()
+        val nextNumber = (item.entries.maxOfOrNull { it.setNumber } ?: 0) + 1
+        val routineId = detail.session.routineId
+        val wasSaved = routines.observeRoutines().firstOrNull()?.any { it.id == routineId } == true
+        // 1) Planificada: `addSet` copia la 1ª; se calca de la última viva.
+        routines.addSet(routineExerciseId)
+        val created = routines.observeRoutine(routineId).firstOrNull()
+            ?.items?.find { it.routineExercise.id == routineExerciseId }
+            ?.sets?.maxByOrNull { it.setNumber }
+        if (created != null) {
+            routines.updateSet(
+                routineExerciseId = routineExerciseId,
+                setId = created.id,
+                targetReps = last.reps,
+                weightKg = last.weightKg,
+                restSeconds = last.restSeconds ?: 90,
+                loadNote = last.loadNote,
+                rir = created.rir
+            )
+        }
+        if (wasSaved) routines.saveRoutine(routineId)
+        val plannedId = routines.observeRoutine(routineId).firstOrNull()
+            ?.items?.find { it.routineExercise.id == routineExerciseId }
+            ?.sets?.maxByOrNull { it.setNumber }?.id
+        // 2) Viva: nº siguiente, sin marcar, calcada de la última.
+        val entry = SetEntry(
+            id = UUID.randomUUID().toString(),
+            sessionId = sessionId,
+            exerciseId = item.exercise.id,
+            plannedSetId = plannedId,
+            setNumber = nextNumber,
+            reps = last.reps,
+            weightKg = last.weightKg,
+            loadNote = last.loadNote,
+            restSeconds = last.restSeconds,
+            done = false,
+            updatedAt = now
+        )
+        sessions.update { map ->
+            val cur = map[sessionId] ?: return@update map
+            map + (sessionId to cur.copy(
+                items = cur.items.map {
+                    if (it.routineExercise.id == routineExerciseId) it.copy(entries = it.entries + entry)
+                    else it
+                }
+            ))
+        }
+    }
+
+    /**
+     * Espejo falso del borrado doble (spec 016): solo pendientes (la hecha
+     * se ignora). Planificada vía `deleteSet` existente + `saveRoutine` si
+     * estaba guardada; viva filtrada (el Room marca `deleted`, el fake
+     * filtra como su `discardSession`).
+     */
+    override suspend fun deleteLiveSet(sessionId: String, entryId: String) {
+        val detail = sessions.value[sessionId] ?: return
+        val item = detail.items.find { it.entries.any { e -> e.id == entryId } } ?: return
+        val entry = item.entries.find { it.id == entryId } ?: return
+        if (entry.done) return
+        if (entry.plannedSetId != null) {
+            routines.deleteSet(item.routineExercise.id, entry.plannedSetId)
+            val routineId = detail.session.routineId
+            if (routines.observeRoutines().firstOrNull()?.any { it.id == routineId } == true) {
+                routines.saveRoutine(routineId)
+            }
+        }
+        sessions.update { map ->
+            val cur = map[sessionId] ?: return@update map
+            map + (sessionId to cur.copy(
+                items = cur.items.map {
+                    if (it.routineExercise.id == item.routineExercise.id) {
+                        it.copy(entries = it.entries.filterNot { e -> e.id == entryId })
+                    } else {
+                        it
+                    }
+                }
+            ))
+        }
+    }
+
     override suspend fun finishSession(sessionId: String) {
         val detail = sessions.value[sessionId] ?: return
         val now = System.currentTimeMillis()
+        // Spec 016 paso 6 (espejo): lo hecho manda sobre lo apuntado.
+        if (schedule != null) {
+            schedule.setScheduled(
+                HistoryCalcs.dateKeyOf(detail.session.startedAt, zone),
+                detail.session.routineId
+            )
+        }
         // El historial alimenta el prefill de la próxima apertura.
         history.update { map ->
             var next = map
