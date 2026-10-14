@@ -36,7 +36,7 @@ Mergeados en `main` tras 011: `012-buscador-gifs` (PR #17, buscador escribible +
 expandir), `014-perfil-enfoque-crear-rutina` (PR #19, chips de enfoque legibles a 360dp + preview que navega a
 `routineEdit` nuevo) y `01-reparacion-bugs` (PR #20, sin spec: retoques `HomeScreen` + `RoutineEditScreen`,
 ver apéndice en `README.md`).
-En rama `015-calendario-progreso` (verificado 13/13, pendiente merge): `015-calendario-progreso`
+Mergeado en `main` tras 014: `015-calendario-progreso` (PR #22): `015-calendario-progreso`
 (`feature/history/` nuevo con `CalendarScreen`/`ProgressScreen` + ViewModels, `domain/model/History.kt`
 con `ScheduledDay`/`MonthDay`/`HistoryCalcs`, tabla `scheduled_days` + `ScheduledDayDao`, DB v3 +
 `MIGRATION_2_3`, `ScheduleRepository` Room + falso + `ScheduleMapper`, progreso y etiquetas reales en
@@ -44,11 +44,19 @@ con `ScheduledDay`/`MonthDay`/`HistoryCalcs`, tabla `scheduled_days` + `Schedule
 tests `HistoryCalcsTest`/`ScheduleFakeTest` + `ScheduledDayDaoTest`/`Migration23Test` + `CalendarSmokeTest`;
 36/36 instrumentados en emulador y en físico —físico vía `am instrument` porque MIUI rechaza el `-g` de AGP—;
 fix mínimo ajeno al spec: `performImeAction()` en `RoutineEditSmokeTest`).
+Mergeado en `main` tras 015: `016-sesion-edicion` (PR #23, spec en `implementado`): ⋮ con "Editar rutina"/
+"Salir del entrenamiento", "+ Añadir serie" que clona la última con doble escritura transaccional
+(serie viva + planificada, `@Upsert`, borrado lógico), swipe solo en pendientes con "¿Borrar?",
+auto-reemplazo del apunte al finalizar otra rutina + aviso en Descartar; verificado 11/11 (`assembleDebug` OK,
+`testDebugUnitTest` 62/62 con `WorkoutLiveEditTest` 7/7, emulador 42/42 con `Workout016LiveEditTest` 6/6;
+físico bloqueado por MIUI `INSTALL_FAILED_USER_RESTRICTED`).
+Mergeado en `main` tras 016: `017-picker-alto-completo` (PR #24, spec en `implementado`): picker a alto
+completo (`fillMaxHeight(0.88f)` → `1f` en `ExercisePickerSheet.kt:159`), resto intacto; verificado
+(`assembleDebug` OK, `testDebugUnitTest` 62/62, `PickerSearchTest` 4/4 en emulador; físico bloqueado mismo MIUI).
 Deuda: los `Fake*Repository` de Fase A conviven con los Room pero ya no se inyectan (Hilt usa los Room);
 marcados como deuda a borrar en cuanto dejen de estar en uso, no borrar aún sin confirmar.
 (`FakeScheduleRepository` es nuevo del 015 y sí se usa en tests JVM.)
-Siguiente: mergear 015, luego `016-sesion-edicion` (Borrador en `specs/`, ⋮ en vivo + añadir serie +
-swipe borrar + auto-reemplazo apunte) y `017-picker-alto-completo`, más tarde CUSTOM (MVP-3) / Fase D Spring/MySQL.
+Siguiente: `018-guardar-rutina-scroll` (Borrador en `specs/`), más tarde CUSTOM (MVP-3) / Fase D Spring/MySQL.
 Punto de control: `docs/01-punto-actual-2026-10-08.md` (revisión 2026-10-08, desactualizado: dice 010 sin
 mergear) + `docs/fotos-referencia.md` (dorados Roborazzi + regeneración) y `docs/revision-tarde.md`
 (borrador, hora pendiente) del spec 011.
@@ -89,7 +97,8 @@ El agente trabaja Kotlin en `app/src/main/`, recursos y documentación.
 
 - Compilar: `./gradlew assembleDebug` (requiere Android SDK; `local.properties` con `sdk.dir`, no se versiona).
 - Tests: `./gradlew testDebugUnitTest` (botes `AppColors/AppDimens` + `CatalogMappingTest` 5/5 en `data/mapper` +
-  reglas `RoutineRules/WorkoutPrefill` con fakes + filtro ES en `data/repository` + fotos Roborazzi Home y tarjeta + `ExampleUnitTest` de plantilla).
+  reglas `RoutineRules/WorkoutPrefill` con fakes + filtro ES en `data/repository` + fotos Roborazzi Home y tarjeta + `ExampleUnitTest` de plantilla +
+  `WorkoutLiveEditTest` 7/7 (016); total 62/62 en verde).
 - Puerta CI: `.github/workflows/blindaje.yml` (`setup-android@v4`, `assembleDebug` + `testDebugUnitTest` en cada
   PR/push a `main`; exigir el check en Settings > Branches > main).
 - Verificación: **emulador Pixel 6 API 34** (`emulator-5554`) **+ dispositivo físico, de forma automática**;
@@ -99,8 +108,8 @@ El agente trabaja Kotlin en `app/src/main/`, recursos y documentación.
   de test con `-g` y MIUI lo rechaza (`SecurityException`) → fallback: `adb install` manual + `am instrument`
   (verificado 36/36 en 015).
 - Tests auto: `testDebugUnitTest` (JVM) + `connectedDebugAndroidTest` (DAO `ExerciseDaoTest` + `Migration12Test` +
-  `ScheduledDayDaoTest` + `Migration23Test` + smokes `feature/home|routines|workout|history` movidos a su espejo, con `testTag`;
-  smoke detalle pendiente);
+  `ScheduledDayDaoTest` + `Migration23Test` + smokes `feature/home|routines|workout|history` movidos a su espejo + `Workout016LiveEditTest` 6/6 (016) +
+  `PickerSearchTest` 4/4 (012/017), con `testTag`; 42/42 en emulador; smoke detalle pendiente);
   `testTag` en raíces/CTAs (`profileRoot/profileSave`, `homeRoot/homeDock/routineCard:<id>`,
   `routineEditRoot/routineEditAddExercise/routineEditSave`, `workoutRoot/workoutFinish/restOverlay).
 - Proyecto: `applicationId`/`namespace` `com.mytrainingplan.app`, `minSdk 26`, `compileSdk/targetSdk 37`, Java 17.
@@ -108,8 +117,8 @@ El agente trabaja Kotlin en `app/src/main/`, recursos y documentación.
 ## Arquitectura objetivo (al implementar)
 
 - Un solo módulo `app`. Flujo final: `feature/* Screen → ViewModel(StateFlow) → Repository → Room`; Retrofit solo rellena la DB.
-- Plan acordado: **Fase A maquetación primero** (5 vistas `references/` UI-first con `ViewModel` fake + repo fake misma firma + `NavHost` condicional `¿hay perfil? home:profile`, sin Room), luego **Fase B Room local (hecha, v3)**, **catálogo hecho (007+010)**, **buscador+GIF hecho (012)**, **sesión-vivo-fixes hecho (013)**, **perfil-enfoque hecho (014)**, **calendario-progreso hecho (015, pendiente merge)** y **Fase D Spring/MySQL**.
-- Progreso Fase A: 5/5 hechas (las 5 vistas + `NavHost` con `home/calendar/progress/profile/routineEdit/workout/exerciseDetail` ya cableados); Fase B + 007/008/009/010/011/012/013/014 mergeados en `main`; en curso 015 en rama `015-calendario-progreso` (verificado 13/13, pendiente merge), siguiente `016-sesion-edicion` + `017-picker-alto-completo`.
+- Plan acordado: **Fase A maquetación primero** (5 vistas `references/` UI-first con `ViewModel` fake + repo fake misma firma + `NavHost` condicional `¿hay perfil? home:profile`, sin Room), luego **Fase B Room local (hecha, v3)**, **catálogo hecho (007+010)**, **buscador+GIF hecho (012)**, **sesión-vivo-fixes hecho (013)**, **perfil-enfoque hecho (014)**, **calendario-progreso hecho (015)** y **sesión-edición (016) + picker-alto (017) hechos** y **Fase D Spring/MySQL**.
+- Progreso Fase A: 5/5 hechas (las 5 vistas + `NavHost` con `home/calendar/progress/profile/routineEdit/workout/exerciseDetail` ya cableados); Fase B + 007/008/009/010/011/012/013/014/015/016/017 mergeados en `main`; siguiente `018-guardar-rutina-scroll` (Borrador en `specs/`).
 - Carpetas: `core/{di,network,datastore,ui}`, `data/{local/{entity,dao},remote/{dto},mapper,repository}`, `domain/model`, `feature/{profile,home,exercises,routines,workout,history}`. Cada `feature/` = `Screen` + `ViewModel` (`exercises` tiene Picker + Detail; `history` tiene Calendar + Progress).
 - Mapeo `DTO/Entity ⇄ dominio` en `data/mapper`; la UI solo ve `domain/model`, nunca Entity ni DTO.
 - Sin casos de uso ni módulos extra hasta que duelan. Versiones solo vía catálogo `gradle/libs.versions.toml`.

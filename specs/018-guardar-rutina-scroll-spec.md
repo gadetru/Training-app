@@ -1,5 +1,5 @@
 # Guardar rutina con barra auto-oculta
-Estado: Borrador
+Estado: aprobado
 Depende de: specs/004-editar-rutina-spec.md (el constructor con su pie fijo); se implementa sobre la rama 016-sesion-edicion
 Fecha de creación: 2026-10-14
 Descripción: El pie fijo "Finalizar y Guardar Rutina" tapa contenido al editar. La barra se oculta al bajar y reaparece al subir (patrón oficial M3), sin mover el botón de sitio.
