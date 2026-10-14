@@ -39,8 +39,10 @@ import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.BottomAppBarDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
@@ -72,7 +74,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.painter.ColorPainter
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -173,6 +178,7 @@ fun RoutineEditScreen(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RoutineEditContent(
     uiState: RoutineEditUiState,
@@ -196,10 +202,19 @@ fun RoutineEditContent(
     // Cabecera MetaCard colapsable: por defecto expandida; colapsada deja
     // solo el título para que el constructor respire con rutinas grandes.
     var metaExpanded by rememberSaveable { mutableStateOf(true) }
+    // Spec 018: pie auto-oculto tipo exitAlways de M3 (Context7 ID
+    // /websites/developer_android_reference_kotlin_androidx_compose_material3):
+    // se conecta al scroll de la columna y desplaza el pie según la dirección.
+    // M3 lo desactiva solo con TalkBack; sin scroll el pie queda visible.
+    val scrollState = rememberScrollState()
+    val footerBehavior = BottomAppBarDefaults.exitAlwaysScrollBehavior(
+        canScroll = { scrollState.canScrollForward || scrollState.canScrollBackward }
+    )
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(AppColors.Bg)
+            .nestedScroll(footerBehavior.nestedScrollConnection)
             .testTag("routineEditRoot")
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
@@ -211,7 +226,7 @@ fun RoutineEditContent(
             Column(
                 modifier = Modifier
                     .weight(1f)
-                    .verticalScroll(rememberScrollState())
+                    .verticalScroll(scrollState)
                     // Con el teclado abierto el rango de scroll sube sobre él;
                     // si no, "Añadir Serie" y el campo enfocado quedan tapados.
                     .imePadding()
@@ -258,7 +273,18 @@ fun RoutineEditContent(
             durationMin = uiState.durationMin,
             isSaving = uiState.isSaving,
             onSave = onSave,
-            modifier = Modifier.align(Alignment.BottomCenter)
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .onSizeChanged {
+                    // El límite negativo es la altura propia: ocultar = bajarla entera.
+                    footerBehavior.state.heightOffsetLimit = -it.height.toFloat()
+                }
+                .graphicsLayer {
+                    // heightOffset: 0 visible → límite oculto; se aplica negado como
+                    // el BottomAppBar de M3 (el pie baja al esconderse). La animación
+                    // de snap/fling del behavior mueve el valor de forma continua.
+                    translationY = -footerBehavior.state.heightOffset
+                }
         )
         if (showNameDialog) {
             NameDialog(
