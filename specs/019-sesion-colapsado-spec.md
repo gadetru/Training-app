@@ -59,11 +59,11 @@ Solo `feature/workout` (`WorkoutViewModel.kt:75-88`: defecto primer-pendiente-ex
 ## Preguntas abiertas
 - Decidido: disparador al cerrar el descanso (con 0 s, al marcar); estado en mapa de pantalla re-expandible; se reutiliza el colapsado sin distintivo; todos colapsados sin excepción + avance auto al siguiente; JVM + smoke nuevo; depende de 016 + 013.
 ## 11. Checklist verificación (última, checkboxes listos para /verifier)
-- [ ] Al abrir la sesión todos los ejercicios están colapsados.
-- [ ] Al cerrarse el descanso de la última serie, el ejercicio se colapsa.
-- [ ] Tras el colapso auto, el siguiente pendiente aparece expandido.
-- [ ] Sin pendientes restantes, nada se expande.
-- [ ] Un tap re-expande un ejercicio auto-colapsado.
-- [ ] `./gradlew assembleDebug` termina OK.
-- [ ] `./gradlew testDebugUnitTest` termina en verde.
-- [ ] `./gradlew connectedDebugAndroidTest` en verde en emulador y en físico.
+- [x] Al abrir la sesión todos los ejercicios están colapsados.
+- [x] Al cerrarse el descanso de la última serie, el ejercicio se colapsa.
+- [x] Tras el colapso auto, el siguiente pendiente aparece expandido.
+- [x] Sin pendientes restantes, nada se expande.
+- [x] Un tap re-expande un ejercicio auto-colapsado.
+- [x] `./gradlew assembleDebug` termina OK.
+- [x] `./gradlew testDebugUnitTest` termina en verde.
+- [x] `./gradlew connectedDebugAndroidTest` en verde en emulador y en físico.
