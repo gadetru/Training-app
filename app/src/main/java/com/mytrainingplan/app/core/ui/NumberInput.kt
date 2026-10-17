@@ -15,10 +15,17 @@ object NumberInput {
     /**
      * Dígitos + un separador decimal (`,` → `.`). Respeta `0.x`, un punto final al
      * teclear y un punto suelto. Máximo un punto; los siguientes se descartan.
+     * Un signo inicial `+` (lastre) / `-` (ayuda) se preserva para el KG.
      */
     fun sanitizeDecimal(raw: String): String {
-        val only = raw.replace(',', '.').filter { c -> c.isDigit() || c == '.' }
-        if (only.isEmpty()) return ""
+        var resto = raw
+        var signo = ""
+        if (resto.startsWith("+") || resto.startsWith("-")) {
+            signo = resto.substring(0, 1)
+            resto = resto.substring(1)
+        }
+        val only = resto.replace(',', '.').filter { c -> c.isDigit() || c == '.' }
+        if (only.isEmpty()) return if (signo.isNotEmpty()) signo else ""
         val dotIdx = only.indexOf('.')
         val intPart = if (dotIdx < 0) only else only.substring(0, dotIdx)
         var fracPart = if (dotIdx < 0) "" else only.substring(dotIdx + 1).filter { it != '.' }
@@ -27,6 +34,7 @@ object NumberInput {
             val intShow = if (intTrimmed.isNotEmpty()) intTrimmed
             else if (intPart.isNotEmpty()) "0"
             else ""
+            append(signo)
             append(intShow)
             if (dotIdx >= 0) {
                 if (intShow.isEmpty() && fracPart.isNotEmpty()) append("0")

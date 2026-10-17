@@ -54,6 +54,7 @@ import androidx.compose.ui.unit.sp
 import com.mytrainingplan.app.domain.model.Profile
 import com.mytrainingplan.app.domain.model.TrainingGoal
 import com.mytrainingplan.app.domain.model.TrainingLevel
+import com.mytrainingplan.app.core.ui.NumberInput
 
 // Tokens references/plantilla-usuario/DESIGN.md + code.html
 private val Bg = Color(0xFF111316)
@@ -100,17 +101,9 @@ fun ProfileScreen(
         heightText = heightText,
         weightText = weightText,
         onDisplayName = { displayName = it },
-        onAge = { ageText = it.filter { c -> c.isDigit() }.take(3) },
-        onHeight = { heightText = it.filter { c -> c.isDigit() }.take(3) },
-        onWeight = {
-            // decimal simple con un solo punto
-            val filtered = it.filter { c -> c.isDigit() || c == '.' || c == ',' }
-                .replace(',', '.')
-            val parts = filtered.split('.')
-            val normalized = if (parts.size <= 2) filtered
-            else parts[0] + "." + parts.drop(1).joinToString("")
-            weightText = normalized.take(6)
-        },
+        onAge = { ageText = NumberInput.sanitizeInt(it).take(3) },
+        onHeight = { heightText = NumberInput.sanitizeInt(it).take(3) },
+        onWeight = { weightText = NumberInput.sanitizeDecimal(it).take(6) },
         onLevel = { levelIndex = it.ordinal },
         onGoal = { goalIndex = it.ordinal },
         onAvatarClick = { /* TODO picker + Coil */ },
