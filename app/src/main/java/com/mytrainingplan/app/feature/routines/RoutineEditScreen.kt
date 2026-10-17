@@ -91,6 +91,7 @@ import androidx.compose.ui.unit.Dp
 import com.mytrainingplan.app.ui.theme.AppColors
 import com.mytrainingplan.app.ui.theme.AppDimens
 import com.mytrainingplan.app.ui.theme.AppTextSizes
+import com.mytrainingplan.app.core.ui.NumberInput
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import coil.decode.BitmapFactoryDecoder
@@ -436,7 +437,7 @@ private fun MetaCard(
             Spacer(Modifier.width(AppDimens.SpaceMd))
             BasicTextField(
                 value = durationMin.toString(),
-                onValueChange = { raw -> raw.toIntOrNull()?.let(onDurationChange) },
+                onValueChange = { raw -> NumberInput.sanitizeInt(raw).toIntOrNull()?.let(onDurationChange) },
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 textStyle = TextStyle(
@@ -1087,7 +1088,10 @@ private fun CellInput(
     val keyboard = LocalSoftwareKeyboardController.current
     BasicTextField(
         value = draft,
-        onValueChange = { draft = it },
+        onValueChange = { draft = when (keyboardType) {
+            KeyboardType.Decimal -> NumberInput.sanitizeDecimal(it)
+            else -> NumberInput.sanitizeInt(it)
+        } },
         singleLine = true,
         keyboardOptions = KeyboardOptions(keyboardType = keyboardType, imeAction = ImeAction.Done),
         keyboardActions = KeyboardActions(

@@ -78,6 +78,7 @@ import androidx.compose.ui.unit.IntOffset
 import com.mytrainingplan.app.ui.theme.AppColors
 import com.mytrainingplan.app.ui.theme.AppDimens
 import com.mytrainingplan.app.ui.theme.AppTextSizes
+import com.mytrainingplan.app.core.ui.NumberInput
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.mytrainingplan.app.domain.model.Exercise
 import com.mytrainingplan.app.domain.model.PlannedSet
@@ -1128,21 +1129,21 @@ private fun SetEditDialog(
                 SetEditField(
                     label = "KG (con signo: + lastre, - ayuda)",
                     value = kgText,
-                    onValue = { kgText = it },
+                    onValue = { kgText = NumberInput.sanitizeDecimal(it) },
                     keyboardType = KeyboardType.Decimal,
                     testTag = "setEditKg"
                 )
                 SetEditField(
                     label = "REPS",
                     value = repsText,
-                    onValue = { repsText = it },
+                    onValue = { repsText = NumberInput.sanitizeInt(it) },
                     keyboardType = KeyboardType.Number,
                     testTag = "setEditReps"
                 )
                 SetEditField(
                     label = "PAUSA (segundos)",
                     value = restText,
-                    onValue = { restText = it },
+                    onValue = { restText = NumberInput.sanitizeInt(it) },
                     keyboardType = KeyboardType.Number,
                     testTag = "setEditRest"
                 )
