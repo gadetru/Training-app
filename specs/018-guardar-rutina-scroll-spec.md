@@ -1,5 +1,5 @@
 # Guardar rutina con barra auto-oculta
-Estado: Borrador
+Estado: implementado
 Depende de: specs/004-editar-rutina-spec.md (el constructor con su pie fijo); se implementa sobre la rama 016-sesion-edicion
 Fecha de creación: 2026-10-14
 Descripción: El pie fijo "Finalizar y Guardar Rutina" tapa contenido al editar. La barra se oculta al bajar y reaparece al subir (patrón oficial M3), sin mover el botón de sitio.
@@ -52,10 +52,10 @@ Solo UI de `feature/routines` (`RoutineEditScreen.kt:199-262`, columna con scrol
 - Decidido: número 018 (el 017 queda reservado al picker); base la rama 016; solo el editor; verificación en ambos dispositivos.
 - ¿Animación de ocultado: deslizamiento (defecto M3) o fundido?
 ## 11. Checklist verificación (última, checkboxes listos para /verifier)
-- [ ] Al bajar, el pie desaparece y la última serie queda a la vista.
-- [ ] Al subir, el pie reaparece sin pulsar nada.
-- [ ] "Finalizar y Guardar Rutina" guarda igual que antes.
-- [ ] El Guardar de la cabecera sigue funcionando.
-- [ ] `./gradlew assembleDebug` termina OK.
-- [ ] `./gradlew testDebugUnitTest` termina en verde.
-- [ ] `./gradlew connectedDebugAndroidTest` en verde en emulador y en físico.
+- [x] Al bajar, el pie desaparece y la última serie queda a la vista.
+- [x] Al subir, el pie reaparece sin pulsar nada.
+- [x] "Finalizar y Guardar Rutina" guarda igual que antes.
+- [x] El Guardar de la cabecera sigue funcionando.
+- [x] `./gradlew assembleDebug` termina OK.
+- [x] `./gradlew testDebugUnitTest` termina en verde.
+- [x] `./gradlew connectedDebugAndroidTest` en verde en emulador y en físico.
