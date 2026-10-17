@@ -34,7 +34,9 @@ Mergeados en `main` tras 011: `012-buscador-gifs` (PR #17, buscador escribible +
 `coil-gif` lote D + hero animado en ficha con thumbs quietos + test JVM del filtro), `013-sesion-vivo-fixes`
 (PR #18, modal numérico KG/REPS/PAUSA + cronómetro detenido con Comenzar/Pausar/Reanudar + tap único para
 expandir), `014-perfil-enfoque-crear-rutina` (PR #19, chips de enfoque legibles a 360dp + preview que navega a
-`routineEdit` nuevo) y `01-reparacion-bugs` (PR #20, sin spec: retoques `HomeScreen` + `RoutineEditScreen`,
+`routineEdit` nuevo), `016-sesion-edicion` (PR #23, ⋮ en vivo + añadir serie + swipe borrar +
+auto-reemplazo apunte) y `017-picker-alto-completo` (PR #24, vista completa en editar rutina) y
+`01-reparacion-bugs` (PR #20, sin spec: retoques `HomeScreen` + `RoutineEditScreen`,
 ver apéndice en `README.md`).
 En rama `015-calendario-progreso` (verificado 13/13, pendiente merge): `015-calendario-progreso`
 (`feature/history/` nuevo con `CalendarScreen`/`ProgressScreen` + ViewModels, `domain/model/History.kt`
@@ -47,8 +49,9 @@ fix mínimo ajeno al spec: `performImeAction()` en `RoutineEditSmokeTest`).
 Deuda: los `Fake*Repository` de Fase A conviven con los Room pero ya no se inyectan (Hilt usa los Room);
 marcados como deuda a borrar en cuanto dejen de estar en uso, no borrar aún sin confirmar.
 (`FakeScheduleRepository` es nuevo del 015 y sí se usa en tests JVM.)
-Siguiente: mergear 015, luego `016-sesion-edicion` (Borrador en `specs/`, ⋮ en vivo + añadir serie +
-swipe borrar + auto-reemplazo apunte) y `017-picker-alto-completo`, más tarde CUSTOM (MVP-3) / Fase D Spring/MySQL.
+Siguiente: mergear 015 (rama `015-calendario-progreso`, pendiente), luego `019-sesion-colapsado`
+(rama `019-sesion-colapsado`, verificado 8/8, pendiente merge) y después `020-ceros-izquierda-modal`,
+`021-sustituir-ejercicio`, `022-retomar-minimizada`, más tarde CUSTOM (MVP-3) / Fase D Spring/MySQL.
 Punto de control: `docs/01-punto-actual-2026-10-08.md` (revisión 2026-10-08, desactualizado: dice 010 sin
 mergear) + `docs/fotos-referencia.md` (dorados Roborazzi + regeneración) y `docs/revision-tarde.md`
 (borrador, hora pendiente) del spec 011.
@@ -108,8 +111,8 @@ El agente trabaja Kotlin en `app/src/main/`, recursos y documentación.
 ## Arquitectura objetivo (al implementar)
 
 - Un solo módulo `app`. Flujo final: `feature/* Screen → ViewModel(StateFlow) → Repository → Room`; Retrofit solo rellena la DB.
-- Plan acordado: **Fase A maquetación primero** (5 vistas `references/` UI-first con `ViewModel` fake + repo fake misma firma + `NavHost` condicional `¿hay perfil? home:profile`, sin Room), luego **Fase B Room local (hecha, v3)**, **catálogo hecho (007+010)**, **buscador+GIF hecho (012)**, **sesión-vivo-fixes hecho (013)**, **perfil-enfoque hecho (014)**, **calendario-progreso hecho (015, pendiente merge)** y **Fase D Spring/MySQL**.
-- Progreso Fase A: 5/5 hechas (las 5 vistas + `NavHost` con `home/calendar/progress/profile/routineEdit/workout/exerciseDetail` ya cableados); Fase B + 007/008/009/010/011/012/013/014 mergeados en `main`; en curso 015 en rama `015-calendario-progreso` (verificado 13/13, pendiente merge), siguiente `016-sesion-edicion` + `017-picker-alto-completo`.
+- Plan acordado: **Fase A maquetación primero** (5 vistas `references/` UI-first con `ViewModel` fake + repo fake misma firma + `NavHost` condicional `¿hay perfil? home:profile`, sin Room), luego **Fase B Room local (hecha, v3)**, **catálogo hecho (007+010)**, **buscador+GIF hecho (012)**, **sesión-vivo-fixes hecho (013)**, **perfil-enfoque hecho (014)**, **calendario-progreso hecho (015, pendiente merge)**, **sesión-colapsado hecho (019, pendiente merge)** y **Fase D Spring/MySQL**.
+- Progreso Fase A: 5/5 hechas (las 5 vistas + `NavHost` con `home/calendar/progress/profile/routineEdit/workout/exerciseDetail` ya cableados); Fase B + 007/008/009/010/011/012/013/014/016/017 mergeados en `main`; en curso 015 en rama `015-calendario-progreso` (verificado 13/13, pendiente merge) + 019 en rama `019-sesion-colapsado` (verificado 8/8, pendiente merge).
 - Carpetas: `core/{di,network,datastore,ui}`, `data/{local/{entity,dao},remote/{dto},mapper,repository}`, `domain/model`, `feature/{profile,home,exercises,routines,workout,history}`. Cada `feature/` = `Screen` + `ViewModel` (`exercises` tiene Picker + Detail; `history` tiene Calendar + Progress).
 - Mapeo `DTO/Entity ⇄ dominio` en `data/mapper`; la UI solo ve `domain/model`, nunca Entity ni DTO.
 - Sin casos de uso ni módulos extra hasta que duelan. Versiones solo vía catálogo `gradle/libs.versions.toml`.
