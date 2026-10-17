@@ -72,19 +72,17 @@ class WorkoutViewModel @Inject constructor(
                 isSaving = e.isSaving
             )
         } else {
-            // Por defecto solo el primer ejercicio pendiente va expandido
-            // (completados colapsados, pendientes contraídos); el mapa solo
-            // guarda los toques del usuario.
-            val firstPending = d.items.indexOfFirst { item ->
-                item.entries.any { !it.done }
-            }
-            val items = d.items.mapIndexed { index, item ->
+            // Spec 019 paso 1: todos colapsados al abrir, sin excepción
+            // (el mapa solo guarda los toques del usuario).
+            val items = d.items.map { item ->
                 WorkoutExerciseUi(
                     routineExercise = item.routineExercise,
                     exercise = item.exercise,
                     entries = item.entries.sortedBy { it.setNumber },
                     planned = item.planned.sortedBy { it.setNumber },
-                    expanded = e.expanded[item.routineExercise.id] ?: (index == firstPending)
+                    expanded = WorkoutExpandRules.defaultExpanded(
+                        e.expanded, item.routineExercise.id
+                    )
                 )
             }
             val all = items.flatMap { it.entries }
@@ -111,6 +109,9 @@ class WorkoutViewModel @Inject constructor(
         viewModelScope.launch {
             while (true) {
                 delay(1_000)
+                // Spec 019 paso 2: al cerrarse el descanso a 0, colapso auto
+                // + avance al siguiente (misma regla que onRestFinish).
+                var closedEntryId: String? = null
                 ephemeral.update { cur ->
                     if (cur.isPaused) return@update cur
                     val ticked = if (sessionId.value != null) {
@@ -121,12 +122,15 @@ class WorkoutViewModel @Inject constructor(
                     val rest = ticked.restRemainingSec
                     if (rest != null) {
                         // A 0 se cierra solo, sin crash.
-                        if (rest <= 1) ticked.copy(restRemainingSec = null, restEntryId = null)
-                        else ticked.copy(restRemainingSec = rest - 1)
+                        if (rest <= 1) {
+                            closedEntryId = ticked.restEntryId
+                            ticked.copy(restRemainingSec = null, restEntryId = null)
+                        } else ticked.copy(restRemainingSec = rest - 1)
                     } else {
                         ticked
                     }
                 }
+                if (closedEntryId != null) autoCollapseAndAdvance(closedEntryId!!)
             }
         }
     }
@@ -147,24 +151,14 @@ class WorkoutViewModel @Inject constructor(
     }
 
     /**
-     * Spec 013 paso 4: niega el estado EFECTIVO (toque previo o defecto
-     * primer pendiente, igual que el `combine`), no `?: true`: si no,
-     * expandir una tarjeta colapsada por defecto costaba 2 taps (el 1º
+     * Spec 013 paso 4 + spec 019 paso 1: niega el estado EFECTIVO (toque
+     * previo o defecto colapsado, igual que el `combine`), no `?: true`: si
+     * no, expandir una tarjeta colapsada por defecto costaba 2 taps (el 1º
      * guardaba `false`, que ya era su estado visible).
      */
     fun onToggleExpanded(routineExerciseId: String) {
-        val items = detail.value?.items ?: emptyList()
-        val firstPending = items.indexOfFirst { item ->
-            item.entries.any { !it.done }
-        }
         ephemeral.update { cur ->
-            val index = items.indexOfFirst { it.routineExercise.id == routineExerciseId }
-            val current = cur.expanded[routineExerciseId]
-                ?: (index != -1 && index == firstPending)
-            cur.copy(
-                expanded = cur.expanded +
-                    (routineExerciseId to !current)
-            )
+            cur.copy(expanded = WorkoutExpandRules.toggle(cur.expanded, routineExerciseId))
         }
     }
 
@@ -186,6 +180,24 @@ class WorkoutViewModel @Inject constructor(
         val deltaRest = safeRest - baseRest
         if (deltaRest != 0) {
             viewModelScope.launch { repository.adjustRest(sid, entryId, deltaRest) }
+        }
+    }
+
+    /**
+     * Spec 019 paso 2: al cerrarse el descanso (a 0 o con Terminar) o al
+     * marcar la última serie sin descanso, si el ejercicio queda sin
+     * pendientes se colapsa y se expande el primer pendiente siguiente en
+     * orden. Si no quedan, solo colapsa. Estado solo de pantalla (mapa
+     * `expanded`); el tap manual posterior pisa lo automático. La serie
+     * disparadora se trata como hecha (el flow de Room puede ir con retardo
+     * tras `toggleSetDone`).
+     */
+    private fun autoCollapseAndAdvance(finishedEntryId: String) {
+        val items = detail.value?.items ?: return
+        ephemeral.update { cur ->
+            val next = WorkoutExpandRules.afterClose(items, cur.expanded, finishedEntryId)
+                ?: return@update cur
+            cur.copy(expanded = next)
         }
     }
 
@@ -215,6 +227,10 @@ class WorkoutViewModel @Inject constructor(
                             restEntryId = entryId
                         )
                     }
+                } else {
+                    // Spec 019 paso 2: sin descanso (0 s) el colapso y el
+                    // avance ocurren al marcar la última serie.
+                    autoCollapseAndAdvance(entryId)
                 }
             }
         }
@@ -232,7 +248,11 @@ class WorkoutViewModel @Inject constructor(
 
     /** `Terminar descanso`: cierra el overlay sin crash. */
     fun onRestFinish() {
+        // Spec 019 paso 2: al cerrar (Terminar o tick a 0), colapso auto +
+        // avance al siguiente si el ejercicio queda sin pendientes.
+        val finishedEntryId = ephemeral.value.restEntryId
         ephemeral.update { it.copy(restRemainingSec = null, restEntryId = null) }
+        if (finishedEntryId != null) autoCollapseAndAdvance(finishedEntryId)
     }
 
     /** Spec 013 paso 3: alterna Comenzar → Pausar → Reanudar (sin lógica de repo). */

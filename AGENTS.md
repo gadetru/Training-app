@@ -34,7 +34,9 @@ Mergeados en `main` tras 011: `012-buscador-gifs` (PR #17, buscador escribible +
 `coil-gif` lote D + hero animado en ficha con thumbs quietos + test JVM del filtro), `013-sesion-vivo-fixes`
 (PR #18, modal numérico KG/REPS/PAUSA + cronómetro detenido con Comenzar/Pausar/Reanudar + tap único para
 expandir), `014-perfil-enfoque-crear-rutina` (PR #19, chips de enfoque legibles a 360dp + preview que navega a
-`routineEdit` nuevo) y `01-reparacion-bugs` (PR #20, sin spec: retoques `HomeScreen` + `RoutineEditScreen`,
+`routineEdit` nuevo), `016-sesion-edicion` (PR #23, ⋮ en vivo + añadir serie + swipe borrar +
+auto-reemplazo apunte) y `017-picker-alto-completo` (PR #24, vista completa en editar rutina) y
+`01-reparacion-bugs` (PR #20, sin spec: retoques `HomeScreen` + `RoutineEditScreen`,
 ver apéndice en `README.md`).
 Mergeado en `main` tras 014: `015-calendario-progreso` (PR #22): `015-calendario-progreso`
 (`feature/history/` nuevo con `CalendarScreen`/`ProgressScreen` + ViewModels, `domain/model/History.kt`

@@ -19,4 +19,7 @@ dejado.
 # 3-Crear rutina: 
 - Esta vista, al abrir, debe mostrar la primera pestaña con nombre de rutina, duracion etc, colapsado
 - El dato de duración de la rutina, debe aparecer vacío. A medida que se añadan ejercicios, se hará 
-una suma de todos los tiempos de descanso + 30 seg por serie y pondrá que la duración es aprox
+una suma de todos los tiempos de descanso + 30 seg por serie y pondrá que la duración es aprox. Una vez
+completada la sesión de entrenamiento, éste dato se actualizará con el tiempo real realizado ese día.
+Cada día que la rutina se complete, ese valor quedará guardado como el valor final de la rutina. Mas 
+Adelante lo quiero utilizar para la estadística de progreso.

@@ -13,6 +13,10 @@ App Android para planificar rutinas y registrar entrenos de fuerza. Funciona sin
 > calendario-progreso (rama `015-calendario-progreso`, verificado 13/13, pendiente merge: mes + progreso
 > reales, `scheduled_days`, DB v3 + `MIGRATION_2_3`, `PlaceholderTabs` borrado, 36/36 instrumentados en
 > emulador y en físico).
+> sesión-colapsada con avance automático (spec 019, rama `019-sesion-colapsado`, verificado 8/8: todos los
+> ejercicios colapsados al abrir, colapso al cerrar el descanso y avance al siguiente pendiente, tap manual
+> re-expande, `assembleDebug` + `testDebugUnitTest` + `connectedDebugAndroidTest` verde en emulador y físico,
+> pendiente merge).
 > Puerta de merge: `assembleDebug` + `testDebugUnitTest` en cada PR/push a `main`.
 > Este README y `docs/` fijan las decisiones de partida; `specs/` recoge lo ya implementado.
 
@@ -93,6 +97,7 @@ firma; Retrofit solo rellena la DB. La UI solo ve `domain/model`. Spec 011: toda
 | Sesión-vivo-fixes (modal numérico KG/REPS/PAUSA + cronómetro detenido con Comenzar/Pausar/Reanudar + tap único para expandir) | Hecha y mergeada (PR #18, `specs/013-sesion-vivo-fixes-spec.md`) |
 | Perfil-enfoque-crear-rutina (chips legibles a 360dp + preview que navega a `routineEdit` nuevo) | Hecha y mergeada (PR #19, `specs/014-perfil-enfoque-crear-rutina-spec.md`) |
 | Calendario-progreso (mes + progreso reales, `scheduled_days`, DB v3 + `MIGRATION_2_3`, `PlaceholderTabs` borrado) | En rama `015-calendario-progreso`, verificado 13/13, pendiente merge (`specs/015-calendario-progreso-spec.md`; 36/36 instrumentados en emulador y en físico) |
+| Sesión colapsada + avance automático (`feature/workout`, `WorkoutViewModel` + `WorkoutExpandRules`) | En rama `019-sesion-colapsado`, verificado 8/8, pendiente merge (`specs/019-sesion-colapsado-spec.md`) |
 
 Desviación conocida: `material-icons-core` solo trae 49 iconos, así que el dock usa fallbacks
 (`List`/`DateRange`/`Star`/`Person`); la fidelidad exacta a los iconos del diseño exigiría `material-icons-extended`.
@@ -194,6 +199,7 @@ Para que una versión actualice a la anterior (y no borre datos):
 
 ### P2 — Sesión en vivo
 - [x] Modal numérico KG/REPS/PAUSA + cronómetro detenido con Comenzar/Pausar/Reanudar + tap único para expandir (PR #18, spec 013).
+- [x] Sesión colapsada al abrir + colapso auto al cerrar descanso y avance al siguiente pendiente; tap manual re-expande (spec 019, rama `019-sesion-colapsado`, 8/8 verificado en emulador y físico, pendiente merge).
 - [ ] `Añadir Ejercicio/Serie en vivo` (picker `003` reutilizado).
 - [ ] Notas/`loadNote` + RPE/DROP en vivo (modelo `Workout.kt:45` lo tiene, UI no).
 - [ ] Descanso avanzado: sonido/vibración, presets (hoy bloqueante + `±10s`).
