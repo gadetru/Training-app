@@ -1,5 +1,5 @@
 # Ceros a la izquierda en los campos numéricos
-Estado: aprobado
+Estado: implementado
 Depende de: specs/013-sesion-vivo-fixes-spec.md (crea el modal de serie) y specs/016-sesion-edicion-spec.md (edición en vivo que usa esos campos)
 Fecha de creación: 2026-10-15
 Descripción: Escribir "012" debe quedar "12". Una sola regla de limpieza de números, compartida por el modal de sesión, las celdas del constructor y el perfil, aplicada mientras se teclea.
@@ -62,10 +62,11 @@ Toca `feature/workout` (`SetEditDialog` en `WorkoutScreen.kt:1107-1148`), `featu
 ## Preguntas abiertas
 - Decidido: `0` suelto se mantiene; `0.5`/`0,5` se respetan; helper compartido; se normaliza al teclear; JVM + smoke; depende de 013 + 016.
 ## 11. Checklist verificación (última, checkboxes listos para /verifier)
-- [ ] Modal de serie: `012` → `12` y `0.5` se mantiene en KG.
-- [ ] Celdas del constructor: `012` → `12` y `0,5` → `0.5`.
-- [ ] Duración de rutina: `012` → `12`.
-- [ ] Perfil: sigue sin ceros iniciales.
-- [ ] `./gradlew assembleDebug` termina OK.
-- [ ] `./gradlew testDebugUnitTest` termina en verde.
-- [ ] `./gradlew connectedDebugAndroidTest` en verde en emulador y en físico.
+- [x] Modal de serie: `012` → `12` y `0.5` se mantiene en KG.
+- [x] Celdas del constructor: `012` → `12` y `0,5` → `0.5`. (código confirmado `RoutineEditScreen.kt:1088-1090`; `RoutineEditSmokeTest` 3/3 pasando en físico POCO F6)
+- [x] Duración de rutina: `012` → `12`. (código confirmado `RoutineEditScreen.kt:439`; sin test dedicado de duración en físico)
+- [x] Perfil: sigue sin ceros iniciales. (código confirmado `ProfileScreen.kt:103-105`; `WorkoutSmokeTest.profile_muestra_titulo_y_cta_guardar` pasando en físico POCO F6)
+- [x] `./gradlew assembleDebug` termina OK.
+- [x] `./gradlew testDebugUnitTest` termina en verde.
+- [x] `./gradlew connectedDebugAndroidTest` en verde en emulador Pixel 6 API 34 (48/48).
+- [x] `./gradlew connectedDebugAndroidTest` en verde en dispositivo físico POCO F6 (ae4a376e, Android 16): 48/48 tests OK, incluido `NumberInputSmokeTest`.
