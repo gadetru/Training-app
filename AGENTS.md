@@ -1,144 +1,73 @@
 # AGENTS.md
 
-## Estado actual (no asumir)
+## Estado (resumen)
 
-Hecho Fase A entera (UI-first en memoria, sin Room), 5/5 vistas:
-`001-plantilla-usuario` (`feature/profile/ProfileScreen` + `domain/model/Profile`),
-`002-vista-principal` (`feature/home/{HomeScreen,HomeViewModel,PlaceholderTabs}` + `domain/model/Home.kt` +
-`data/repository/FakeHomeRepository` con interfaz `HomeRepository` de firma futura),
-`003-lista-ejercicios` (picker `ExercisePickerSheet` + `FakeExerciseRepository`),
-`004-editar-rutina` (`feature/routines/{RoutineEditScreen,RoutineEditViewModel}` + `domain/model/Routine.kt` +
-`FakeRoutineRepository` con borradores separados de guardadas),
-`005-rutina` (sesión en vivo `feature/workout/{WorkoutScreen,WorkoutViewModel}` + `domain/model/Workout.kt` +
-`FakeWorkoutRepository` con prefill última-vs-plan; verificado `assembleDebug` OK).
-`MainActivity.kt` ya no muestra Profile directo: `TrainingNav()` con `NavHost` condicional `¿hay perfil? home:profile`
-(rutas `home/calendar/progress/profile` + `routineEdit?routineId` + `workout?routineId` + `exerciseDetail?exerciseId`;
-`onStart` de Home abre la sesión; el tab Perfil reutiliza `ProfileScreen` sin dock; la ficha abre desde
-picker, editar rutina y sesión con `Uri.encode` por el `/` de `músculo/slug`).
-Hecha Fase B Room local y mergeada en `main` (rama `006-fase-b-room-local`, PR #7): entidades + DAOs con `@Upsert`,
-`exportSchema=true`, repositorios Room con la misma firma que los fakes, Hilt, `CatalogTagStore` (DataStore),
-Retrofit + Gson que solo rellena vía `CatalogSync`, y `CatalogMappingTest` (DTO → dominio → entidad).
-Mergeados en `main` tras Fase B: `007-catalogo-fork` (PR #8, tag `v1.1.0` del fork `gadetru` verificado,
-1323 entradas, `CatalogSync` distingue 404 con `Log` de sin-red, `getById` a `suspend`, DTO camelCase +
-`CatalogResponse`), `008-rutinas-feed` (PR #9, feed único + descarte seguro + `position` sin huecos),
-`009-sesion-persistida` (PR #10, prefill persistido al iniciar + cierre sin fantasmas + log interno).
-En curso nada: `010-detalle-ejercicio` mergeado en `main` (PR #13): ficha `ExerciseDetailScreen` +
-`ExerciseDetailViewModel`, `instructions` en modelo/entidad/mapper/DTO, DB v2 + `MIGRATION_1_2` y re-descarga
-mismo tag; checklist 10/10 en `[x]`.
-Mergeado en `main` tras 010: `011-blindaje-visual-tests-autofix` (PR #14/#15/#16): UI a botes con nombre en
-`ui/theme/` (`Color/Dimensions/Theme/Type`), tests en espejo por paquete y regla en `src/test/` (botes JVM +
-mapper + reglas con falsos + fotos Roborazzi Home y tarjeta) y `src/androidTest/` (DAO + migración + smokes
-movidos a su espejo), puerta de merge `.github/workflows/blindaje.yml` (`assembleDebug` + `testDebugUnitTest`)
-y fix CI autorizado 2026-10-09 (ver abajo): `setup-android@v3` → `@v4` + bit ejecutable en `gradlew`.
-Mergeados en `main` tras 011: `012-buscador-gifs` (PR #17, buscador escribible + filtro por etiqueta ES +
-`coil-gif` lote D + hero animado en ficha con thumbs quietos + test JVM del filtro), `013-sesion-vivo-fixes`
-(PR #18, modal numérico KG/REPS/PAUSA + cronómetro detenido con Comenzar/Pausar/Reanudar + tap único para
-expandir), `014-perfil-enfoque-crear-rutina` (PR #19, chips de enfoque legibles a 360dp + preview que navega a
-`routineEdit` nuevo), `016-sesion-edicion` (PR #23, ⋮ en vivo + añadir serie + swipe borrar +
-auto-reemplazo apunte) y `017-picker-alto-completo` (PR #24, vista completa en editar rutina) y
-`01-reparacion-bugs` (PR #20, sin spec: retoques `HomeScreen` + `RoutineEditScreen`,
-ver apéndice en `README.md`).
-Mergeado en `main` tras 014: `015-calendario-progreso` (PR #22): `015-calendario-progreso`
-(`feature/history/` nuevo con `CalendarScreen`/`ProgressScreen` + ViewModels, `domain/model/History.kt`
-con `ScheduledDay`/`MonthDay`/`HistoryCalcs`, tabla `scheduled_days` + `ScheduledDayDao`, DB v3 +
-`MIGRATION_2_3`, `ScheduleRepository` Room + falso + `ScheduleMapper`, progreso y etiquetas reales en
-`RoomHomeRepository`, `calendar`/`progress` reales en `MainActivity` + `Ver mes`, `PlaceholderTabs` borrado;
-tests `HistoryCalcsTest`/`ScheduleFakeTest` + `ScheduledDayDaoTest`/`Migration23Test` + `CalendarSmokeTest`;
-36/36 instrumentados en emulador y en físico —físico vía `am instrument` porque MIUI rechaza el `-g` de AGP—;
-fix mínimo ajeno al spec: `performImeAction()` en `RoutineEditSmokeTest`).
-Mergeado en `main` tras 015: `016-sesion-edicion` (PR #23, spec en `implementado`): ⋮ con "Editar rutina"/
-"Salir del entrenamiento", "+ Añadir serie" que clona la última con doble escritura transaccional
-(serie viva + planificada, `@Upsert`, borrado lógico), swipe solo en pendientes con "¿Borrar?",
-auto-reemplazo del apunte al finalizar otra rutina + aviso en Descartar; verificado 11/11 (`assembleDebug` OK,
-`testDebugUnitTest` 62/62 con `WorkoutLiveEditTest` 7/7, emulador 42/42 con `Workout016LiveEditTest` 6/6;
-físico bloqueado por MIUI `INSTALL_FAILED_USER_RESTRICTED`).
-Mergeado en `main` tras 016: `017-picker-alto-completo` (PR #24, spec en `implementado`): picker a alto
-completo (`fillMaxHeight(0.88f)` → `1f` en `ExercisePickerSheet.kt:159`), resto intacto; verificado
-(`assembleDebug` OK, `testDebugUnitTest` 62/62, `PickerSearchTest` 4/4 en emulador; físico bloqueado mismo MIUI).
-Deuda: los `Fake*Repository` de Fase A conviven con los Room pero ya no se inyectan (Hilt usa los Room);
-marcados como deuda a borrar en cuanto dejen de estar en uso, no borrar aún sin confirmar.
-(`FakeScheduleRepository` es nuevo del 015 y sí se usa en tests JVM.)
-Siguiente: `018-guardar-rutina-scroll` (Borrador en `specs/`), más tarde CUSTOM (MVP-3) / Fase D Spring/MySQL.
-Punto de control: `docs/01-punto-actual-2026-10-08.md` (revisión 2026-10-08, desactualizado: dice 010 sin
-mergear) + `docs/fotos-referencia.md` (dorados Roborazzi + regeneración) y `docs/revision-tarde.md`
-(borrador, hora pendiente) del spec 011.
-`docs/`, `specs/`, `references/` siguen siendo guía objetivo/diseño, no código hecho.
-Desviación conocida: `material-icons-core` solo trae 49 iconos (fallbacks `List/DateRange/Star/Person` en `HomeScreen.kt:67-82`);
-fidelidad exacta a los iconos del spec exigiría `material-icons-extended` (proponer y esperar).
-Antes de editar, comprueba con `Glob`/`Grep` que el fichero existe; los specs pueden citar rutas futuras.
+- Hechas: Fase A (UI-first, 5/5 vistas), Fase B (Room local) y specs `007` a `017`, todos mergeados en `main`.
+- Siguiente: `018-guardar-rutina-scroll` (Borrador en `specs/`). Más tarde: CUSTOM (MVP-3) y Fase D Spring/MySQL.
+- Detalle por spec, deuda, desviaciones y puntos de control: `docs/estado.md`. Léelo solo si la tarea lo necesita. Lo mantiene `/spec-impl` al cerrar cada spec (entradas "implementado, pendiente de merge"; el usuario las pasa a "mergeado"). Si trabajas fuera de un spec, actualízalo tú al terminar.
+- `docs/`, `specs/` y `references/` son guía de objetivo/diseño, no código hecho. Antes de editar, comprueba con `Glob`/`Grep` que el fichero existe: los specs pueden citar rutas futuras.
+- Deuda: los `Fake*Repository` de Fase A ya no se inyectan (Hilt usa los Room). No borrarlos sin confirmar.
+- Iconos: `material-icons-core` solo trae 49. Para fidelidad exacta haría falta `material-icons-extended`: proponer la línea exacta y esperar.
 
-Fuente de verdad: `README.md` (principios + restricción Gradle), `docs/ARQUITECTURA.md` (capas y carpetas),
-`docs/MODELO_DE_DATOS.md` (entidades y series). Si un spec contradice a estos o al código, avisa y sigue al código.
+Fuente de verdad: `README.md` (principios + restricción Gradle), `docs/ARQUITECTURA.md` (capas y carpetas), `docs/MODELO_DE_DATOS.md` (entidades y series). Si un spec contradice a estos o al código, avisa y sigue al código.
 
 ## Restricción Gradle (obligatoria)
 
 El esqueleto Gradle lo crea y mantiene Android Studio, **no el agente**. No crear, regenerar ni editar:
 `gradlew`, `gradlew.bat`, `gradle/wrapper/`, `settings.gradle.kts`, `gradle.properties`,
 `gradle/libs.versions.toml`, `build.gradle.kts` (raíz y `app/`).
-Excepción lote A consumida: `navigation-compose, lifecycle-viewmodel-compose, material-icons-core, coil-compose`
-ya declarados (`app/build.gradle.kts:42-45`) y en uso (navigation, viewmodel, icons; coil en uso vía `AsyncImage`
-en picker/detalle/editar para thumbs + GIF grande con `coil-gif` = hero animado en ficha y thumbs quietos;
-avatar picker pendiente).
-Excepción lote B consumida (spec 006, mergeado): `room, hilt, datastore-preferences, retrofit + converter-gson`
-ya declarados y en uso (Room/Hilt/DataStore/Retrofit). No añadir más dependencias: `material-icons-extended`
-solo proponer línea exacta y esperar.
-Excepción lote C consumida (spec 011, mergeado PR #14-16): `roborazzi, roborazzi-compose, robolectric`
-(`testImplementation`) + plugin `io.github.takahirom.roborazzi` (`libs.versions.toml:19-20,50-52,60`,
-`app/build.gradle.kts:7,76-80,89-92`) con `testOptions.unitTests.isIncludeAndroidResources=true` y dorados en
-`app/src/test/screenshots` (solo Home + tarjeta).
-Excepción lote D consumida (spec 012, mergeado PR #17, autorizada 2026-10-09): `coil-gif` misma versión que
-`coil` (2.6.0) en `libs.versions.toml:41` + `app/build.gradle.kts`, con `ImageLoaderFactory` global en
-`TrainingApp.kt` (`GifDecoder.Factory()`); hero animado en ficha, thumbs quietos en lista.
-Excepción puntual CI autorizada por el usuario (2026-10-09, PR #16, ya aplicada): `setup-android@v3` → `@v4`
-en `.github/workflows/blindaje.yml` (v3 pedía el paquete obsoleto `tools` → `Failed to find package 'tools'`;
-v4 solo instala `platform-tools` por defecto) + bit ejecutable en `gradlew` (`100644` → `100755`, contenido
-sin cambios). `.github/workflows/` sí lo mantiene el agente; el resto del esqueleto Gradle sigue vetado.
+
+Dependencias ya declaradas y en uso (lotes A–D consumidos): `navigation-compose`, `lifecycle-viewmodel-compose`, `material-icons-core`, `coil-compose`, `coil-gif` (misma versión que `coil`), `room`, `hilt`, `datastore-preferences`, `retrofit` + `converter-gson`, `roborazzi`, `roborazzi-compose`, `robolectric` (más el plugin `io.github.takahirom.roborazzi`).
+**No añadir más.** Si hace falta una nueva, proponer la línea exacta y esperar. Versiones solo vía catálogo `gradle/libs.versions.toml`.
+
+Excepción permanente: `.github/workflows/` sí lo mantiene el agente (usa `setup-android@v4`; `gradlew` debe conservar el bit ejecutable).
+
 El agente trabaja Kotlin en `app/src/main/`, recursos y documentación.
+
+## Ejecución de Gradle (obligatoria)
+
+1. **Un solo Gradle a la vez.** Si Android Studio está sincronizando o compilando, espera o avisa. No lances builds en paralelo.
+2. **Salida a fichero, no a la tubería.** Lanza siempre con `--console=plain` y redirige:
+   `mkdir -p build && ./gradlew <tarea> --console=plain > build/agent.log 2>&1`
+   y lee solo el final (`tail -n 40 build/agent.log`) o filtra con `grep -nE "error|FAILED|BUILD"`.
+3. **Timeout generoso y explícito.** Pasa el parámetro de timeout de la herramienta bash a **600000 ms (10 min)** para `assembleDebug` y `testDebugUnitTest`. No cortes antes: un build en frío, o el primero tras tocar dependencias, Room o KSP, puede tardar varios minutos.
+4. **Si se supera el timeout: no reintentes la misma tarea.** Ejecuta `./gradlew --stop`, anota `bloqueado: build > 10 min`, informa y deja que el usuario compile desde Android Studio.
+5. Nada de `gradle` global ni de regenerar el wrapper.
 
 ## Comandos
 
 - Compilar: `./gradlew assembleDebug` (requiere Android SDK; `local.properties` con `sdk.dir`, no se versiona).
-- Tests: `./gradlew testDebugUnitTest` (botes `AppColors/AppDimens` + `CatalogMappingTest` 5/5 en `data/mapper` +
-  reglas `RoutineRules/WorkoutPrefill` con fakes + filtro ES en `data/repository` + fotos Roborazzi Home y tarjeta + `ExampleUnitTest` de plantilla +
-  `WorkoutLiveEditTest` 7/7 (016); total 62/62 en verde).
-- Puerta CI: `.github/workflows/blindaje.yml` (`setup-android@v4`, `assembleDebug` + `testDebugUnitTest` en cada
-  PR/push a `main`; exigir el check en Settings > Branches > main).
-- Verificación: **emulador Pixel 6 API 34** (`emulator-5554`) **+ dispositivo físico, de forma automática**;
-  se testea en ambos: `adb` + MCP `mobile-mcp` (`list_available_devices` → `list_elements` por `ref` → `click`/`screenshot`/`logs`)
-  y `connectedDebugAndroidTest` como red de seguridad. Si un spec dice explícitamente solo uno, manda el spec y se anota.
-  En físico Xiaomi/MIUI: activar "Instalar vía USB" (si no, `INSTALL_FAILED_USER_RESTRICTED`); AGP instala el APK
-  de test con `-g` y MIUI lo rechaza (`SecurityException`) → fallback: `adb install` manual + `am instrument`
-  (verificado 36/36 en 015).
-- Tests auto: `testDebugUnitTest` (JVM) + `connectedDebugAndroidTest` (DAO `ExerciseDaoTest` + `Migration12Test` +
-  `ScheduledDayDaoTest` + `Migration23Test` + smokes `feature/home|routines|workout|history` movidos a su espejo + `Workout016LiveEditTest` 6/6 (016) +
-  `PickerSearchTest` 4/4 (012/017), con `testTag`; 42/42 en emulador; smoke detalle pendiente);
-  `testTag` en raíces/CTAs (`profileRoot/profileSave`, `homeRoot/homeDock/routineCard:<id>`,
-  `routineEditRoot/routineEditAddExercise/routineEditSave`, `workoutRoot/workoutFinish/restOverlay).
+  Comprobación rápida por paso: `./gradlew :app:compileDebugKotlin`.
+- Tests JVM: `./gradlew testDebugUnitTest`. Cubre botes `AppColors/AppDimens`, `CatalogMappingTest`, reglas `RoutineRules/WorkoutPrefill` con fakes, filtro ES del catálogo, fotos Roborazzi (Home y tarjeta) y `WorkoutLiveEditTest`. Debe quedar todo en verde.
+- Puerta CI: `.github/workflows/blindaje.yml` (`assembleDebug` + `testDebugUnitTest` en cada PR/push a `main`; el check se exige en Settings > Branches > main).
+- Tests instrumentados: `connectedDebugAndroidTest` (DAO, migraciones, smokes `feature/home|routines|workout|history`, `Workout016LiveEditTest`, `PickerSearchTest`), con `testTag` en raíces/CTAs (`profileRoot/profileSave`, `homeRoot/homeDock/routineCard:<id>`, `routineEditRoot/routineEditAddExercise/routineEditSave`, `workoutRoot/workoutFinish/restOverlay`). Smoke de detalle pendiente.
+- Verificación: **emulador Pixel 6 API 34** (`emulator-5554`) **+ dispositivo físico, de forma automática**; se testea en ambos con `adb` + MCP `mobile-mcp` (`list_available_devices` → `list_elements` por `ref` → `click`/`screenshot`/`logs`) y `connectedDebugAndroidTest` como red de seguridad. Si un spec dice explícitamente solo uno, manda el spec y se anota.
+  **Antes de lanzar nada contra dispositivo, comprueba `adb devices`.** Si no hay ninguno en estado `device`, no lances `connectedDebugAndroidTest`: anota `bloqueado: sin dispositivo` y sigue.
+  En físico Xiaomi/MIUI: activar "Instalar vía USB" (si no, `INSTALL_FAILED_USER_RESTRICTED`). AGP instala el APK de test con `-g` y MIUI lo rechaza (`SecurityException`) → fallback: `adb install` manual + `am instrument`.
 - Proyecto: `applicationId`/`namespace` `com.mytrainingplan.app`, `minSdk 26`, `compileSdk/targetSdk 37`, Java 17.
 
-## Arquitectura objetivo (al implementar)
+## Arquitectura
 
-- Un solo módulo `app`. Flujo final: `feature/* Screen → ViewModel(StateFlow) → Repository → Room`; Retrofit solo rellena la DB.
-- Plan acordado: **Fase A maquetación primero** (5 vistas `references/` UI-first con `ViewModel` fake + repo fake misma firma + `NavHost` condicional `¿hay perfil? home:profile`, sin Room), luego **Fase B Room local (hecha, v3)**, **catálogo hecho (007+010)**, **buscador+GIF hecho (012)**, **sesión-vivo-fixes hecho (013)**, **perfil-enfoque hecho (014)**, **calendario-progreso hecho (015)** y **sesión-edición (016) + picker-alto (017) hechos** y **Fase D Spring/MySQL**.
-- Progreso Fase A: 5/5 hechas (las 5 vistas + `NavHost` con `home/calendar/progress/profile/routineEdit/workout/exerciseDetail` ya cableados); Fase B + 007/008/009/010/011/012/013/014/015/016/017 mergeados en `main`; siguiente `018-guardar-rutina-scroll` (Borrador en `specs/`).
-- Carpetas: `core/{di,network,datastore,ui}`, `data/{local/{entity,dao},remote/{dto},mapper,repository}`, `domain/model`, `feature/{profile,home,exercises,routines,workout,history}`. Cada `feature/` = `Screen` + `ViewModel` (`exercises` tiene Picker + Detail; `history` tiene Calendar + Progress).
-- Mapeo `DTO/Entity ⇄ dominio` en `data/mapper`; la UI solo ve `domain/model`, nunca Entity ni DTO.
-- Sin casos de uso ni módulos extra hasta que duelan. Versiones solo vía catálogo `gradle/libs.versions.toml`.
-- Catálogo: fork ExerciseGymGifsDB por jsDelivr con **tag fijo** (`CATALOG_TAG` + DataStore), nunca rama; solo URLs de GIF en DB (Coil cachea); update por `upsert` y solo filas `source=CATALOG`.
+- Un solo módulo `app`. Flujo: `feature/* Screen → ViewModel(StateFlow) → Repository → Room`. Retrofit solo rellena la DB.
+- Fases: A maquetación UI-first (hecha), B Room local (hecha), catálogo y specs 007–017 (hechos), Fase D Spring/MySQL (pendiente).
+- Carpetas: `core/{di,network,datastore,ui}`, `data/{local/{entity,dao},remote/{dto},mapper,repository}`, `domain/model`, `feature/{profile,home,exercises,routines,workout,history}`, y `ui/theme/` (`Color/Dimensions/Theme/Type`). Cada `feature/` = `Screen` + `ViewModel` (`exercises` tiene Picker + Detail; `history` tiene Calendar + Progress).
+- Mapeo `DTO/Entity ⇄ dominio` en `data/mapper`. La UI solo ve `domain/model`, nunca Entity ni DTO.
+- Sin casos de uso ni módulos extra hasta que duelan.
+- Catálogo: fork ExerciseGymGifsDB por jsDelivr con **tag fijo** (`CATALOG_TAG` + DataStore), nunca rama. Solo URLs de GIF en DB (Coil cachea). Update por `upsert` y solo filas `source=CATALOG`.
 
-## Datos Room (al implementar)
+## Datos Room
 
-- IDs de usuario = **UUID** en cliente; ejercicios de catálogo conservan su `id` (`músculo/slug`).
+- IDs de usuario = **UUID** en cliente. Los ejercicios de catálogo conservan su `id` (`músculo/slug`).
 - Toda entidad de usuario lleva `updatedAt` + `deleted` (borrado lógico, sync-ready Fase 2) desde el día uno.
 - Catálogo y propios comparten tabla con `source` (`CATALOG`/`CUSTOM`).
 - **Siempre `@Upsert`, nunca `@Insert(onConflict = REPLACE)`** (REPLACE borra la fila y arrastra hijas).
-- `exportSchema = true`; cada cambio de esquema sube versión + `Migration` real; `fallbackToDestructiveMigration()` solo en desarrollo. Estado: DB **v3** + `MIGRATION_1_2` (`instructions TEXT DEFAULT '[]'`; la re-descarga con el mismo tag rellena las viejas vía `upsert`) + `MIGRATION_2_3` (crea `scheduled_days`).
-- `weightKg` con signo (`+` lastre, `0` corporal, `-` ayuda) + `loadNote` libre; `restSeconds` vive en **cada serie**, no en el ejercicio.
-- Comportamiento series (`docs/MODELO_DE_DATOS.md`): al crear N series se copian valores de la 1ª; editar propaga solo a siguientes **no editadas a mano** (estado solo de pantalla); día nuevo = valores por defecto de ajustes, sin copiar de otros días; al iniciar sesión, prefill con **última sesión** de ese ejercicio en ese día, si no con lo planificado.
+- `exportSchema = true` (schemas en `app/schemas/`). Cada cambio de esquema sube versión + `Migration` real. `fallbackToDestructiveMigration()` solo en desarrollo. Versión actual y migraciones: míralas en `AppDatabase` y `app/schemas/`.
+- `weightKg` con signo (`+` lastre, `0` corporal, `-` ayuda) + `loadNote` libre. `restSeconds` vive en **cada serie**, no en el ejercicio.
+- Comportamiento de series (`docs/MODELO_DE_DATOS.md`): al crear N series se copian valores de la 1ª. Editar propaga solo a siguientes **no editadas a mano** (estado solo de pantalla). Día nuevo = valores por defecto de ajustes, sin copiar de otros días. Al iniciar sesión, prefill con **última sesión** de ese ejercicio en ese día, y si no existe, con lo planificado.
 
 ## Distribución
 
-Mismo `applicationId` siempre; misma keystore (fuera del repo, con copia externa); subir `versionCode` por versión; cambio de esquema Room = subir versión DB + migración o se pierden datos.
+Mismo `applicationId` siempre (no cambiarlo ni añadir `applicationIdSuffix ".debug"`). Misma keystore (fuera del repo, con copia externa). Subir `versionCode` por versión. Cambio de esquema Room = subir versión DB + migración o se pierden datos.
 
 ## Edge-to-edge (obligatorio en cada vista)
 
@@ -148,4 +77,4 @@ La app usa `enableEdgeToEdge()` (`MainActivity.kt`): el contenido dibuja por deb
 - Todo dock/CTA inferior fijo lleva `navigationBarsPadding()` (conservando su margen visual de 16dp).
 - Prohibido compensar con dp fijos extra que imiten la altura de las barras.
 - Excepciones que ya gestionan insets solas (no tocar): `ModalBottomSheet` y diálogos de Material3; contenido centrado sin elementos pegados a los bordes.
-- Checklist para futuras vistas: probar en emulador Pixel 6 API 34 **y en físico, de forma automática**, con navegación por gestos y (si se puede) con 3 botones; arriba nada bajo hora/cobertura/batería, abajo nada bajo la barra del sistema.
+- Checklist para futuras vistas: probar en emulador Pixel 6 API 34 **y en físico, de forma automática**, con navegación por gestos y (si se puede) con 3 botones. Arriba nada bajo hora/cobertura/batería, abajo nada bajo la barra del sistema.
