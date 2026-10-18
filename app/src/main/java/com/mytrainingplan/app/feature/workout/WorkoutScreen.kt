@@ -114,14 +114,16 @@ private fun formatWeight(weightKg: Double): String =
     if (weightKg % 1.0 == 0.0) weightKg.toInt().toString() else weightKg.toString()
 
 /**
- * Sesión en vivo (spec 005, Fase A).
- * La sesión la crea el ViewModel con `startSession(routineId)`; por eso solo
- * se pide `routineId` (sin `sessionId`: reanudar/time-travel queda para futuro
- * spec). Sin `routineId` o id inexistente: estado vacío sin crash con vuelta.
+ * Sesión en vivo (spec 005, Fase A; spec 022: reanudar con `sessionId`).
+ * La sesión la crea el ViewModel con `startSession(routineId)`; al reanudar
+ * se pasa `sessionId` para observar la existente (series + cronómetro
+ * conservados). Sin `routineId` o id inexistente: estado vacío sin crash
+ * con vuelta.
  */
 @Composable
 fun WorkoutScreen(
     routineId: String? = null,
+    sessionId: String? = null,
     viewModel: WorkoutViewModel = hiltViewModel(),
     onFinished: () -> Unit = {},
     onDiscard: () -> Unit = {},
@@ -132,13 +134,15 @@ fun WorkoutScreen(
     onEditRoutine: (String) -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    LaunchedEffect(routineId) { viewModel.openSession(routineId) }
+    // Spec 022: reanudar con sessionId (observa la existente); sin él se
+    // crea una nueva (Iniciar). Rotación no duplica (opened en el VM).
+    LaunchedEffect(routineId, sessionId) { viewModel.openSession(routineId, sessionId) }
     val restVisible = uiState.restRemainingSec != null
     // Descanso bloqueante: consume el atrás del sistema mientras está visible.
-    // Atrás sin finalizar descarta la sesión (sin fantasma); minimizar (botón)
-    // mantiene la sesión viva en el repo.
+    // Atrás sin finalizar navega a Home (popBackStack) y deja la sesión viva
+    // en el repo (no la descarta: spec 022 §1/§24). Minimizar mantiene viva.
     BackHandler {
-        if (!restVisible) viewModel.onDiscard(onDiscard)
+        if (!restVisible) onBack()
     }
     // Espera breve antes de declarar "no encontrada" (el startSession en
     // memoria resuelve casi al instante; el id inexistente queda vacío).

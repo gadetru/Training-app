@@ -128,6 +128,9 @@ class FakeWorkoutRepository(
 
     private val sessions = MutableStateFlow<Map<String, WorkoutSessionDetail>>(emptyMap())
 
+    /** Sesión viva actual (guardia anti-doble: solo una viva por definición). */
+    private var liveSessionId: String? = null
+
     /** Historial de finalizadas por `(routineId, exerciseId)`. */
     private val history = MutableStateFlow<Map<Pair<String, String>, List<SetEntry>>>(emptyMap())
 
@@ -138,6 +141,9 @@ class FakeWorkoutRepository(
         history.map { map -> map[routineId to exerciseId] ?: emptyList() }
 
     override suspend fun startSession(routineId: String): String {
+        // Guardia anti-doble (spec 022): si ya hay una sesión viva, no crear
+        // fantasma; devolver la viva.
+        liveSessionId?.let { return it }
         val sessionId = UUID.randomUUID().toString()
         val now = System.currentTimeMillis()
         val detail = routines.observeRoutine(routineId).firstOrNull()
@@ -188,6 +194,7 @@ class FakeWorkoutRepository(
                 items = items
             ))
         }
+        liveSessionId = sessionId
         return sessionId
     }
 
@@ -403,10 +410,12 @@ class FakeWorkoutRepository(
         }
         // La finalizada no sigue viva: se retira de activas.
         sessions.update { it - sessionId }
+        if (liveSessionId == sessionId) liveSessionId = null
     }
 
     override suspend fun discardSession(sessionId: String) {
         sessions.update { it - sessionId }
+        if (liveSessionId == sessionId) liveSessionId = null
     }
 
     private inline fun mutateEntry(

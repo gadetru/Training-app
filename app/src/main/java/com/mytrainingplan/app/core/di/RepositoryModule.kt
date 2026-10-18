@@ -85,8 +85,9 @@ object RepositoryModule {
     fun provideHomeRepository(
         routineRepo: RoutineRepository,
         profileRepo: ProfileRepository,
-        sessions: WorkoutSessionDao
-    ): HomeRepository = com.mytrainingplan.app.data.repository.RoomHomeRepository(routineRepo, profileRepo, sessions)
+        sessions: WorkoutSessionDao,
+        scheduled: ScheduledDayDao
+    ): HomeRepository = com.mytrainingplan.app.data.repository.RoomHomeRepository(routineRepo, profileRepo, sessions, scheduled)
 
     @Provides
     @Singleton

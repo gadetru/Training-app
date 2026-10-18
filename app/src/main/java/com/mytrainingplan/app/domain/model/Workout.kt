@@ -45,10 +45,10 @@ enum class TimerState {
 /**
  * Segundos transcurridos del cronómetro en [nowMs].
  * Fórmula del spec 022: `timerBaseSec + (now - runningSince) / 1000`
- * mientras corre; `timerBaseSec` cuando está parado.
+ * mientras corre; `timerBaseSec` cuando está parado. Nunca negativo.
  */
 fun WorkoutSession.timerElapsedSec(nowMs: Long): Int =
-    if (runningSince != null) timerBaseSec + ((nowMs - runningSince) / 1000).toInt()
+    if (runningSince != null) (timerBaseSec + ((nowMs - runningSince) / 1000).toInt()).coerceAtLeast(0)
     else timerBaseSec.coerceAtLeast(0)
 
 /**

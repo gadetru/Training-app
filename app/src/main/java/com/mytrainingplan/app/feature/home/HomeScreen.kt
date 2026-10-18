@@ -26,6 +26,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Done
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.List
@@ -36,10 +38,12 @@ import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -65,6 +69,7 @@ import com.mytrainingplan.app.domain.model.FootKind
 import com.mytrainingplan.app.domain.model.HomeUiState
 import com.mytrainingplan.app.domain.model.RoutineSummary
 import com.mytrainingplan.app.domain.model.WeeklyProgress
+import kotlinx.coroutines.delay
 
 // Colores y medidas desde ui/theme (spec 011): sin tokens locales.
 
@@ -100,11 +105,17 @@ fun HomeScreen(
     onSort: () -> Unit = {},
     onSeeMonth: () -> Unit = {},
     selectedTab: HomeTab = HomeTab.RUTINAS,
-    onTabSelected: (HomeTab) -> Unit = {}
+    onTabSelected: (HomeTab) -> Unit = {},
+    // Spec 022 §52: callbacks de la sesión viva desde Home.
+    onLiveResume: (routineId: String, sessionId: String) -> Unit = { _, _ -> },
+    onLiveFinish: () -> Unit = {},
+    onLiveDiscard: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
     // Rutina pendiente de confirmar borrado (menú ··· → Eliminar).
     var pendingDelete by remember { mutableStateOf<RoutineSummary?>(null) }
+    // Spec 022: descarte de sesión viva con confirmación.
+    var pendingLiveDiscard by remember { mutableStateOf(false) }
     HomeContent(
         uiState = uiState,
         onStart = onStart,
@@ -114,9 +125,13 @@ fun HomeScreen(
         onSort = onSort,
         onSeeMonth = onSeeMonth,
         selectedTab = selectedTab,
-        onTabSelected = onTabSelected
+        onTabSelected = onTabSelected,
+        onLiveResume = onLiveResume,
+        onLiveFinish = onLiveFinish,
+        onLiveDiscard = { pendingLiveDiscard = true },
+        liveSessionId = uiState.liveSessionId
     )
-    // Confirmación de borrado: los diálogos de Material3 gestionan insets solos.
+    // Confirmación de borrado de rutina (menú ··· → Eliminar).
     val target = pendingDelete
     if (target != null) {
         AlertDialog(
@@ -144,6 +159,42 @@ fun HomeScreen(
             containerColor = AppColors.Card
         )
     }
+    // Spec 022 §28: confirmación de descarte de sesión viva (misma aviso que
+    // la sesión). Material3 gestiona insets solo.
+    if (pendingLiveDiscard) {
+        AlertDialog(
+            onDismissRequest = { pendingLiveDiscard = false },
+            title = { Text("¿Descartar entrenamiento?", color = AppColors.TextPrimary) },
+            text = {
+                Text(
+                    "La sesión se descarta sin guardar y no contará como prefill. " +
+                        "Lo añadido o borrado en vivo sí queda en la rutina.",
+                    color = AppColors.TextMuted
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        pendingLiveDiscard = false
+                        viewModel.onDiscardLive()
+                    },
+                    shape = RoundedCornerShape(AppDimens.RadiusPill),
+                    colors = ButtonDefaults.textButtonColors(
+                        containerColor = AppColors.ErrorRed,
+                        contentColor = AppColors.OnOrange
+                    )
+                ) {
+                    Text("Descartar", fontSize = AppTextSizes.Body, fontWeight = FontWeight.Bold)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { pendingLiveDiscard = false }) {
+                    Text("Seguir", fontSize = AppTextSizes.Body, fontWeight = FontWeight.Bold)
+                }
+            },
+            containerColor = AppColors.Card
+        )
+    }
 }
 
 @Composable
@@ -156,8 +207,15 @@ fun HomeContent(
     onSort: () -> Unit = {},
     onSeeMonth: () -> Unit = {},
     selectedTab: HomeTab = HomeTab.RUTINAS,
-    onTabSelected: (HomeTab) -> Unit = {}
+    onTabSelected: (HomeTab) -> Unit = {},
+    // Spec 022: callbacks de la sesión viva desde Home.
+    onLiveResume: (routineId: String, sessionId: String) -> Unit = { _, _ -> },
+    onLiveFinish: () -> Unit = {},
+    onLiveDiscard: () -> Unit = {},
+    // Spec 022: id de la sesión viva (para Reanudar con sessionId).
+    liveSessionId: String? = null
 ) {
+    val hasLiveSession = uiState.liveRoutineId != null
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -181,10 +239,18 @@ fun HomeContent(
             ) {
                 RoutineFeed(
                     routines = uiState.routines,
+                    liveRoutineId = uiState.liveRoutineId,
+                    liveSessionId = liveSessionId,
+                    liveElapsedSec = uiState.liveElapsedSec,
+                    scheduledTodayId = uiState.scheduledTodayId,
+                    hasLiveSession = hasLiveSession,
                     onStart = onStart,
                     onEdit = onEdit,
                     onDeleteRequest = onDeleteRequest,
-                    onSort = onSort
+                    onSort = onSort,
+                    onLiveResume = onLiveResume,
+                    onLiveFinish = onLiveFinish,
+                    onLiveDiscard = onLiveDiscard
                 )
                 DashboardRow(
                     progress = uiState.progress,
@@ -285,10 +351,19 @@ private fun TopBar(
 @Composable
 private fun RoutineFeed(
     routines: List<RoutineSummary>,
+    liveRoutineId: String?,
+    liveSessionId: String?,
+    liveElapsedSec: Int,
+    scheduledTodayId: String?,
+    hasLiveSession: Boolean,
     onStart: (routineId: String) -> Unit,
     onEdit: (routineId: String) -> Unit,
     onDeleteRequest: (RoutineSummary) -> Unit,
-    onSort: () -> Unit
+    onSort: () -> Unit,
+    // Spec 022: callbacks de la sesión viva desde Home.
+    onLiveResume: (routineId: String, sessionId: String) -> Unit = { _, _ -> },
+    onLiveFinish: () -> Unit = {},
+    onLiveDiscard: () -> Unit = {}
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(AppDimens.SpaceXl)) {
         Row(
@@ -322,9 +397,17 @@ private fun RoutineFeed(
         routines.forEach { routine ->
             RoutineCard(
                 routine = routine,
+                isLive = routine.id == liveRoutineId,
+                liveSessionId = liveSessionId,
+                liveElapsedSec = liveElapsedSec,
+                scheduledTodayId = scheduledTodayId,
+                hasLiveSession = hasLiveSession,
                 onStart = { onStart(routine.id) },
                 onEdit = { onEdit(routine.id) },
-                onDelete = { onDeleteRequest(routine) }
+                onDelete = { onDeleteRequest(routine) },
+                onLiveResume = onLiveResume,
+                onLiveFinish = onLiveFinish,
+                onLiveDiscard = onLiveDiscard
             )
         }
     }
@@ -334,9 +417,18 @@ private fun RoutineFeed(
 @Composable
 private fun RoutineCard(
     routine: RoutineSummary,
+    isLive: Boolean = false,
+    liveSessionId: String? = null,
+    liveElapsedSec: Int = 0,
+    scheduledTodayId: String?,
+    hasLiveSession: Boolean,
     onStart: () -> Unit,
     onEdit: () -> Unit,
-    onDelete: () -> Unit
+    onDelete: () -> Unit,
+    // Spec 022: callbacks de la sesión viva desde Home.
+    onLiveResume: (routineId: String, sessionId: String) -> Unit = { _, _ -> },
+    onLiveFinish: () -> Unit = {},
+    onLiveDiscard: () -> Unit = {}
 ) {
     val accent = routine.accent.toCompose()
     Box(
@@ -348,7 +440,7 @@ private fun RoutineCard(
             .padding(AppDimens.SpaceHuge)
             .testTag("routineCard:${routine.id}")
     ) {
-        // Accent bar lateral.
+        // Accent bar lateral (intacta, spec §74).
         Box(
             modifier = Modifier
                 .align(Alignment.CenterStart)
@@ -362,8 +454,6 @@ private fun RoutineCard(
                 Column(modifier = Modifier.weight(1f)) {
                     Text(routine.title, color = AppColors.TextPrimary, fontSize = AppTextSizes.TitleLg, fontWeight = FontWeight.SemiBold)
                     Spacer(Modifier.height(AppDimens.SpaceMd))
-                    // FlowRow con wrap: con 5 grupos salta a 2 líneas en vez
-                    // de recortar el último tag fuera de la tarjeta.
                     FlowRow(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(AppDimens.SpaceSm),
@@ -396,8 +486,6 @@ private fun RoutineCard(
                     }
                 }
                 // Botón ··· con menú Editar / Eliminar (hit target 48dp).
-                // El ModalBottomSheet/diálogos gestionan insets solos; el
-                // DropdownMenu se ancla a este Box.
                 var menuExpanded by remember { mutableStateOf(false) }
                 Box(
                     modifier = Modifier.size(AppDimens.TouchMin),
@@ -467,34 +555,162 @@ private fun RoutineCard(
                     )
                 }
                 Spacer(Modifier.width(AppDimens.SpaceMd))
-                // Primera card con CTA naranja, resto secundario (como code.html).
-                val primary = routine.accent == AccentColor.ORANGE
-                Row(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(AppDimens.RadiusPill))
-                        .background(if (primary) AppColors.Orange else AppColors.Card2)
-                        .border(AppDimens.BorderThin, if (primary) AppColors.Orange else AppColors.BorderSubtle, RoundedCornerShape(AppDimens.RadiusPill))
-                        .clickable(role = Role.Button, onClickLabel = "Iniciar rutina", onClick = onStart)
-                        .padding(horizontal = AppDimens.SpaceHuge, vertical = AppDimens.SpaceLg),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        Icons.Filled.PlayArrow,
-                        contentDescription = null,
-                        tint = if (primary) AppColors.OnOrange else AppColors.TextPrimary,
-                        modifier = Modifier.size(AppDimens.IconMd)
+                // Spec 022 §28/§51: fila CTA de la rutina viva o Iniciar normal.
+                if (isLive) {
+                    liveCtaRow(
+                        onResume = { onLiveResume(routine.id, liveSessionId ?: "") },
+                        onFinish = onLiveFinish,
+                        onDiscard = onLiveDiscard,
+                        routineId = routine.id
                     )
-                    Spacer(Modifier.width(AppDimens.SpaceXs))
-                    Text(
-                        "Iniciar",
-                        color = if (primary) AppColors.OnOrange else AppColors.TextPrimary,
-                        fontSize = AppTextSizes.Body,
-                        fontWeight = FontWeight.Bold
+                    // Pie "EN MARCHA hh:mm" con tick local de 1 s (spec §28).
+                    liveClockRow(liveElapsedSec)
+                } else {
+                    normalCtaRow(
+                        routine = routine,
+                        scheduledTodayId = scheduledTodayId,
+                        enabled = !hasLiveSession,
+                        onStart = onStart
                     )
                 }
             }
         }
     }
+}
+
+/** Spec 022 §28: formato de reloj hh:mm. */
+private fun formatClock(totalSec: Int): String {
+    val s = totalSec.coerceAtLeast(0)
+    return "%02d:%02d".format(s / 60, s % 60)
+}
+
+/** Fila CTA normal: "Iniciar" naranja solo si programada hoy; no clicable si hay viva. */
+@Composable
+private fun normalCtaRow(
+    routine: RoutineSummary,
+    scheduledTodayId: String?,
+    enabled: Boolean,
+    onStart: () -> Unit
+) {
+    val primary = routine.id == scheduledTodayId
+    val bg = if (!enabled) AppColors.CardHigh else if (primary) AppColors.Orange else AppColors.Card2
+    val border = if (!enabled) AppColors.BorderSubtle else if (primary) AppColors.Orange else AppColors.BorderSubtle
+    val textColor = if (!enabled) AppColors.TextMuted.copy(alpha = 0.5f) else if (primary) AppColors.OnOrange else AppColors.TextPrimary
+    val iconColor = if (!enabled) AppColors.TextMuted.copy(alpha = 0.5f) else if (primary) AppColors.OnOrange else AppColors.TextPrimary
+    Row(
+        modifier = Modifier
+            .clip(RoundedCornerShape(AppDimens.RadiusPill))
+            .background(bg)
+            .border(AppDimens.BorderThin, border, RoundedCornerShape(AppDimens.RadiusPill))
+            .clickable(
+                enabled = enabled,
+                role = Role.Button,
+                onClickLabel = "Iniciar rutina",
+                onClick = onStart
+            )
+            .padding(horizontal = AppDimens.SpaceHuge, vertical = AppDimens.SpaceLg),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(
+            Icons.Filled.PlayArrow,
+            contentDescription = null,
+            tint = iconColor,
+            modifier = Modifier.size(AppDimens.IconMd)
+        )
+        Spacer(Modifier.width(AppDimens.SpaceXs))
+        Text(
+            "Iniciar",
+            color = textColor,
+            fontSize = AppTextSizes.Body,
+            fontWeight = FontWeight.Bold
+        )
+    }
+}
+
+/** Fila CTA de la sesión viva: Reanudar (primario) + Terminar + Descartar. */
+@Composable
+private fun liveCtaRow(
+    onResume: () -> Unit,
+    onFinish: () -> Unit,
+    onDiscard: () -> Unit,
+    routineId: String
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(AppDimens.SpaceMd),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        // Reanudar (primario, estilo naranja).
+        Row(
+            modifier = Modifier
+                .weight(1f)
+                .clip(RoundedCornerShape(AppDimens.RadiusPill))
+                .background(AppColors.Orange)
+                .clickable(role = Role.Button, onClickLabel = "Reanudar entrenamiento", onClick = onResume)
+                .padding(vertical = AppDimens.SpaceXl)
+                .testTag("resumeWorkout:$routineId"),
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(Icons.Filled.PlayArrow, contentDescription = null, tint = AppColors.OnOrange, modifier = Modifier.size(AppDimens.IconMd))
+            Spacer(Modifier.width(AppDimens.SpaceXs))
+            Text("Reanudar", color = AppColors.OnOrange, fontSize = AppTextSizes.Body, fontWeight = FontWeight.Bold)
+        }
+        // Terminar.
+        Row(
+            modifier = Modifier
+                .weight(1f)
+                .clip(RoundedCornerShape(AppDimens.RadiusPill))
+                .background(AppColors.CardHigh)
+                .border(AppDimens.BorderThin, AppColors.BorderSubtle, RoundedCornerShape(AppDimens.RadiusPill))
+                .clickable(role = Role.Button, onClickLabel = "Finalizar entrenamiento", onClick = onFinish)
+                .padding(vertical = AppDimens.SpaceXl)
+                .testTag("finishWorkout:$routineId"),
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(Icons.Filled.Done, contentDescription = null, tint = AppColors.TextPrimary, modifier = Modifier.size(AppDimens.IconMd))
+            Spacer(Modifier.width(AppDimens.SpaceXs))
+            Text("Terminar", color = AppColors.TextPrimary, fontSize = AppTextSizes.Body, fontWeight = FontWeight.Bold)
+        }
+        // Descartar.
+        Row(
+            modifier = Modifier
+                .weight(1f)
+                .clip(RoundedCornerShape(AppDimens.RadiusPill))
+                .background(AppColors.CardHigh)
+                .border(AppDimens.BorderThin, AppColors.BorderSubtle, RoundedCornerShape(AppDimens.RadiusPill))
+                .clickable(role = Role.Button, onClickLabel = "Descartar entrenamiento", onClick = onDiscard)
+                .padding(vertical = AppDimens.SpaceXl)
+                .testTag("discardWorkout:$routineId"),
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(Icons.Filled.Close, contentDescription = null, tint = AppColors.ErrorRed, modifier = Modifier.size(AppDimens.IconMd))
+            Spacer(Modifier.width(AppDimens.SpaceXs))
+            Text("Descartar", color = AppColors.ErrorRed, fontSize = AppTextSizes.Body, fontWeight = FontWeight.Bold)
+        }
+    }
+}
+
+/** Pie "EN MARCHA hh:mm" con tick local de 1 s solo en la card viva. */
+@Composable
+private fun liveClockRow(liveElapsedSec: Int) {
+    var displayedSec by remember { mutableStateOf(liveElapsedSec) }
+    LaunchedEffect(liveElapsedSec) {
+        displayedSec = liveElapsedSec
+        while (true) {
+            delay(1_000)
+            displayedSec = displayedSec + 1
+        }
+    }
+    Text(
+        "EN MARCHA ${formatClock(displayedSec)}",
+        color = AppColors.Orange,
+        fontSize = AppTextSizes.Small,
+        fontWeight = FontWeight.Bold,
+        modifier = Modifier.padding(top = AppDimens.SpaceXs).testTag("liveClock")
+    )
 }
 
 @Composable

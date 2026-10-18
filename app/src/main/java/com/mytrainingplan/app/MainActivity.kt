@@ -45,11 +45,16 @@ private const val ROUTE_CALENDAR = "calendar"
 private const val ROUTE_PROGRESS = "progress"
 private const val ROUTE_PROFILE = "profile"
 private const val ARG_ROUTINE_ID = "routineId"
+private const val ARG_SESSION_ID = "sessionId"
 private const val ROUTE_ROUTINE_EDIT = "routineEdit?$ARG_ROUTINE_ID={$ARG_ROUTINE_ID}"
 /** Ruta sin argumentos: crear rutina nueva (el arg queda null por defecto). */
 private const val ROUTE_ROUTINE_EDIT_NEW = "routineEdit"
-/** Sesión en vivo (spec 005): `workout?routineId={id}`, null = estado vacío. */
-private const val ROUTE_WORKOUT = "workout?$ARG_ROUTINE_ID={$ARG_ROUTINE_ID}"
+/**
+ * Sesión en vivo (spec 005; spec 022: reanudar con sessionId).
+ * `workout?routineId={id}&sessionId={id}`; ambos nullable. Sin sessionId se
+ * crea una nueva (Iniciar); con sessionId se observa la existente (Reanudar).
+ */
+private const val ROUTE_WORKOUT = "workout?$ARG_ROUTINE_ID={$ARG_ROUTINE_ID}&$ARG_SESSION_ID={$ARG_SESSION_ID}"
 /**
  * Ficha de ejercicio (spec 010): query-param porque el id de catálogo lleva
  * `/` (`músculo/slug`); al navegar se pasa con `Uri.encode` y el NavComponent
@@ -102,6 +107,20 @@ fun TrainingNav() {
                 onCreate = { navController.navigate(ROUTE_ROUTINE_EDIT_NEW) },
                 // Spec 005: `Iniciar` abre la sesión en vivo de esa rutina.
                 onStart = { navController.navigate("workout?$ARG_ROUTINE_ID=$it") },
+                // Spec 022: `Reanudar` retoma la sesión viva (con su sessionId).
+                onLiveResume = { routineId, sessionId ->
+                    navController.navigate("workout?$ARG_ROUTINE_ID=$routineId&$ARG_SESSION_ID=$sessionId")
+                },
+                // Spec 022: `Terminar` cierra la sesión viva desde Home.
+                onLiveFinish = {
+                    navController.popBackStack()
+                    navController.navigateToTab(HomeTab.RUTINAS)
+                },
+                // Spec 022: `Descartar` (confirmado en Home) descarta la sesión viva.
+                onLiveDiscard = {
+                    navController.popBackStack()
+                    navController.navigateToTab(HomeTab.RUTINAS)
+                },
                 // Spec 015: `Ver mes` abre el tab Calendario.
                 onSeeMonth = { navController.navigateToTab(HomeTab.CALENDARIO) },
                 // Menú ··· (P0 TODO vivo): `Editar` abre el constructor con esa
@@ -138,11 +157,17 @@ fun TrainingNav() {
                     type = NavType.StringType
                     nullable = true
                     defaultValue = null
+                },
+                navArgument(ARG_SESSION_ID) {
+                    type = NavType.StringType
+                    nullable = true
+                    defaultValue = null
                 }
             )
         ) { backStackEntry ->
             WorkoutScreen(
                 routineId = backStackEntry.arguments?.getString(ARG_ROUTINE_ID),
+                sessionId = backStackEntry.arguments?.getString(ARG_SESSION_ID),
                 onFinished = {
                     navController.popBackStack()
                     navController.navigateToTab(HomeTab.RUTINAS)
