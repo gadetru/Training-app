@@ -68,15 +68,19 @@ class FakeHomeRepository : HomeRepository {
                     footNote = "Recuperación activa",
                     footKind = FootKind.INFO
                 )
-            ),
-            progress = WeeklyProgress(
-                streakDays = 4,
-                sessionsDone = 3,
-                sessionsGoal = 4,
-                minutes = 185,
-                volumeDeltaPct = 12,
-                weekChecks = listOf(true, true, true, true, false, false, false)
+                ),
+                progress = WeeklyProgress(
+                    streakDays = 4,
+                    sessionsDone = 3,
+                    sessionsGoal = 4,
+                    minutes = 185,
+                    volumeDeltaPct = 12,
+                    weekChecks = listOf(true, true, true, true, false, false, false)
+                ),
+                liveRoutineId = null,
+                liveElapsedSec = 0,
+                scheduledTodayId = null,
+                liveSessionId = null
             )
-        )
     }
 }

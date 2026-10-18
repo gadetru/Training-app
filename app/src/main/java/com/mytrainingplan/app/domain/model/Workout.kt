@@ -24,9 +24,45 @@ data class WorkoutSession(
     val endedAt: Long? = null,
     /** Segundos acumulados en pausa (el timer no avanza mientras hay pausa). */
     val pausedAccumSec: Int = 0,
+    /** Segundos ya contados del cronómetro (0 = sin empezar). */
+    val timerBaseSec: Int = 0,
+    /** Marca de arranque en ms (null = parado); snapshot del reloj real. */
+    val runningSince: Long? = null,
     val updatedAt: Long = 0L,
     val deleted: Boolean = false
 )
+
+/** Estado del cronómetro de una sesión. */
+enum class TimerState {
+    /** Nunca se pulsó Comenzar (base 0, sin arranque). */
+    SIN_EMPEZAR,
+    /** Estaba corriendo y se paró: tiempo congelado en timerBaseSec. */
+    EN_PAUSA,
+    /** Corriendo: el reloj avanza desde runningSince. */
+    ACTIVO
+}
+
+/**
+ * Segundos transcurridos del cronómetro en [nowMs].
+ * Fórmula del spec 022: `timerBaseSec + (now - runningSince) / 1000`
+ * mientras corre; `timerBaseSec` cuando está parado. Nunca negativo.
+ */
+fun WorkoutSession.timerElapsedSec(nowMs: Long): Int =
+    if (runningSince != null) (timerBaseSec + ((nowMs - runningSince) / 1000).toInt()).coerceAtLeast(0)
+    else timerBaseSec.coerceAtLeast(0)
+
+/**
+ * Estado derivado del cronómetro (puro, sin lecturas de DB).
+ * ACTIVO si `runningSince != null`; EN PAUSA si `timerBaseSec > 0` y
+ * `runningSince == null`; SIN EMPEZAR si `timerBaseSec == 0` y
+ * `runningSince == null`.
+ */
+val WorkoutSession.timerState: TimerState
+    get() = when {
+        runningSince != null -> TimerState.ACTIVO
+        timerBaseSec > 0 -> TimerState.EN_PAUSA
+        else -> TimerState.SIN_EMPEZAR
+    }
 
 /** Una serie realizada dentro de una sesión. */
 data class SetEntry(

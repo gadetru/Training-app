@@ -68,16 +68,34 @@ interface WorkoutRepository {
     suspend fun deleteLiveSet(sessionId: String, entryId: String)
 
     /**
-     * Sustituye el ejercicio de una rutina en sesión (spec 021): mismo
-     * `id`/`position` del slot, nuevo `exerciseId`, y reescribe el
-     * `exerciseId` de TODAS las entradas de esa sesión del old al nuevo
-     * (hechas incluidas) en la misma transacción. Duplicados permitidos.
-     */
+      * Sustituye el ejercicio de una rutina en sesión (spec 021): mismo
+      * `id`/`position` del slot, nuevo `exerciseId`, y reescribe el
+      * `exerciseId` de TODAS las entradas de esa sesión del old al nuevo
+      * (hechas incluidas) en la misma transacción. Duplicados permitidos.
+      */
     suspend fun replaceExercise(
         sessionId: String,
         routineExerciseId: String,
         newExerciseId: String
     )
+
+    /**
+     * Arranca el cronómetro de la sesión (desde 0 o desde el base congelado).
+     * `nowMs` = marca de arranque real (para que sobreviva al matar la app).
+     */
+    suspend fun timerStart(sessionId: String, nowMs: Long)
+
+    /**
+     * Congela el cronómetro: acumula el tramo corrido en `timerBaseSec` y
+     * desancla `runningSince`.
+     */
+    suspend fun timerPause(sessionId: String, nowMs: Long)
+
+    /**
+     * Re-ancla el reloj sin perder lo ya contado (tick de 15 s kill-safe o
+     * reanudar): `timerBaseSec += ahora - runningSince` y `runningSince = nowMs`.
+     */
+    suspend fun timerSync(sessionId: String, nowMs: Long)
 
     /** Guarda la sesión (alimenta el prefill futuro) y la cierra. */
     suspend fun finishSession(sessionId: String)
@@ -110,6 +128,9 @@ class FakeWorkoutRepository(
 
     private val sessions = MutableStateFlow<Map<String, WorkoutSessionDetail>>(emptyMap())
 
+    /** Sesión viva actual (guardia anti-doble: solo una viva por definición). */
+    private var liveSessionId: String? = null
+
     /** Historial de finalizadas por `(routineId, exerciseId)`. */
     private val history = MutableStateFlow<Map<Pair<String, String>, List<SetEntry>>>(emptyMap())
 
@@ -120,6 +141,9 @@ class FakeWorkoutRepository(
         history.map { map -> map[routineId to exerciseId] ?: emptyList() }
 
     override suspend fun startSession(routineId: String): String {
+        // Guardia anti-doble (spec 022): si ya hay una sesión viva, no crear
+        // fantasma; devolver la viva.
+        liveSessionId?.let { return it }
         val sessionId = UUID.randomUUID().toString()
         val now = System.currentTimeMillis()
         val detail = routines.observeRoutine(routineId).firstOrNull()
@@ -170,6 +194,7 @@ class FakeWorkoutRepository(
                 items = items
             ))
         }
+        liveSessionId = sessionId
         return sessionId
     }
 
@@ -325,6 +350,39 @@ class FakeWorkoutRepository(
         }
     }
 
+    override suspend fun timerStart(sessionId: String, nowMs: Long) {
+        sessions.update { map ->
+            val cur = map[sessionId] ?: return@update map
+            val s = cur.session
+            if (s.runningSince != null) return@update map
+            map + (sessionId to cur.copy(session = s.copy(runningSince = nowMs)))
+        }
+    }
+
+    override suspend fun timerPause(sessionId: String, nowMs: Long) {
+        sessions.update { map ->
+            val cur = map[sessionId] ?: return@update map
+            val s = cur.session
+            if (s.runningSince == null) return@update map
+            val acumulado = s.timerBaseSec + ((nowMs - s.runningSince) / 1000).toInt()
+            map + (sessionId to cur.copy(
+                session = s.copy(timerBaseSec = acumulado.coerceAtLeast(0), runningSince = null)
+            ))
+        }
+    }
+
+    override suspend fun timerSync(sessionId: String, nowMs: Long) {
+        sessions.update { map ->
+            val cur = map[sessionId] ?: return@update map
+            val s = cur.session
+            if (s.runningSince == null) return@update map
+            val acumulado = s.timerBaseSec + ((nowMs - s.runningSince) / 1000).toInt()
+            map + (sessionId to cur.copy(
+                session = s.copy(timerBaseSec = acumulado.coerceAtLeast(0), runningSince = nowMs)
+            ))
+        }
+    }
+
     override suspend fun finishSession(sessionId: String) {
         val detail = sessions.value[sessionId] ?: return
         val now = System.currentTimeMillis()
@@ -352,10 +410,12 @@ class FakeWorkoutRepository(
         }
         // La finalizada no sigue viva: se retira de activas.
         sessions.update { it - sessionId }
+        if (liveSessionId == sessionId) liveSessionId = null
     }
 
     override suspend fun discardSession(sessionId: String) {
         sessions.update { it - sessionId }
+        if (liveSessionId == sessionId) liveSessionId = null
     }
 
     private inline fun mutateEntry(

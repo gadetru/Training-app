@@ -58,8 +58,20 @@ data class HomeUiState(
     val firstName: String = "Carlos",
     val routines: List<RoutineSummary> = emptyList(),
     val progress: WeeklyProgress = WeeklyProgress(),
-    val isLoading: Boolean = false
+    val isLoading: Boolean = false,
+    /** Id de la sesión viva (para Terminar/Descartar desde Home), o null. */
+    val liveSessionId: String? = null,
+    /** Id de la rutina con sesión viva (endedAt IS NULL, no borrada), o null. */
+    val liveRoutineId: String? = null,
+    /** Contador de la sesión viva (segundos), 0 si no hay viva. */
+    val liveElapsedSec: Int = 0,
+    /** Id de la rutina programada para HOY (primera fila de scheduled_days de hoy). */
+    val scheduledTodayId: String? = null
 ) {
     val greeting: String
         get() = "Hola, $firstName"
+
+    /** Hay una sesión viva que bloquea los "Iniciar" del resto. */
+    val hasLiveSession: Boolean
+        get() = liveRoutineId != null
 }

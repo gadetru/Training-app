@@ -39,7 +39,8 @@ Entidades + DAOs con `@Upsert`, `exportSchema=true`, repositorios Room con la mi
 
 ## Implementados, pendientes de merge
 
-(vacío) `/spec-impl` añade aquí una entrada al cerrar cada spec. Al mergear, el usuario la mueve al bloque "Specs mergeados en `main`".
+- `022-sesion-en-marcha` (rama `022-sesion-en-marcha`, sin commitear): cronómetro persistente (DB v4 + `MIGRATION_3_4` con `timerBaseSec`/`runningSince`, `Migration34Test`), guardia anti-doble en `startSession` (Room + fake), `WorkoutViewModel.openSession(routineId, sessionId)` con estados `timerState`/`timerElapsedSec` derivados de DB, tick 1s pantalla + tick 15s `timerSync` kill-safe, CTA "Finalizar" (sesión). Home: `HomeUiState.liveRoutineId`/`liveSessionId`/`liveElapsedSec`/`scheduledTodayId`/`hasLiveSession`, `RoomHomeRepository` combina `observeLive()` + `scheduled_days` de hoy, `HomeScreen` card EN MARCHA (Reanudar `resumeWorkout:<id>` / Terminar `finishWorkout:<id>` / Descartar `discardWorkout:<id>` + confirmación + pie contador con tick 1s), `primary` = programada hoy, resto Iniciar no clicable. `MainActivity` ruta `workout?routineId&sessionId` + wiring `onLiveResume/onLiveFinish/onLiveDiscard`. Tests JVM: `TimerRulesTest`, `HomeLiveTest`, `StartSessionGuardTest`; `testDebugUnitTest` verde (96/96). `assembleDebug` OK; schema v4 regenerado (`4.json` con las 2 columnas).
+  Verificación bloqueada: `connectedDebugAndroidTest` no lanzable (no hay `adb` ni dispositivo en estado `device` en este entorno). Pendiente de prueba en emulador Pixel 6 API 34 y físico.
 
 ## Siguiente
 
