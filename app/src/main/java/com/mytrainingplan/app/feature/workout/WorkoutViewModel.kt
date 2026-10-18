@@ -302,6 +302,19 @@ class WorkoutViewModel @Inject constructor(
         viewModelScope.launch { repository.deleteLiveSet(sid, entryId) }
     }
 
+    /**
+     * Spec 021: sustituye el ejercicio del slot de rutina en sesión.
+     * Reescribe el exerciseId de todas las entradas (hechas incluidas) en
+     * el repo; el flujo de detail recompone solo y la tarjeta muestra el
+     * nuevo nombre vía item.exercise.
+     */
+    fun onReplaceExercise(routineExerciseId: String, newExerciseId: String) {
+        val sid = sessionId.value ?: return
+        viewModelScope.launch {
+            repository.replaceExercise(sid, routineExerciseId, newExerciseId)
+        }
+    }
+
     /** Flujo crudo para previsualización o depuración. */
     internal fun observeDetail(): Flow<WorkoutSessionDetail?> = detail
 }

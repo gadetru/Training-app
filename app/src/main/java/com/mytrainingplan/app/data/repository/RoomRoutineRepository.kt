@@ -178,6 +178,11 @@ class RoomRoutineRepository(
         items.upsert(cur.copy(deleted = true).toEntity())
     }
 
+    override suspend fun updateExercise(routineExerciseId: String, newExerciseId: String) {
+        val cur = items.getById(routineExerciseId)?.toDomain() ?: return
+        items.upsert(cur.copy(exerciseId = newExerciseId).toEntity())
+    }
+
     override suspend fun saveRoutine(routineId: String) {
         val cur = routines.getById(routineId)?.toDomain() ?: return
         routines.upsert(cur.toEntity())

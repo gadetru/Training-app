@@ -78,6 +78,9 @@ interface RoutineRepository {
 
     suspend fun deleteExercise(routineExerciseId: String)
 
+    /** Cambia el ejercicio de un slot de rutina sin mover su posición (spec 021). */
+    suspend fun updateExercise(routineExerciseId: String, newExerciseId: String)
+
     /** Publica el borrador al feed. */
     suspend fun saveRoutine(routineId: String)
 
@@ -244,6 +247,28 @@ class FakeRoutineRepository(
                     item.copy(routineExercise = item.routineExercise.copy(position = index))
                 }
             map + (routineId to current.copy(items = items))
+        }
+    }
+
+    override suspend fun updateExercise(routineExerciseId: String, newExerciseId: String) {
+        val routineId = findRoutineId(routineExerciseId) ?: return
+        ensureDraft(routineId) ?: return
+        val now = System.currentTimeMillis()
+        drafts.update { map ->
+            val entry = map.entries
+                .find { (_, detail) -> detail.items.any { it.routineExercise.id == routineExerciseId } }
+                ?: return@update map
+            val updated = entry.value.copy(
+                items = entry.value.items.map { item ->
+                    if (item.routineExercise.id == routineExerciseId) {
+                        item.copy(routineExercise = item.routineExercise.copy(
+                            exerciseId = newExerciseId,
+                            updatedAt = now
+                        ))
+                    } else item
+                }
+            )
+            map + (entry.key to updated)
         }
     }
 
