@@ -7,6 +7,7 @@ import com.mytrainingplan.app.data.local.dao.RoutineExerciseDao
 import com.mytrainingplan.app.data.mapper.toDomain
 import com.mytrainingplan.app.data.mapper.toEntity
 import com.mytrainingplan.app.domain.model.PlannedSet
+import com.mytrainingplan.app.domain.model.RoutineDurationRules
 import java.util.UUID
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
@@ -81,23 +82,23 @@ class RoomRoutineRepository(
         emit(exercises.getById(id))
     }
 
-    override suspend fun createRoutine(name: String, durationMin: Int): String {
+    override suspend fun createRoutine(name: String, durationMin: Int, durationManual: Boolean): String {
         val id = UUID.randomUUID().toString()
         val now = System.currentTimeMillis()
         // Spec 008: `position` real = nº de rutinas vivas al crear (orden de creación).
         val count = routines.observeAll().first().size
         routines.upsert(
             com.mytrainingplan.app.domain.model.Routine(
-                id = id, name = name, durationMin = durationMin,
+                id = id, name = name, durationMin = durationMin, durationManual = durationManual,
                 position = count, createdAt = now, updatedAt = now
             ).toEntity(now)
         )
         return id
     }
 
-    override suspend fun updateMeta(routineId: String, name: String, durationMin: Int) {
+    override suspend fun updateMeta(routineId: String, name: String, durationMin: Int, durationManual: Boolean) {
         val cur = routines.getById(routineId)?.toDomain() ?: return
-        routines.upsert(cur.copy(name = name, durationMin = durationMin).toEntity())
+        routines.upsert(cur.copy(name = name, durationMin = durationMin, durationManual = durationManual).toEntity())
     }
 
     override suspend fun addExercises(routineId: String, ids: List<String>) {
@@ -185,7 +186,18 @@ class RoomRoutineRepository(
 
     override suspend fun saveRoutine(routineId: String) {
         val cur = routines.getById(routineId)?.toDomain() ?: return
-        routines.upsert(cur.toEntity())
+        val updated = if (cur.durationManual) {
+            cur // MANUAL: se congela, no se recalcula.
+        } else {
+            // AUTO: estimación = Σ descansos + 30 s por serie, mínimo 1.
+            val exercises = items.observeByRoutine(routineId).first()
+            val allSets = exercises.flatMap { re ->
+                sets.observeByExercise(re.id).first().map { it.toDomain() }
+            }
+            val estimated = RoutineDurationRules.estimate(allSets) ?: 0
+            cur.copy(durationMin = estimated)
+        }
+        routines.upsert(updated.toEntity())
     }
 
     override suspend fun discard(routineId: String) {

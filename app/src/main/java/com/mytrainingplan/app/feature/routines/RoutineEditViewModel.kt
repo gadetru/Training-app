@@ -3,6 +3,7 @@ package com.mytrainingplan.app.feature.routines
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mytrainingplan.app.data.repository.RoutineRepository
+import com.mytrainingplan.app.domain.model.RoutineDurationRules
 import com.mytrainingplan.app.domain.model.RoutineEditUiState
 import com.mytrainingplan.app.domain.model.RoutineExerciseUi
 import com.mytrainingplan.app.domain.model.RoutineMuscleLabels
@@ -56,6 +57,7 @@ class RoutineEditViewModel @Inject constructor(
                 routineId = detail.routine.id,
                 name = detail.routine.name,
                 durationMin = detail.routine.durationMin,
+                durationManual = detail.routine.durationManual,
                 tags = RoutineMuscleLabels.tagsFor(detail.items.map { it.exercise }),
                 exercises = detail.items.map { item ->
                     RoutineExerciseUi(
@@ -90,13 +92,30 @@ class RoutineEditViewModel @Inject constructor(
     fun onNameChange(value: String) {
         val id = routineId.value ?: return
         val duration = uiState.value.durationMin
-        viewModelScope.launch { repository.updateMeta(id, value, duration) }
+        val manual = uiState.value.durationManual
+        viewModelScope.launch { repository.updateMeta(id, value, duration, manual) }
     }
 
     fun onDurationChange(minutes: Int) {
         val id = routineId.value ?: return
         val name = uiState.value.name
-        viewModelScope.launch { repository.updateMeta(id, name, minutes.coerceAtLeast(0)) }
+        // Escribir la duración a mano congela el modo (MANUAL).
+        viewModelScope.launch { repository.updateMeta(id, name, minutes.coerceAtLeast(0), true) }
+    }
+
+    /** Vuelve a AUTO: recalcula la estimación desde las series actuales y la persiste. */
+    fun onDurationModeChange(manual: Boolean) {
+        val id = routineId.value ?: return
+        val name = uiState.value.name
+        val duration = uiState.value.durationMin
+        if (!manual) {
+            // AUTO: recalcular estimación desde las series del borrador.
+            val sets = uiState.value.exercises.flatMap { it.sets }
+            val estimated = RoutineDurationRules.estimate(sets) ?: 0
+            viewModelScope.launch { repository.updateMeta(id, name, estimated.coerceAtLeast(0), false) }
+        } else {
+            viewModelScope.launch { repository.updateMeta(id, name, duration.coerceAtLeast(0), true) }
+        }
     }
 
     fun onAddExercises(ids: List<String>) {

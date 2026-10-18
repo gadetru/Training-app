@@ -14,6 +14,8 @@ data class RoutineEntity(
     @PrimaryKey val id: String,
     val name: String = "",
     val durationMin: Int = 45,
+    /** `true` = duración fijada a mano (MANUAL, se congela); `false` = AUTO. */
+    val durationManual: Boolean = false,
     val position: Int = 0,
     val createdAt: Long = 0L,
     val updatedAt: Long = 0L,

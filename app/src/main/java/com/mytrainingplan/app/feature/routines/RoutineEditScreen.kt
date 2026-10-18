@@ -98,6 +98,7 @@ import coil.decode.BitmapFactoryDecoder
 import coil.request.ImageRequest
 import com.mytrainingplan.app.domain.model.Exercise
 import com.mytrainingplan.app.domain.model.PlannedSet
+import com.mytrainingplan.app.domain.model.RoutineDurationRules
 import com.mytrainingplan.app.domain.model.RoutineEditUiState
 import com.mytrainingplan.app.domain.model.RoutineExercise
 import com.mytrainingplan.app.domain.model.RoutineExerciseUi
@@ -152,6 +153,7 @@ fun RoutineEditScreen(
         uiState = uiState,
         onNameChange = viewModel::onNameChange,
         onDurationChange = viewModel::onDurationChange,
+        onDurationModeChange = viewModel::onDurationModeChange,
         onAddClick = { showPicker = true },
         onToggleExpanded = viewModel::onToggleExpanded,
         onDeleteExercise = viewModel::onDeleteExercise,
@@ -185,6 +187,7 @@ fun RoutineEditContent(
     uiState: RoutineEditUiState,
     onNameChange: (String) -> Unit = {},
     onDurationChange: (Int) -> Unit = {},
+    onDurationModeChange: (Boolean) -> Unit = {},
     onAddClick: () -> Unit = {},
     onToggleExpanded: (String) -> Unit = {},
     onDeleteExercise: (String) -> Unit = {},
@@ -211,6 +214,16 @@ fun RoutineEditContent(
     val footerBehavior = BottomAppBarDefaults.exitAlwaysScrollBehavior(
         canScroll = { scrollState.canScrollForward || scrollState.canScrollBackward }
     )
+    // Duración efectiva para mostrar: AUTO → estimación de las series (o "—"
+    // si no hay); MANUAL → el número escrito (congelado).
+    val sets = uiState.exercises.flatMap { it.sets }
+    val estimated = RoutineDurationRules.estimate(sets)
+    val effectiveDuration = if (uiState.durationManual) uiState.durationMin else (estimated ?: 0)
+    val durationDisplay = when {
+        uiState.durationManual -> "${uiState.durationMin} min"
+        estimated == null -> "—"
+        else -> "≈ $estimated min"
+    }
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -239,8 +252,11 @@ fun RoutineEditContent(
                     name = uiState.name,
                     onEditNameClick = { showNameDialog = true },
                     exerciseCount = uiState.exercises.size,
-                    durationMin = uiState.durationMin,
+                    durationMin = effectiveDuration,
+                    durationManual = uiState.durationManual,
                     onDurationChange = onDurationChange,
+                    onDurationModeChange = onDurationModeChange,
+                    durationDisplay = durationDisplay,
                     tags = uiState.tags,
                     expanded = metaExpanded,
                     onToggleExpanded = { metaExpanded = !metaExpanded }
@@ -271,7 +287,9 @@ fun RoutineEditContent(
         SaveFooter(
             exerciseCount = uiState.exercises.size,
             totalSets = uiState.exercises.sumOf { it.sets.size },
-            durationMin = uiState.durationMin,
+            durationMin = effectiveDuration,
+            durationManual = uiState.durationManual,
+            durationDisplay = durationDisplay,
             isSaving = uiState.isSaving,
             onSave = onSave,
             modifier = Modifier
@@ -362,7 +380,10 @@ private fun MetaCard(
     onEditNameClick: () -> Unit,
     exerciseCount: Int,
     durationMin: Int,
+    durationManual: Boolean,
     onDurationChange: (Int) -> Unit,
+    onDurationModeChange: (Boolean) -> Unit,
+    durationDisplay: String,
     tags: List<String>,
     expanded: Boolean = true,
     onToggleExpanded: () -> Unit = {}
@@ -422,7 +443,7 @@ private fun MetaCard(
         }
         Spacer(Modifier.height(AppDimens.SpaceSm))
         Text(
-            "$exerciseCount ejercicios configurados • ~$durationMin min estimados",
+            "$exerciseCount ejercicios configurados • $durationDisplay",
             color = AppColors.TextMuted,
             fontSize = AppTextSizes.Body
         )
@@ -435,25 +456,55 @@ private fun MetaCard(
         ) {
             Text("Duración", color = AppColors.TextMuted, fontSize = AppTextSizes.Body)
             Spacer(Modifier.width(AppDimens.SpaceMd))
-            BasicTextField(
-                value = durationMin.toString(),
-                onValueChange = { raw -> NumberInput.sanitizeInt(raw).toIntOrNull()?.let(onDurationChange) },
-                singleLine = true,
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                textStyle = TextStyle(
+            // Interruptor AUTO / MANUAL (dos estados).
+            Box(
+                modifier = Modifier
+                    .size(AppDimens.TouchMin)
+                    .clip(RoundedCornerShape(AppDimens.RadiusPill))
+                    .background(if (durationManual) AppColors.CardHigh else AppColors.Card)
+                    .border(AppDimens.BorderThin, AppColors.BorderSubtle, RoundedCornerShape(AppDimens.RadiusPill))
+                    .clickable(onClick = { onDurationModeChange(!durationManual) }),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    if (durationManual) "MANUAL" else "AUTO",
                     color = AppColors.TextPrimary,
+                    fontSize = AppTextSizes.Small,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+            Spacer(Modifier.width(AppDimens.SpaceSm))
+            if (durationManual) {
+                // Campo numérico editable (modo MANUAL, congelado a lo escrito).
+                BasicTextField(
+                    value = durationMin.toString(),
+                    onValueChange = { raw -> NumberInput.sanitizeInt(raw).toIntOrNull()?.let(onDurationChange) },
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    textStyle = TextStyle(
+                        color = AppColors.TextPrimary,
+                        fontSize = AppTextSizes.TitleSm,
+                        fontWeight = FontWeight.Bold,
+                        textAlign = TextAlign.Center
+                    ),
+                    modifier = Modifier
+                        .width(AppDimens.DurationWidth)
+                        .clip(RoundedCornerShape(AppDimens.RadiusMd))
+                        .background(AppColors.CardHigh)
+                        .padding(vertical = AppDimens.SpaceMd, horizontal = AppDimens.SpaceXs)
+                )
+                Spacer(Modifier.width(AppDimens.SpaceSm))
+                Text("min", color = AppColors.TextMuted, fontSize = AppTextSizes.Body)
+            } else {
+                // AUTO: solo lectura, "≈ X min" o "—" sin series.
+                Text(
+                    durationDisplay,
+                    color = AppColors.TextMuted,
                     fontSize = AppTextSizes.TitleSm,
                     fontWeight = FontWeight.Bold,
-                    textAlign = TextAlign.Center
-                ),
-                modifier = Modifier
-                    .width(AppDimens.DurationWidth)
-                    .clip(RoundedCornerShape(AppDimens.RadiusMd))
-                    .background(AppColors.CardHigh)
-                    .padding(vertical = AppDimens.SpaceMd, horizontal = AppDimens.SpaceXs)
-            )
-            Spacer(Modifier.width(AppDimens.SpaceSm))
-            Text("min", color = AppColors.TextMuted, fontSize = AppTextSizes.Body)
+                    modifier = Modifier.width(AppDimens.DurationWidth)
+                )
+            }
         }
         Spacer(Modifier.height(AppDimens.SpaceMd))
         if (tags.isEmpty()) {
@@ -1207,6 +1258,8 @@ private fun SaveFooter(
     exerciseCount: Int,
     totalSets: Int,
     durationMin: Int,
+    durationManual: Boolean,
+    durationDisplay: String,
     isSaving: Boolean,
     onSave: () -> Unit,
     modifier: Modifier = Modifier
@@ -1234,7 +1287,12 @@ private fun SaveFooter(
                 color = AppColors.TextMuted,
                 fontSize = AppTextSizes.Body
             )
-            Text("~$durationMin min", color = AppColors.Volt, fontSize = AppTextSizes.Body, fontWeight = FontWeight.Bold)
+            Text(
+                if (durationManual) durationDisplay else "≈ $durationMin min",
+                color = AppColors.Volt,
+                fontSize = AppTextSizes.Body,
+                fontWeight = FontWeight.Bold
+            )
         }
         Spacer(Modifier.height(AppDimens.SpaceLg))
         Row(

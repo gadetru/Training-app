@@ -24,7 +24,9 @@ data class Routine(
     /** UUID generado en cliente. */
     val id: String,
     val name: String,
-    val durationMin: Int,
+    val durationMin: Int = 0,
+    /** `true` = el usuario fijó la duración a mano (se congela); `false` = AUTO, se estima/real. */
+    val durationManual: Boolean = false,
     val position: Int = 0,
     val createdAt: Long = 0L,
     val updatedAt: Long = 0L,
@@ -80,7 +82,9 @@ data class RoutineExerciseUi(
 data class RoutineEditUiState(
     val routineId: String = "",
     val name: String = "",
-    val durationMin: Int = 45,
+    val durationMin: Int = 0,
+    /** Modo AUTO/MANUAL de la duración. `true` = MANUAL (congela), `false` = AUTO. */
+    val durationManual: Boolean = false,
     val tags: List<String> = emptyList(),
     val exercises: List<RoutineExerciseUi> = emptyList(),
     val isSaving: Boolean = false
