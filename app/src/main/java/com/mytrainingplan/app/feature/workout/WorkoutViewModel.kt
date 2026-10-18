@@ -4,6 +4,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mytrainingplan.app.data.repository.WorkoutRepository
 import com.mytrainingplan.app.data.repository.WorkoutSessionDetail
+import com.mytrainingplan.app.domain.model.TimerState
+import com.mytrainingplan.app.domain.model.timerElapsedSec
+import com.mytrainingplan.app.domain.model.timerState
 import com.mytrainingplan.app.domain.model.WorkoutExerciseUi
 import com.mytrainingplan.app.domain.model.WorkoutUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -22,16 +25,13 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 /**
- * Estado solo de pantalla (jamás se persiste): cronómetro, pausa, descanso,
- * plegado y guardado. Vive en un único [MutableStateFlow] para que el
- * [combine] con la sesión sea de 2 flujos (las sobrecargas tipadas de más
- * aridad no existen en la versión de coroutines del proyecto).
+ * Estado solo de pantalla (jamás se persiste): descanso, plegado y guardado.
+ * El cronómetro (`elapsedSec`/`isPaused`) se deriva de [detail] (DB) más un
+ * tick local de 1 s para que el reloj se vea moverse en pantalla sin lecturas
+ * de DB (spec 022 §48). Vive en un único [MutableStateFlow] para que el
+ * [combine] con la sesión sea de 2 flujos.
  */
 private data class Ephemeral(
-    val elapsedSec: Int = 0,
-    // Spec 013 paso 3: arranque detenido (el cronómetro no auto-arranca;
-    // el botón Comenzar lo pone en marcha vía onPauseToggle).
-    val isPaused: Boolean = true,
     val restRemainingSec: Int? = null,
     val restTotalSec: Int = 0,
     val restEntryId: String? = null,
@@ -40,7 +40,8 @@ private data class Ephemeral(
 )
 
 /**
- * Sesión en vivo con Room (Paso 11 spec 006, Fase B).
+ * Sesión en vivo con Room (Paso 11 spec 006, Fase B; spec 022: reanudar con
+ * `sessionId`, cronómetro persistente, CTA "Finalizar").
  * Misma forma por fuera; repo real inyectado con Hilt.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -53,6 +54,9 @@ class WorkoutViewModel @Inject constructor(
     private val sessionId = MutableStateFlow<String?>(null)
     private val ephemeral = MutableStateFlow(Ephemeral())
 
+    /** Reloj de pantalla: se inicializa desde detail y avanza por tick de 1 s. */
+    private val elapsedSec = MutableStateFlow(0)
+
     private val detail: StateFlow<WorkoutSessionDetail?> =
         sessionId.flatMapLatest { id: String? ->
             if (id == null) flowOf(null) else repository.observeSession(id)
@@ -62,11 +66,15 @@ class WorkoutViewModel @Inject constructor(
             initialValue = null
         )
 
-    val uiState: StateFlow<WorkoutUiState> = combine(detail, ephemeral) { d, e ->
+    val uiState: StateFlow<WorkoutUiState> = combine(
+        detail,
+        combine(ephemeral, elapsedSec) { e, s -> Pair(e, s) }
+    ) { d, pair ->
+        val (e, secs) = pair
         if (d == null) {
             WorkoutUiState(
-                elapsedSec = e.elapsedSec,
-                isPaused = e.isPaused,
+                elapsedSec = secs,
+                isPaused = true,
                 restRemainingSec = e.restRemainingSec,
                 restTotalSec = e.restTotalSec,
                 isSaving = e.isSaving
@@ -86,11 +94,12 @@ class WorkoutViewModel @Inject constructor(
                 )
             }
             val all = items.flatMap { it.entries }
+            val isPaused = d.session.timerState != TimerState.ACTIVO
             WorkoutUiState(
                 sessionId = d.session.id,
                 routineName = d.routineName,
-                elapsedSec = e.elapsedSec,
-                isPaused = e.isPaused,
+                elapsedSec = secs,
+                isPaused = isPaused,
                 exercises = items,
                 doneCount = all.count { it.done },
                 totalCount = all.size,
@@ -106,59 +115,92 @@ class WorkoutViewModel @Inject constructor(
     )
 
     init {
+        // (Re)inicializa el reloj de pantalla desde la sesión de DB.
+        viewModelScope.launch {
+            detail.collect { d ->
+                val now = System.currentTimeMillis()
+                elapsedSec.value = if (d == null) 0 else d.session.timerElapsedSec(now)
+            }
+        }
+
+        // Tick de 1 s: avanza el reloj cuando ACTIVO + cuenta atrás del descanso.
         viewModelScope.launch {
             while (true) {
                 delay(1_000)
-                // Spec 019 paso 2: al cerrarse el descanso a 0, colapso auto
-                // + avance al siguiente (misma regla que onRestFinish).
+                val now = System.currentTimeMillis()
+                val d = detail.value
+                if (d != null && d.session.runningSince != null) {
+                    elapsedSec.value = d.session.timerElapsedSec(now)
+                }
                 var closedEntryId: String? = null
                 ephemeral.update { cur ->
-                    if (cur.isPaused) return@update cur
-                    val ticked = if (sessionId.value != null) {
-                        cur.copy(elapsedSec = cur.elapsedSec + 1)
-                    } else {
-                        cur
-                    }
-                    val rest = ticked.restRemainingSec
-                    if (rest != null) {
-                        // A 0 se cierra solo, sin crash.
-                        if (rest <= 1) {
-                            closedEntryId = ticked.restEntryId
-                            ticked.copy(restRemainingSec = null, restEntryId = null)
-                        } else ticked.copy(restRemainingSec = rest - 1)
-                    } else {
-                        ticked
-                    }
+                    val rest = cur.restRemainingSec
+                    if (rest == null) return@update cur
+                    // A 0 se cierra solo, sin crash.
+                    val next = (rest - 1).coerceAtLeast(0)
+                    if (next <= 0) {
+                        closedEntryId = cur.restEntryId
+                        cur.copy(restRemainingSec = null, restEntryId = null)
+                    } else cur.copy(restRemainingSec = next)
                 }
                 if (closedEntryId != null) autoCollapseAndAdvance(closedEntryId!!)
+            }
+        }
+
+        // Tick de 15 s: persiste el cronómetro corriendo (kill-safe aproximado, spec 022).
+        viewModelScope.launch {
+            while (true) {
+                delay(15_000)
+                val sid = sessionId.value ?: return@launch
+                val d = detail.value ?: return@launch
+                if (d.session.runningSince != null) {
+                    viewModelScope.launch { repository.timerSync(sid, System.currentTimeMillis()) }
+                }
             }
         }
     }
 
     /**
-     * Abre la sesión: crea una con `startSession(routineId)` (prefill
-     * última-vs-plan en el repo). Idempotente (rotación no duplica sesiones:
-     * el ViewModel sobrevive y [opened] ya está fijado). Con null no crea
-     * nada: estado vacío sin crash.
+     * Abre la sesión: si `sessionId` != null observa la existente (reanudar);
+     * si no, crea una con `startSession(routineId)` (prefill última-vs-plan).
+     * Idempotente (rotación no duplica sesiones: el ViewModel sobrevive y
+     * [opened] ya está fijado). Con null no crea nada: estado vacío.
      */
-    fun openSession(routineId: String?) {
+    fun openSession(routineId: String?, sessionId: String? = null) {
         if (opened) return
         opened = true
-        if (routineId == null) return
+        if (routineId == null && sessionId == null) return
         viewModelScope.launch {
-            sessionId.value = repository.startSession(routineId)
+            if (sessionId != null) {
+                this@WorkoutViewModel.sessionId.value = sessionId
+            } else {
+                this@WorkoutViewModel.sessionId.value = repository.startSession(routineId!!)
+            }
         }
     }
 
     /**
      * Spec 013 paso 4 + spec 019 paso 1: niega el estado EFECTIVO (toque
-     * previo o defecto colapsado, igual que el `combine`), no `?: true`: si
-     * no, expandir una tarjeta colapsada por defecto costaba 2 taps (el 1º
-     * guardaba `false`, que ya era su estado visible).
+     * previo o defecto colapsado, igual que el `combine`), no `?: true`.
      */
     fun onToggleExpanded(routineExerciseId: String) {
         ephemeral.update { cur ->
             cur.copy(expanded = WorkoutExpandRules.toggle(cur.expanded, routineExerciseId))
+        }
+    }
+
+    /**
+     * Spec 013 paso 4 + spec 019 paso 1 + spec 022: alterna Comenzar → Pausar →
+     * Reanudar persistiéndolo en el repo según el estado derivado de DB.
+     */
+    fun onPauseToggle() {
+        val sid = sessionId.value ?: return
+        val d = detail.value ?: return
+        val now = System.currentTimeMillis()
+        when (d.session.timerState) {
+            TimerState.ACTIVO -> viewModelScope.launch { repository.timerPause(sid, now) }
+            TimerState.EN_PAUSA, TimerState.SIN_EMPEZAR ->
+                viewModelScope.launch { repository.timerStart(sid, now) }
         }
     }
 
@@ -212,7 +254,7 @@ class WorkoutViewModel @Inject constructor(
         val d = detail.value ?: return
         val sid = sessionId.value ?: return
         val entry = d.items.flatMap { it.entries }.find { it.id == entryId } ?: return
-        if (!entry.done && ephemeral.value.isPaused) return
+        if (!entry.done && d.session.timerState != TimerState.ACTIVO) return
         viewModelScope.launch {
             repository.toggleSetDone(sid, entryId, !entry.done)
             if (!entry.done) {
@@ -253,11 +295,6 @@ class WorkoutViewModel @Inject constructor(
         val finishedEntryId = ephemeral.value.restEntryId
         ephemeral.update { it.copy(restRemainingSec = null, restEntryId = null) }
         if (finishedEntryId != null) autoCollapseAndAdvance(finishedEntryId)
-    }
-
-    /** Spec 013 paso 3: alterna Comenzar → Pausar → Reanudar (sin lógica de repo). */
-    fun onPauseToggle() {
-        ephemeral.update { it.copy(isPaused = !it.isPaused) }
     }
 
     fun onFinish(onDone: () -> Unit) {

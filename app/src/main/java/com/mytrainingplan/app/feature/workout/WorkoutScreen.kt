@@ -1443,14 +1443,14 @@ private fun SessionBar(
             // Flag no está en material-icons-core → fallback Done.
             Icon(Icons.Filled.Done, contentDescription = null, tint = AppColors.OnOrange, modifier = Modifier.size(AppDimens.IconXl))
             Spacer(Modifier.width(AppDimens.SpaceSm))
-            Text(
-                if (isSaving) "Guardando…" else "Finalizar y Guardar",
-                color = AppColors.OnOrange,
-                fontSize = AppTextSizes.BodyLg,
-                fontWeight = FontWeight.Bold,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
+                Text(
+                    if (isSaving) "Guardando…" else "Finalizar",
+                    color = AppColors.OnOrange,
+                    fontSize = AppTextSizes.BodyLg,
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
         }
         // Minimizar (TODO visual: vuelve atrás manteniendo la sesión viva).
         Box(
