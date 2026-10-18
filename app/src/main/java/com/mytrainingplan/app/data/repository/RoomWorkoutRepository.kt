@@ -58,6 +58,13 @@ class RoomWorkoutRepository(
      * vacía sin crash (la UI permite volver).
      */
     override suspend fun startSession(routineId: String): String {
+        // Guardia anti-doble (spec 022 §45): si ya hay una sesión viva,
+        // no crear fantasma; devolver la viva + Log (comportamiento de retomar).
+        val viva = sessions.observeLive().first().firstOrNull()
+        if (viva != null) {
+            Log.w(TAG, "startSession: ya hay sesión viva sessionId=${viva.id} routineId=${viva.routineId}; se retorna la viva")
+            return viva.id
+        }
         val id = UUID.randomUUID().toString()
         val now = System.currentTimeMillis()
         sessions.upsert(
@@ -329,6 +336,54 @@ class RoomWorkoutRepository(
         }
         sessions.upsert(cur.copy(deleted = true).toEntity())
         Log.i(TAG, "discardSession: sessionId=$sessionId")
+    }
+
+    override suspend fun timerStart(sessionId: String, nowMs: Long) {
+        val cur = sessions.observeById(sessionId).first()?.toDomain()
+        if (cur == null) {
+            Log.w(TAG, "timerStart: sesión inexistente sessionId=$sessionId")
+            return
+        }
+        if (cur.runningSince != null) {
+            Log.w(TAG, "timerStart: ya está corriendo sessionId=$sessionId")
+            return
+        }
+        sessions.upsert(cur.copy(runningSince = nowMs).toEntity(nowMs))
+        Log.i(TAG, "timerStart: sessionId=$sessionId runningSince=$nowMs")
+    }
+
+    override suspend fun timerPause(sessionId: String, nowMs: Long) {
+        val cur = sessions.observeById(sessionId).first()?.toDomain()
+        if (cur == null) {
+            Log.w(TAG, "timerPause: sesión inexistente sessionId=$sessionId")
+            return
+        }
+        if (cur.runningSince == null) {
+            Log.w(TAG, "timerPause: no está corriendo sessionId=$sessionId")
+            return
+        }
+        val acumulado = cur.timerBaseSec + ((nowMs - cur.runningSince) / 1000).toInt()
+        sessions.upsert(
+            cur.copy(timerBaseSec = acumulado.coerceAtLeast(0), runningSince = null).toEntity(nowMs)
+        )
+        Log.i(TAG, "timerPause: sessionId=$sessionId timerBaseSec=$acumulado")
+    }
+
+    override suspend fun timerSync(sessionId: String, nowMs: Long) {
+        val cur = sessions.observeById(sessionId).first()?.toDomain()
+        if (cur == null) {
+            Log.w(TAG, "timerSync: sesión inexistente sessionId=$sessionId")
+            return
+        }
+        if (cur.runningSince == null) {
+            Log.w(TAG, "timerSync: no está corriendo sessionId=$sessionId")
+            return
+        }
+        val acumulado = cur.timerBaseSec + ((nowMs - cur.runningSince) / 1000).toInt()
+        sessions.upsert(
+            cur.copy(timerBaseSec = acumulado.coerceAtLeast(0), runningSince = nowMs).toEntity(nowMs)
+        )
+        Log.i(TAG, "timerSync: sessionId=$sessionId timerBaseSec=$acumulado runningSince=$nowMs")
     }
 
     override fun observeLastEntries(routineId: String, exerciseId: String): Flow<List<SetEntry>> =
