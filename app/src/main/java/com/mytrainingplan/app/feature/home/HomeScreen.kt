@@ -127,7 +127,12 @@ fun HomeScreen(
         selectedTab = selectedTab,
         onTabSelected = onTabSelected,
         onLiveResume = onLiveResume,
-        onLiveFinish = onLiveFinish,
+        // Spec 022 §13: Terminar cierra de verdad la sesión viva en el repo
+        // (el feed se refresca solo vía Flow) y después navega.
+        onLiveFinish = {
+            viewModel.onFinishLive()
+            onLiveFinish()
+        },
         onLiveDiscard = { pendingLiveDiscard = true },
         liveSessionId = uiState.liveSessionId
     )
@@ -529,43 +534,60 @@ private fun RoutineCard(
                     .background(AppColors.BorderSubtle)
             )
             Spacer(Modifier.height(AppDimens.SpaceXl))
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Row(
-                    modifier = Modifier.weight(1f),
-                    verticalAlignment = Alignment.CenterVertically
+            // Spec 022 §28/§51: bloque CTA de la rutina viva o pie + Iniciar.
+            if (isLive) {
+                // Contador dentro del CTA, arriba y alineado con el contenido
+                // (mismo arranque que título/tags/meta); botones a ancho
+                // completo, en su propia fila, sin compartir espacio.
+                // Tinte naranja translúcido: identifica la rutina en marcha.
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(AppDimens.RadiusXl))
+                        .background(AppColors.Orange.copy(alpha = 0.12f))
+                        .border(
+                            AppDimens.BorderThin,
+                            AppColors.Orange.copy(alpha = 0.4f),
+                            RoundedCornerShape(AppDimens.RadiusXl)
+                        )
+                        .padding(AppDimens.SpaceXl)
                 ) {
-                    val footColor = if (routine.footKind == FootKind.PR) AppColors.Volt else AppColors.TextMuted
-                    val footIcon = when {
-                        routine.footKind == FootKind.PR -> Icons.Filled.Star
-                        routine.title.contains("Sentadilla") -> Icons.Filled.Info
-                        else -> Icons.Filled.Check
-                    }
-                    Icon(footIcon, contentDescription = null, tint = footColor, modifier = Modifier.size(AppDimens.IconSm))
-                    Spacer(Modifier.width(AppDimens.SpaceSm))
-                    Text(
-                        routine.footNote,
-                        color = footColor,
-                        fontSize = AppTextSizes.Small,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                }
-                Spacer(Modifier.width(AppDimens.SpaceMd))
-                // Spec 022 §28/§51: fila CTA de la rutina viva o Iniciar normal.
-                if (isLive) {
+                    liveClockRow(liveElapsedSec)
+                    Spacer(Modifier.height(AppDimens.SpaceLg))
                     liveCtaRow(
                         onResume = { onLiveResume(routine.id, liveSessionId ?: "") },
                         onFinish = onLiveFinish,
                         onDiscard = onLiveDiscard,
                         routineId = routine.id
                     )
-                    // Pie "EN MARCHA hh:mm" con tick local de 1 s (spec §28).
-                    liveClockRow(liveElapsedSec)
-                } else {
+                }
+            } else {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(
+                        modifier = Modifier.weight(1f),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        val footColor = if (routine.footKind == FootKind.PR) AppColors.Volt else AppColors.TextMuted
+                        val footIcon = when {
+                            routine.footKind == FootKind.PR -> Icons.Filled.Star
+                            routine.title.contains("Sentadilla") -> Icons.Filled.Info
+                            else -> Icons.Filled.Check
+                        }
+                        Icon(footIcon, contentDescription = null, tint = footColor, modifier = Modifier.size(AppDimens.IconSm))
+                        Spacer(Modifier.width(AppDimens.SpaceSm))
+                        Text(
+                            routine.footNote,
+                            color = footColor,
+                            fontSize = AppTextSizes.Small,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+                    Spacer(Modifier.width(AppDimens.SpaceMd))
                     normalCtaRow(
                         routine = routine,
                         scheduledTodayId = scheduledTodayId,
@@ -652,9 +674,9 @@ private fun liveCtaRow(
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Icon(Icons.Filled.PlayArrow, contentDescription = null, tint = AppColors.OnOrange, modifier = Modifier.size(AppDimens.IconMd))
+            Icon(Icons.Filled.PlayArrow, contentDescription = null, tint = AppColors.OnOrange, modifier = Modifier.size(AppDimens.IconSm))
             Spacer(Modifier.width(AppDimens.SpaceXs))
-            Text("Reanudar", color = AppColors.OnOrange, fontSize = AppTextSizes.Body, fontWeight = FontWeight.Bold)
+            Text("Reanudar", color = AppColors.OnOrange, fontSize = AppTextSizes.Small, fontWeight = FontWeight.Bold, maxLines = 1)
         }
         // Terminar.
         Row(
@@ -669,9 +691,9 @@ private fun liveCtaRow(
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Icon(Icons.Filled.Done, contentDescription = null, tint = AppColors.TextPrimary, modifier = Modifier.size(AppDimens.IconMd))
+            Icon(Icons.Filled.Done, contentDescription = null, tint = AppColors.TextPrimary, modifier = Modifier.size(AppDimens.IconSm))
             Spacer(Modifier.width(AppDimens.SpaceXs))
-            Text("Terminar", color = AppColors.TextPrimary, fontSize = AppTextSizes.Body, fontWeight = FontWeight.Bold)
+            Text("Terminar", color = AppColors.TextPrimary, fontSize = AppTextSizes.Small, fontWeight = FontWeight.Bold, maxLines = 1)
         }
         // Descartar.
         Row(
@@ -686,14 +708,17 @@ private fun liveCtaRow(
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Icon(Icons.Filled.Close, contentDescription = null, tint = AppColors.ErrorRed, modifier = Modifier.size(AppDimens.IconMd))
+            Icon(Icons.Filled.Close, contentDescription = null, tint = AppColors.ErrorRed, modifier = Modifier.size(AppDimens.IconSm))
             Spacer(Modifier.width(AppDimens.SpaceXs))
-            Text("Descartar", color = AppColors.ErrorRed, fontSize = AppTextSizes.Body, fontWeight = FontWeight.Bold)
+            Text("Descartar", color = AppColors.ErrorRed, fontSize = AppTextSizes.Small, fontWeight = FontWeight.Bold, maxLines = 1)
         }
     }
 }
 
-/** Pie "EN MARCHA hh:mm" con tick local de 1 s solo en la card viva. */
+/**
+ * Contador de la card viva (spec 022 §28): punto naranja + "EN MARCHA" +
+ * reloj, en una fila a ancho completo (tick local de 1 s, sin lecturas DB).
+ */
 @Composable
 private fun liveClockRow(liveElapsedSec: Int) {
     var displayedSec by remember { mutableStateOf(liveElapsedSec) }
@@ -704,13 +729,33 @@ private fun liveClockRow(liveElapsedSec: Int) {
             displayedSec = displayedSec + 1
         }
     }
-    Text(
-        "EN MARCHA ${formatClock(displayedSec)}",
-        color = AppColors.Orange,
-        fontSize = AppTextSizes.Small,
-        fontWeight = FontWeight.Bold,
-        modifier = Modifier.padding(top = AppDimens.SpaceXs).testTag("liveClock")
-    )
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .testTag("liveClock"),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
+            modifier = Modifier
+                .size(AppDimens.SpaceSm)
+                .clip(CircleShape)
+                .background(AppColors.Orange)
+        )
+        Spacer(Modifier.width(AppDimens.SpaceSm))
+        Text(
+            "EN MARCHA",
+            color = AppColors.Orange,
+            fontSize = AppTextSizes.Small,
+            fontWeight = FontWeight.Bold
+        )
+        Spacer(Modifier.width(AppDimens.SpaceMd))
+        Text(
+            formatClock(displayedSec),
+            color = AppColors.TextPrimary,
+            fontSize = AppTextSizes.TitleSm,
+            fontWeight = FontWeight.Bold
+        )
+    }
 }
 
 @Composable
