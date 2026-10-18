@@ -16,6 +16,8 @@ fun WorkoutSessionEntity.toDomain(): WorkoutSession = WorkoutSession(
     startedAt = startedAt,
     endedAt = endedAt,
     pausedAccumSec = pausedAccumSec,
+    timerBaseSec = timerBaseSec,
+    runningSince = runningSince,
     updatedAt = updatedAt,
     deleted = deleted
 )
@@ -27,6 +29,8 @@ fun WorkoutSession.toEntity(now: Long = System.currentTimeMillis()): WorkoutSess
         startedAt = startedAt,
         endedAt = endedAt,
         pausedAccumSec = pausedAccumSec,
+        timerBaseSec = timerBaseSec,
+        runningSince = runningSince,
         updatedAt = now,
         deleted = deleted
     )

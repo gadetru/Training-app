@@ -23,8 +23,9 @@ import com.mytrainingplan.app.data.local.entity.SetEntryEntity
 import com.mytrainingplan.app.data.local.entity.WorkoutSessionEntity
 
 /**
- * Base Room v3 (Paso 3 spec 006, Fase B; v2 spec 010: +`instructions`;
- * v3 spec 015: +`scheduled_days`).
+ * Base Room v4 (Paso 3 spec 006, Fase B; v2 spec 010: +`instructions`;
+ * v3 spec 015: +`scheduled_days`; v4 spec 022: +`timerBaseSec`/`runningSince`
+ * en `workout_sessions` para el cronómetro persistente).
  * 8 tablas espejo del dominio. `exportSchema = true`, esquemas en
  * `app/schemas/` (se generan al sincronizar en Android Studio con red;
  * aquí se deja la carpeta lista). `fallbackToDestructiveMigration()` solo
@@ -41,7 +42,7 @@ import com.mytrainingplan.app.data.local.entity.WorkoutSessionEntity
         SetEntryEntity::class,
         ScheduledDayEntity::class
     ],
-    version = 3,
+    version = 4,
     exportSchema = true
 )
 @TypeConverters(Converters::class)
@@ -82,5 +83,19 @@ val MIGRATION_2_3 = object : Migration(2, 3) {
                 "`deleted` INTEGER NOT NULL, " +
                 "PRIMARY KEY(`id`))"
         )
+    }
+}
+
+/**
+ * Migración 3→4 (spec 022): añade `timerBaseSec` (segundos ya contados,
+ * 0 por defecto) y `runningSince` (marca de arranque, null = parado) a
+ * `workout_sessions`. Filas viejas quedan con 0 / null: la sesión fresca
+ * conserva el arranque del 013 (00:00 + Comenzar). Sin tocar sesiones ni
+ * series existentes; siempre `@Upsert`, nunca REPLACE.
+ */
+val MIGRATION_3_4 = object : Migration(3, 4) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE workout_sessions ADD COLUMN timerBaseSec INTEGER NOT NULL DEFAULT 0")
+        db.execSQL("ALTER TABLE workout_sessions ADD COLUMN runningSince INTEGER")
     }
 }
