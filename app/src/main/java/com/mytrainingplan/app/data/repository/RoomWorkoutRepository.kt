@@ -265,6 +265,48 @@ class RoomWorkoutRepository(
         Log.i(TAG, "deleteLiveSet: sessionId=$sessionId entryId=$entryId")
     }
 
+    /**
+     * Spec 021: sustituye el ejercicio del slot de rutina y reescribe el
+     * `exerciseId` de TODAS las entradas de esa sesión del old al nuevo
+     * (hechas incluidas) en la misma transacción, para que la sesión viva
+     * no pierda la agrupación por `exerciseId`. Sin migraciones: solo
+     * `@Upsert` sobre tablas existentes (DB v3).
+     */
+    override suspend fun replaceExercise(
+        sessionId: String,
+        routineExerciseId: String,
+        newExerciseId: String
+    ) {
+        if (sessions.observeById(sessionId).first() == null) {
+            Log.w(TAG, "replaceExercise: sesión inexistente sessionId=$sessionId")
+            return
+        }
+        val re = routineExercises.getById(routineExerciseId)?.toDomain()
+        if (re == null) {
+            Log.w(TAG, "replaceExercise: ejercicio inexistente routineExerciseId=$routineExerciseId")
+            return
+        }
+        val oldExerciseId = re.exerciseId
+        if (oldExerciseId == newExerciseId) return
+        val now = System.currentTimeMillis()
+        db.withTransaction {
+            // 1) Slot de rutina: mismo id/position, nuevo exerciseId.
+            routineExercises.upsert(
+                re.copy(exerciseId = newExerciseId, updatedAt = now).toEntity(now)
+            )
+            // 2) Entradas de esta sesión con el viejo exerciseId → nuevo.
+            entries.observeBySession(sessionId).first()
+                .filter { it.exerciseId == oldExerciseId }
+                .map { it.toDomain().copy(exerciseId = newExerciseId, updatedAt = now) }
+                .forEach { entries.upsert(it.toEntity(now)) }
+        }
+        Log.i(
+            TAG,
+            "replaceExercise: sessionId=$sessionId routineExerciseId=$routineExerciseId " +
+                "$oldExerciseId -> $newExerciseId"
+        )
+    }
+
     override suspend fun finishSession(sessionId: String) {
         val cur = sessions.observeById(sessionId).first()?.toDomain()
         if (cur == null) {

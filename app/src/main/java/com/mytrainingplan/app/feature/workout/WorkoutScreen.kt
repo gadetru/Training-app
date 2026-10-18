@@ -79,6 +79,7 @@ import com.mytrainingplan.app.ui.theme.AppColors
 import com.mytrainingplan.app.ui.theme.AppDimens
 import com.mytrainingplan.app.ui.theme.AppTextSizes
 import com.mytrainingplan.app.core.ui.NumberInput
+import com.mytrainingplan.app.feature.exercises.ExercisePickerSheet
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.mytrainingplan.app.domain.model.Exercise
 import com.mytrainingplan.app.domain.model.PlannedSet
@@ -162,7 +163,8 @@ fun WorkoutScreen(
                 onExerciseClick = onExerciseClick,
                 onEditRoutine = { routineId?.let(onEditRoutine) },
                 onAddLiveSet = viewModel::onAddLiveSet,
-                onDeleteLiveSet = viewModel::onDeleteLiveSet
+                onDeleteLiveSet = viewModel::onDeleteLiveSet,
+                onReplaceExercise = viewModel::onReplaceExercise
             )
         }
         if (restVisible) {
@@ -193,10 +195,15 @@ fun WorkoutContent(
     // Spec 016 paso 4: añade una serie viva calcada de la última.
     onAddLiveSet: (String) -> Unit = {},
     // Spec 016 paso 5: borra una serie viva pendiente.
-    onDeleteLiveSet: (String) -> Unit = {}
+    onDeleteLiveSet: (String) -> Unit = {},
+    // Spec 021 paso 5: sustituye el ejercicio de una tarjeta en sesión.
+    onReplaceExercise: (String, String) -> Unit = { _, _ -> }
 ) {
     // Confirmación de descarte: overlay propio (AlertDialog gestiona insets solo).
     var showDiscardDialog by rememberSaveable { mutableStateOf(false) }
+    // Spec 021 paso 5: picker de sustitución (id objetivo + visibilidad).
+    var showReplacePicker by rememberSaveable { mutableStateOf(false) }
+    var replaceTargetId by rememberSaveable { mutableStateOf<String?>(null) }
     // Spec 013 paso 1: qué serie se edita en el modal (id, sobrevive a rotación).
     // El objeto fresco se resuelve desde uiState en cada recomposición.
     var editingEntryId by rememberSaveable { mutableStateOf<String?>(null) }
@@ -249,7 +256,11 @@ fun WorkoutContent(
                         onExerciseClick = onExerciseClick,
                         onEditClick = { entryId -> editingEntryId = entryId },
                         onAddSet = { onAddLiveSet(item.routineExercise.id) },
-                        onDeleteEntry = onDeleteLiveSet
+                        onDeleteEntry = onDeleteLiveSet,
+                        onReplacePicker = { target ->
+                            replaceTargetId = target
+                            showReplacePicker = true
+                        }
                     )
                 }
                 item {
@@ -326,6 +337,27 @@ fun WorkoutContent(
                 onConfirm = { kg, reps, rest ->
                     onUpdateEntry(editing.id, kg, reps, rest)
                     editingEntryId = null
+                }
+            )
+        }
+        // Spec 021 paso 5: picker de sustitución (modal a pantalla completa).
+        if (showReplacePicker && replaceTargetId != null) {
+            ExercisePickerSheet(
+                onConfirm = { ids ->
+                    ids.firstOrNull()?.let { newId ->
+                        onReplaceExercise(replaceTargetId!!, newId)
+                    }
+                    showReplacePicker = false
+                    replaceTargetId = null
+                },
+                onDismiss = {
+                    showReplacePicker = false
+                    replaceTargetId = null
+                },
+                onExerciseClick = { exerciseId ->
+                    onExerciseClick(exerciseId)
+                    showReplacePicker = false
+                    replaceTargetId = null
                 }
             )
         }
@@ -561,7 +593,9 @@ private fun ExerciseAccordion(
     // Spec 016 paso 4: añade una serie calcada de la última.
     onAddSet: () -> Unit = {},
     // Spec 016 paso 5: borra una serie pendiente (por id de entrada).
-    onDeleteEntry: (String) -> Unit = {}
+    onDeleteEntry: (String) -> Unit = {},
+    // Spec 021 paso 5: pide sustituir el ejercicio de esta tarjeta.
+    onReplacePicker: (String) -> Unit = {}
 ) {
     val doneCount = item.entries.count { it.done }
     val total = item.entries.size
@@ -630,74 +664,86 @@ private fun ExerciseAccordion(
     } else {
         // Spec 013 paso 4: un solo clickable por tarjeta (1 tap expande);
         // el nombre lleva su propio tap a la ficha y consume el evento
-        // (abre el detalle sin expandir a la vez).
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(AppDimens.RadiusCard))
-                .background(AppColors.Card)
-                .border(AppDimens.BorderThin, AppColors.BorderSubtle, RoundedCornerShape(AppDimens.RadiusCard))
-                .clickable(onClick = onToggleExpanded)
-                .testTag("exerciseCard:${item.routineExercise.id}")
-                .padding(AppDimens.SpaceXl),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            if (completed) {
-                Icon(
-                    Icons.Filled.CheckCircle,
-                    contentDescription = null,
-                    tint = AppColors.Volt,
-                    modifier = Modifier.size(AppDimens.SetCell)
-                )
-            } else {
-                Box(
+        // (abre el detalle sin expandir a la vez). Spec 021: solo las
+        // colapsadas son deslizables (SwipeableExerciseCard decide; en
+        // expandidas renderá la fila sin gesto).
+        SwipeableExerciseCard(
+            item = item,
+            onCardTap = onToggleExpanded,
+            onReplacePickerRequested = { onReplacePicker(item.routineExercise.id) },
+            content = {
+                Row(
                     modifier = Modifier
-                        .size(AppDimens.SetCell)
-                        .clip(RoundedCornerShape(AppDimens.RadiusLg))
-                        .background(AppColors.CardHigh),
-                    contentAlignment = Alignment.Center
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(AppDimens.RadiusCard))
+                        .background(AppColors.Card)
+                        .border(
+                            AppDimens.BorderThin,
+                            AppColors.BorderSubtle,
+                            RoundedCornerShape(AppDimens.RadiusCard)
+                        )
+                        .testTag("exerciseCard:${item.routineExercise.id}")
+                        .padding(AppDimens.SpaceXl),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(
-                        "${index + 1}",
-                        color = AppColors.TextPrimary,
-                        fontSize = AppTextSizes.TitleSm,
-                        fontWeight = FontWeight.Bold
-                    )
+                    if (completed) {
+                        Icon(
+                            Icons.Filled.CheckCircle,
+                            contentDescription = null,
+                            tint = AppColors.Volt,
+                            modifier = Modifier.size(AppDimens.SetCell)
+                        )
+                    } else {
+                        Box(
+                            modifier = Modifier
+                                .size(AppDimens.SetCell)
+                                .clip(RoundedCornerShape(AppDimens.RadiusLg))
+                                .background(AppColors.CardHigh),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                "${index + 1}",
+                                color = AppColors.TextPrimary,
+                                fontSize = AppTextSizes.TitleSm,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
+                    Spacer(Modifier.width(AppDimens.SpaceLg))
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            "${index + 1}. ${item.exercise.name}",
+                            color = AppColors.TextPrimary,
+                            fontSize = AppTextSizes.Title,
+                            fontWeight = FontWeight.SemiBold,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            // Spec 010: el nombre abre la ficha (el resto expande).
+                            modifier = Modifier.clickable(onClick = { onExerciseClick(item.exercise.id) })
+                        )
+                        Spacer(Modifier.height(AppDimens.SpaceXxs))
+                        Text(
+                            if (completed) {
+                                val maxW = item.entries.maxOfOrNull { it.weightKg } ?: 0.0
+                                "$doneCount de $total series completadas • ${formatWeight(maxW)} kg máx"
+                            } else {
+                                "$total series programadas"
+                            },
+                            color = AppColors.TextMuted,
+                            fontSize = AppTextSizes.Body,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+                    Box(
+                        modifier = Modifier.size(AppDimens.TouchMin),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(Icons.Filled.KeyboardArrowDown, contentDescription = "Expandir", tint = AppColors.TextMuted)
+                    }
                 }
             }
-            Spacer(Modifier.width(AppDimens.SpaceLg))
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    "${index + 1}. ${item.exercise.name}",
-                    color = AppColors.TextPrimary,
-                    fontSize = AppTextSizes.Title,
-                    fontWeight = FontWeight.SemiBold,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    // Spec 010: el nombre abre la ficha (el resto expande).
-                    modifier = Modifier.clickable(onClick = { onExerciseClick(item.exercise.id) })
-                )
-                Spacer(Modifier.height(AppDimens.SpaceXxs))
-                Text(
-                    if (completed) {
-                        val maxW = item.entries.maxOfOrNull { it.weightKg } ?: 0.0
-                        "$doneCount de $total series completadas • ${formatWeight(maxW)} kg máx"
-                    } else {
-                        "$total series programadas"
-                    },
-                    color = AppColors.TextMuted,
-                    fontSize = AppTextSizes.Body,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-            }
-            Box(
-                modifier = Modifier.size(AppDimens.TouchMin),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(Icons.Filled.KeyboardArrowDown, contentDescription = "Expandir", tint = AppColors.TextMuted)
-            }
-        }
+        )
     }
 }
 
@@ -926,6 +972,96 @@ private fun SwipeableSetRow(
                 onToggleDone = { if (revealed) settle() else onToggleDone() },
                 onEditClick = { if (revealed) settle() else onEditClick() }
             )
+        }
+    }
+}
+
+/**
+ * Spec 021 paso 4: swipe a la izquierda SOLO en tarjeta de ejercicio
+ * colapsada (`!item.expanded`), recorrido topado al ancho de la píldora
+ * "Sustituir" + aire. Fondo naranja suave con alfa 0 en reposo; tap en
+ * la píldora abre el picker (onReplacePickerRequested); tap en la fila
+ * revelada o swipe de vuelta cancela a reposo. Tap nombre/expansión
+ * intactos (se gestiona fuera: esta tarjeta no consume esos eventos).
+ * testTag `replaceLiveExercise:<routineExerciseId>`.
+ */
+@Composable
+private fun SwipeableExerciseCard(
+    item: WorkoutExerciseUi,
+    onCardTap: () -> Unit,
+    onReplacePickerRequested: () -> Unit,
+    content: @Composable () -> Unit
+) {
+    if (item.expanded) {
+        content()
+        return
+    }
+    val swipe = remember {
+        AnchoredDraggableState(initialValue = RowSwipe.Settled)
+    }
+    val fling = AnchoredDraggableDefaults.flingBehavior(state = swipe)
+    val scope = rememberCoroutineScope()
+    var actionWidthPx by remember { mutableStateOf(0f) }
+    val density = LocalDensity.current
+    val endInsetPx = with(density) { (AppDimens.SpaceXl + AppDimens.SpaceMd).toPx() }
+    SideEffect {
+        if (actionWidthPx > 0f) {
+            swipe.updateAnchors(
+                DraggableAnchors {
+                    RowSwipe.Settled at 0f
+                    RowSwipe.Revealed at -(actionWidthPx + endInsetPx)
+                }
+            )
+        }
+    }
+    val settle: () -> Unit = { scope.launch { swipe.animateTo(RowSwipe.Settled) } }
+    val revealed = swipe.currentValue == RowSwipe.Revealed
+    val offsetPx = swipe.offset.let { if (it.isNaN()) 0f else it }
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .testTag("replaceLiveExercise:${item.routineExercise.id}")
+    ) {
+        Box(
+            modifier = Modifier
+                .matchParentSize()
+                .clip(RoundedCornerShape(AppDimens.RadiusCard))
+                .background(AppColors.Orange.copy(alpha = 0.10f))
+                .alpha(if (offsetPx != 0f || revealed) 1f else 0f)
+                .clickable(onClick = settle)
+                .padding(start = AppDimens.SpaceXl, end = AppDimens.SpaceXl + AppDimens.SpaceMd),
+            contentAlignment = Alignment.CenterEnd
+        ) {
+            Box(
+                modifier = Modifier
+                    .onSizeChanged { actionWidthPx = it.width.toFloat() }
+                    .clip(RoundedCornerShape(AppDimens.RadiusPill))
+                    .background(AppColors.Orange)
+                    .clickable(onClick = onReplacePickerRequested)
+                    .testTag("replaceLiveExercise:${item.routineExercise.id}")
+                    .padding(horizontal = AppDimens.SpaceXl, vertical = AppDimens.SpaceMd),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    "Sustituir",
+                    color = AppColors.OnOrange,
+                    fontSize = AppTextSizes.BodyLg,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+        }
+        Box(
+            modifier = Modifier
+                .offset { IntOffset(offsetPx.roundToInt(), 0) }
+                .anchoredDraggable(
+                    state = swipe,
+                    orientation = Orientation.Horizontal,
+                    flingBehavior = fling
+                )
+                .clickable(onClick = { if (revealed) settle() else onCardTap() })
+        ) {
+            content()
         }
     }
 }

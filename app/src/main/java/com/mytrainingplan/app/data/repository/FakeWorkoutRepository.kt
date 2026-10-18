@@ -67,6 +67,18 @@ interface WorkoutRepository {
      */
     suspend fun deleteLiveSet(sessionId: String, entryId: String)
 
+    /**
+     * Sustituye el ejercicio de una rutina en sesión (spec 021): mismo
+     * `id`/`position` del slot, nuevo `exerciseId`, y reescribe el
+     * `exerciseId` de TODAS las entradas de esa sesión del old al nuevo
+     * (hechas incluidas) en la misma transacción. Duplicados permitidos.
+     */
+    suspend fun replaceExercise(
+        sessionId: String,
+        routineExerciseId: String,
+        newExerciseId: String
+    )
+
     /** Guarda la sesión (alimenta el prefill futuro) y la cierra. */
     suspend fun finishSession(sessionId: String)
 
@@ -265,6 +277,49 @@ class FakeWorkoutRepository(
                     } else {
                         it
                     }
+                }
+            ))
+        }
+    }
+
+    /**
+     * Spec 021: espejo en memoria de la doble escritura. Cambia el ejercicio
+     * del slot de rutina y reescribe el exerciseId de todas las entradas de
+     * esa sesión del old al nuevo (hechas incluidas). La ficha muestra el
+     * nombre nuevo vía `item.exercise`.
+     */
+    override suspend fun replaceExercise(
+        sessionId: String,
+        routineExerciseId: String,
+        newExerciseId: String
+    ) {
+        val detail = sessions.value[sessionId] ?: return
+        val item = detail.items.find { it.routineExercise.id == routineExerciseId } ?: return
+        val oldExerciseId = item.exercise.id
+        if (oldExerciseId == newExerciseId) return
+        val now = System.currentTimeMillis()
+        val newExercise = exercises.getById(newExerciseId) ?: return
+        // 1) Slot de rutina: mismo id/position, nuevo exerciseId (persistido).
+        routines.updateExercise(routineExerciseId, newExerciseId)
+        // 2) Entradas de esta sesión del viejo al nuevo (hechas incluidas).
+        sessions.update { map ->
+            val cur = map[sessionId] ?: return@update map
+            map + (sessionId to cur.copy(
+                items = cur.items.map { it ->
+                    if (it.routineExercise.id == routineExerciseId) {
+                        it.copy(
+                            routineExercise = it.routineExercise.copy(
+                                exerciseId = newExerciseId,
+                                updatedAt = now
+                            ),
+                            exercise = newExercise,
+                            entries = it.entries.map { entry ->
+                                if (entry.exerciseId == oldExerciseId) {
+                                    entry.copy(exerciseId = newExerciseId, updatedAt = now)
+                                } else entry
+                            }
+                        )
+                    } else it
                 }
             ))
         }

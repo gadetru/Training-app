@@ -7,6 +7,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /**
@@ -174,5 +175,98 @@ class WorkoutLiveEditTest {
             1,
             f.schedules.observeScheduledBetween(today, "9999-12-31").first().size
         )
+    }
+
+    // ---------- Spec 021: replaceExercise ----------
+
+    private val newExerciseId = "pectorals/barbell-bench-press"
+
+    @Test
+    fun replace_reescribe_entradas_hechas_incluidas() = runBlocking {
+        val f = fixture()
+        val sessionId = f.workouts.startSession(f.routineId)
+        val item = f.workouts.observeSession(sessionId).first()!!.items.single()
+        val entry = item.entries.single()
+        f.workouts.toggleSetDone(sessionId, entry.id, done = true)
+
+        f.workouts.replaceExercise(sessionId, item.routineExercise.id, newExerciseId)
+
+        val after = f.workouts.observeSession(sessionId).first()!!.items.single()
+        assertEquals(newExerciseId, after.exercise.id)
+        assertEquals(newExerciseId, after.routineExercise.exerciseId)
+        assertEquals(newExerciseId, after.entries.single().exerciseId)
+        assertTrue(after.entries.single().done) // hecha sigue hecha
+    }
+
+    @Test
+    fun replace_planificados_intactos() = runBlocking {
+        val f = fixture()
+        val sessionId = f.workouts.startSession(f.routineId)
+        val item = f.workouts.observeSession(sessionId).first()!!.items.single()
+        val plannedBefore = item.planned.single()
+
+        f.workouts.replaceExercise(sessionId, item.routineExercise.id, newExerciseId)
+
+        val after = f.workouts.observeSession(sessionId).first()!!.items.single()
+        // El slot de rutina cambió de ejercicio pero su posición/id se conserva;
+        // las planificadas siguen vinculadas al mismo routineExerciseId.
+        assertEquals(item.routineExercise.id, after.routineExercise.id)
+        assertEquals(item.routineExercise.position, after.routineExercise.position)
+        assertEquals(newExerciseId, after.routineExercise.exerciseId)
+        assertEquals(plannedBefore.id, after.planned.single().id)
+        assertEquals(plannedBefore.targetReps, after.planned.single().targetReps)
+    }
+
+    @Test
+    fun replace_duplicado_permitido() = runBlocking {
+        val f = fixture()
+        val routineId = f.routineId
+        // Añade un segundo ejercicio a la rutina para forzar duplicado.
+        f.routines.addExercises(routineId, listOf(newExerciseId))
+        f.routines.saveRoutine(routineId)
+        val sessionId = f.workouts.startSession(routineId)
+        val squatItem = f.workouts.observeSession(sessionId).first()!!.items
+            .single { it.routineExercise.exerciseId == "quads/barbell-bench-squat" }
+
+        f.workouts.replaceExercise(sessionId, squatItem.routineExercise.id, newExerciseId)
+
+        val after = f.workouts.observeSession(sessionId).first()!!.items
+        val replaced = after.single { it.routineExercise.id == squatItem.routineExercise.id }
+        assertEquals(newExerciseId, replaced.exercise.id)
+        // Queda un segundo slot con el mismo ejercicio (duplicado permitido).
+        assertEquals(2, after.count { it.exercise.id == newExerciseId })
+    }
+
+    @Test
+    fun replace_rutina_persiste() = runBlocking {
+        val f = fixture()
+        val sessionId = f.workouts.startSession(f.routineId)
+        val item = f.workouts.observeSession(sessionId).first()!!.items.single()
+
+        f.workouts.replaceExercise(sessionId, item.routineExercise.id, newExerciseId)
+
+        // Reabrir la rutina: el slot conserva el nuevo ejercicio.
+        val detail = f.routines.observeRoutine(f.routineId).first()!!
+        val slot = detail.items.single { it.routineExercise.id == item.routineExercise.id }
+        assertEquals(newExerciseId, slot.routineExercise.exerciseId)
+    }
+
+    @Test
+    fun replace_id_igual_no_hace_nada() = runBlocking {
+        val f = fixture()
+        val sessionId = f.workouts.startSession(f.routineId)
+        val item = f.workouts.observeSession(sessionId).first()!!.items.single()
+
+        f.workouts.replaceExercise(sessionId, item.routineExercise.id, item.exercise.id)
+
+        val after = f.workouts.observeSession(sessionId).first()!!.items.single()
+        assertEquals(item.exercise.id, after.exercise.id)
+    }
+
+    @Test
+    fun replace_sesion_inexistente_no_cambia() = runBlocking {
+        val f = fixture()
+        f.workouts.replaceExercise("sesion-inesistente", "re-inesistente", newExerciseId)
+        // No debe lanzar.
     }
 }
