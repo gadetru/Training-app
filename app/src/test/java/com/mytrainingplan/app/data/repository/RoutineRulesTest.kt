@@ -114,4 +114,30 @@ class RoutineRulesTest {
         assertEquals("", cleared.routineExercise.note)
         assertTrue(cleared.sets.all { it.loadNote == null })
     }
+
+    @Test
+    fun addSet_copia_valores_de_ultima_serie_no_de_primera() = runBlocking {
+        val r = repo()
+        val id = r.createRoutine(name = "Serie")
+        r.addExercises(id, listOf("quads/barbell-bench-squat"))
+        val reId = r.observeRoutine(id).first()!!.items.single().routineExercise.id
+
+        val set1 = r.observeRoutine(id).first()!!.items.single().sets.single()
+        r.updateSet(reId, set1.id, 10, 60.0, 90, null, null)
+
+        r.addSet(reId)
+        val sets = r.observeRoutine(id).first()!!.items.single().sets.sortedBy { it.setNumber }
+        assertEquals(2, sets.size)
+        assertEquals(10, sets[1].targetReps)
+        assertEquals(60.0, sets[1].weightKg, 0.001)
+
+        r.updateSet(reId, sets[1].id, 20, 70.0, 90, null, null)
+
+        r.addSet(reId)
+        val sets3 = r.observeRoutine(id).first()!!.items.single().sets.sortedBy { it.setNumber }
+        assertEquals(3, sets3.size)
+        assertEquals(20, sets3[2].targetReps)
+        assertEquals(70.0, sets3[2].weightKg, 0.001)
+        assertEquals(10, sets3[0].targetReps)
+    }
 }

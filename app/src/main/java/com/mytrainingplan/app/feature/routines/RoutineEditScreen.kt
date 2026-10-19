@@ -454,7 +454,8 @@ private fun MetaCard(
         ) {
             Text("Duración", color = AppColors.TextMuted, fontSize = AppTextSizes.Body)
             Spacer(Modifier.width(AppDimens.SpaceMd))
-            // Interruptor AUTO / MANUAL (dos estados).
+            // Modo AUTO/MANUAL: Box icon-only (sin texto interno para evitar recorte).
+            // El icono varía según durationManual; el campo de valor y "min" recuperan el sobrante.
             Box(
                 modifier = Modifier
                     .size(AppDimens.TouchMin)
@@ -464,11 +465,11 @@ private fun MetaCard(
                     .clickable(onClick = { onDurationModeChange(!durationManual) }),
                 contentAlignment = Alignment.Center
             ) {
-                Text(
-                    if (durationManual) "MANUAL" else "AUTO",
-                    color = AppColors.TextPrimary,
-                    fontSize = AppTextSizes.Small,
-                    fontWeight = FontWeight.Bold
+                Icon(
+                    imageVector = if (durationManual) Icons.Filled.Edit else Icons.Filled.CheckCircle,
+                    contentDescription = if (durationManual) "Modo manual" else "Modo automático",
+                    tint = AppColors.TextPrimary,
+                    modifier = Modifier.size(AppDimens.IconMd)
                 )
             }
             Spacer(Modifier.width(AppDimens.SpaceSm))
@@ -486,7 +487,7 @@ private fun MetaCard(
                         textAlign = TextAlign.Center
                     ),
                     modifier = Modifier
-                        .width(AppDimens.DurationWidth)
+                        .weight(1f)
                         .clip(RoundedCornerShape(AppDimens.RadiusMd))
                         .background(AppColors.CardHigh)
                         .padding(vertical = AppDimens.SpaceMd, horizontal = AppDimens.SpaceXs)
@@ -500,7 +501,7 @@ private fun MetaCard(
                     color = AppColors.TextMuted,
                     fontSize = AppTextSizes.TitleSm,
                     fontWeight = FontWeight.Bold,
-                    modifier = Modifier.width(AppDimens.DurationWidth)
+                    modifier = Modifier.weight(1f)
                 )
             }
         }

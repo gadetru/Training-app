@@ -214,10 +214,10 @@ class FakeRoutineRepository(
     override suspend fun addSet(routineExerciseId: String) {
         if (!ensureDraftForItem(routineExerciseId)) return
         mutateItem(routineExerciseId) { detail ->
-            val first = detail.sets.minByOrNull { it.setNumber }
+            val last = detail.sets.maxByOrNull { it.setNumber }
             val nextNumber = (detail.sets.maxOfOrNull { it.setNumber } ?: 0) + 1
-            val newSet = if (first != null) {
-                first.copy(id = UUID.randomUUID().toString(), setNumber = nextNumber)
+            val newSet = if (last != null) {
+                last.copy(id = UUID.randomUUID().toString(), setNumber = nextNumber)
             } else {
                 emptyPlannedSet(routineExerciseId, nextNumber)
             }
