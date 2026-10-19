@@ -477,10 +477,12 @@ private fun RoutineCard(
                     }
                     Spacer(Modifier.height(AppDimens.SpaceLg))
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Filled.DateRange, contentDescription = null, tint = AppColors.Orange, modifier = Modifier.size(AppDimens.IconSm))
-                        Spacer(Modifier.width(AppDimens.SpaceXs))
-                        Text("${routine.durationMin} min", color = AppColors.TextMuted, fontSize = AppTextSizes.Body)
-                        Text("  •  ", color = AppColors.TextMuted, fontSize = AppTextSizes.Body)
+                        if (routine.durationMin > 0) {
+                            Icon(Icons.Filled.DateRange, contentDescription = null, tint = AppColors.Orange, modifier = Modifier.size(AppDimens.IconSm))
+                            Spacer(Modifier.width(AppDimens.SpaceXs))
+                            Text("${routine.durationMin} min", color = AppColors.TextMuted, fontSize = AppTextSizes.Body)
+                            Text("  •  ", color = AppColors.TextMuted, fontSize = AppTextSizes.Body)
+                        }
                         Icon(Icons.Filled.List, contentDescription = null, tint = AppColors.Cyan, modifier = Modifier.size(AppDimens.IconSm))
                         Spacer(Modifier.width(AppDimens.SpaceXs))
                         Text("${routine.exerciseCount} ejercicios", color = AppColors.TextMuted, fontSize = AppTextSizes.Body)

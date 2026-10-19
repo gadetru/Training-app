@@ -6,6 +6,7 @@ import com.mytrainingplan.app.data.local.AppDatabase
 import com.mytrainingplan.app.data.local.MIGRATION_1_2
 import com.mytrainingplan.app.data.local.MIGRATION_2_3
 import com.mytrainingplan.app.data.local.MIGRATION_3_4
+import com.mytrainingplan.app.data.local.MIGRATION_4_5
 import com.mytrainingplan.app.data.local.dao.ExerciseDao
 import com.mytrainingplan.app.data.local.dao.PlannedSetDao
 import com.mytrainingplan.app.data.local.dao.ProfileDao
@@ -34,7 +35,7 @@ object DatabaseModule {
     @Singleton
     fun provideDatabase(@ApplicationContext ctx: Context): AppDatabase =
         Room.databaseBuilder(ctx, AppDatabase::class.java, "training.db")
-            .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
+            .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
             .build()
 
     @Provides fun provideProfileDao(db: AppDatabase): ProfileDao = db.profileDao()

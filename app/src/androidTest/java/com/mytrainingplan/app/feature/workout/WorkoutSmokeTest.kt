@@ -71,7 +71,8 @@ class WorkoutSmokeTest {
         rule.onNodeWithTag("workoutRoot").assertIsDisplayed()
         rule.onNodeWithText("Torso - Fuerza").assertIsDisplayed()
         rule.onNodeWithText("Press banca", substring = true).assertIsDisplayed()
-        rule.onNodeWithText("Finalizar y Guardar").assertIsDisplayed()
+        // Spec 022: el CTA se renombró "Finalizar y Guardar" → "Finalizar".
+        rule.onNodeWithText("Finalizar").assertIsDisplayed()
         rule.onNodeWithTag("workoutFinish").assertIsDisplayed()
         rule.onNodeWithText("Descartar Entrenamiento").assertIsDisplayed()
         // Sin descanso activo no hay overlay.

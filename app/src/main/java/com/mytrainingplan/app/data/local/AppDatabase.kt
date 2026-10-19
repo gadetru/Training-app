@@ -23,9 +23,8 @@ import com.mytrainingplan.app.data.local.entity.SetEntryEntity
 import com.mytrainingplan.app.data.local.entity.WorkoutSessionEntity
 
 /**
- * Base Room v4 (Paso 3 spec 006, Fase B; v2 spec 010: +`instructions`;
- * v3 spec 015: +`scheduled_days`; v4 spec 022: +`timerBaseSec`/`runningSince`
- * en `workout_sessions` para el cronómetro persistente).
+ * Base Room v5 (Paso 3 spec 006, Fase B; v5 spec 023: +`durationManual` en
+ * `routines` para el modo AUTO/MANUAL de la duración).
  * 8 tablas espejo del dominio. `exportSchema = true`, esquemas en
  * `app/schemas/` (se generan al sincronizar en Android Studio con red;
  * aquí se deja la carpeta lista). `fallbackToDestructiveMigration()` solo
@@ -42,7 +41,7 @@ import com.mytrainingplan.app.data.local.entity.WorkoutSessionEntity
         SetEntryEntity::class,
         ScheduledDayEntity::class
     ],
-    version = 4,
+    version = 5,
     exportSchema = true
 )
 @TypeConverters(Converters::class)
@@ -97,5 +96,17 @@ val MIGRATION_3_4 = object : Migration(3, 4) {
     override fun migrate(db: SupportSQLiteDatabase) {
         db.execSQL("ALTER TABLE workout_sessions ADD COLUMN timerBaseSec INTEGER NOT NULL DEFAULT 0")
         db.execSQL("ALTER TABLE workout_sessions ADD COLUMN runningSince INTEGER")
+    }
+}
+
+/**
+ * Migración 4→5 (spec 023): añade `durationManual` (INTEGER NOT NULL DEFAULT 1)
+ * a `routines`. Las filas existentes pasan a MANUAL y conservan su `durationMin`
+ * (hoy 45 min por defecto de la entidad); las nuevas nacen en AUTO (`false` = 0)
+ * salvo que el repo las cree con `durationManual = true`.
+ */
+val MIGRATION_4_5 = object : Migration(4, 5) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE routines ADD COLUMN durationManual INTEGER NOT NULL DEFAULT 1")
     }
 }

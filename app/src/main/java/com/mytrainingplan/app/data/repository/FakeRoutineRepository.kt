@@ -3,6 +3,7 @@ package com.mytrainingplan.app.data.repository
 import com.mytrainingplan.app.domain.model.Exercise
 import com.mytrainingplan.app.domain.model.PlannedSet
 import com.mytrainingplan.app.domain.model.Routine
+import com.mytrainingplan.app.domain.model.RoutineDurationRules
 import com.mytrainingplan.app.domain.model.RoutineExercise
 import java.util.UUID
 import kotlinx.coroutines.flow.Flow
@@ -47,9 +48,9 @@ interface RoutineRepository {
     fun observeRoutine(id: String): Flow<RoutineDetail?>
 
     /** Crea un borrador vacío (0 ejercicios) y devuelve su UUID. */
-    suspend fun createRoutine(name: String = "", durationMin: Int = 45): String
+    suspend fun createRoutine(name: String = "", durationMin: Int = 0, durationManual: Boolean = false): String
 
-    suspend fun updateMeta(routineId: String, name: String, durationMin: Int)
+    suspend fun updateMeta(routineId: String, name: String, durationMin: Int, durationManual: Boolean)
 
     /** Añade un ejercicio por cada id resuelto, cada uno con 1 serie vacía. */
     suspend fun addExercises(routineId: String, ids: List<String>)
@@ -116,7 +117,7 @@ class FakeRoutineRepository(
     override fun observeRoutine(id: String): Flow<RoutineDetail?> =
         combine(drafts, saved) { dr, sv -> dr[id] ?: sv[id] }
 
-    override suspend fun createRoutine(name: String, durationMin: Int): String {
+    override suspend fun createRoutine(name: String, durationMin: Int, durationManual: Boolean): String {
         val id = UUID.randomUUID().toString()
         val now = System.currentTimeMillis()
         val detail = RoutineDetail(
@@ -124,6 +125,7 @@ class FakeRoutineRepository(
                 id = id,
                 name = name,
                 durationMin = durationMin,
+                durationManual = durationManual,
                 position = saved.value.size + drafts.value.size,
                 createdAt = now,
                 updatedAt = now
@@ -134,11 +136,11 @@ class FakeRoutineRepository(
         return id
     }
 
-    override suspend fun updateMeta(routineId: String, name: String, durationMin: Int) {
+    override suspend fun updateMeta(routineId: String, name: String, durationMin: Int, durationManual: Boolean) {
         ensureDraft(routineId) ?: return
         drafts.update { map ->
             val current = map[routineId] ?: return@update map
-            map + (routineId to current.copy(routine = current.routine.copy(name = name, durationMin = durationMin)))
+            map + (routineId to current.copy(routine = current.routine.copy(name = name, durationMin = durationMin, durationManual = durationManual)))
         }
     }
 
@@ -275,8 +277,16 @@ class FakeRoutineRepository(
     override suspend fun saveRoutine(routineId: String) {
         val draft = drafts.value[routineId] ?: return
         val now = System.currentTimeMillis()
+        // Spec 023: AUTO recalcula la estimación al guardar; MANUAL se congela.
+        val routine = if (draft.routine.durationManual) {
+            draft.routine
+        } else {
+            val allSets = draft.items.flatMap { it.sets }
+            val estimated = RoutineDurationRules.estimate(allSets) ?: 0
+            draft.routine.copy(durationMin = estimated)
+        }
         val published = draft.copy(
-            routine = draft.routine.copy(
+            routine = routine.copy(
                 position = saved.value[routineId]?.routine?.position ?: saved.value.size,
                 updatedAt = now,
                 createdAt = if (draft.routine.createdAt == 0L) now else draft.routine.createdAt

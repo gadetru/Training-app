@@ -3,9 +3,11 @@ package com.mytrainingplan.app.data.repository
 import com.mytrainingplan.app.domain.model.Exercise
 import com.mytrainingplan.app.domain.model.HistoryCalcs
 import com.mytrainingplan.app.domain.model.PlannedSet
+import com.mytrainingplan.app.domain.model.RoutineDurationRules
 import com.mytrainingplan.app.domain.model.RoutineExercise
 import com.mytrainingplan.app.domain.model.SetEntry
 import com.mytrainingplan.app.domain.model.WorkoutSession
+import com.mytrainingplan.app.domain.model.timerElapsedSec
 import java.time.ZoneId
 import java.util.UUID
 import kotlinx.coroutines.flow.Flow
@@ -386,6 +388,13 @@ class FakeWorkoutRepository(
     override suspend fun finishSession(sessionId: String) {
         val detail = sessions.value[sessionId] ?: return
         val now = System.currentTimeMillis()
+        // Spec 023: si la rutina es AUTO, adopta el tiempo real medido (mín. 1).
+        val elapsed = detail.session.timerElapsedSec(now)
+        val routineDetail = routines.observeRoutine(detail.session.routineId).firstOrNull()
+        if (routineDetail != null && !routineDetail.routine.durationManual) {
+            val realMin = RoutineDurationRules.fromRealSeconds(elapsed)
+            routines.updateMeta(detail.session.routineId, routineDetail.routine.name, realMin, false)
+        }
         // Spec 016 paso 6 (espejo): lo hecho manda sobre lo apuntado.
         if (schedule != null) {
             schedule.setScheduled(

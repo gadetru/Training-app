@@ -243,10 +243,12 @@ class Workout013InteractionTest {
         // Criterio 6a: 1 tap en la tarjeta colapsada expande. Tap de dedo
         // real vía hit-testing (offset en la zona de la flecha, sin tap
         // propio): `performClick()` sobre el nodo fusionado no atraviesa
-        // igual la jerarquía que un dedo. Scroll primero por el dock.
-        rule.onNodeWithTag("exerciseCard:reB").performScrollTo()
-        val card = rule.onNodeWithTag("exerciseCard:reB").fetchSemanticsNode()
-        rule.onNodeWithTag("exerciseCard:reB").performTouchInput {
+        // igual la jerarquía. Scroll primero por el dock. El tag vive en el
+        // árbol NO fusionado (el wrapper deslizable del 021 fusiona
+        // descendientes con su clickable): `useUnmergedTree = true`.
+        rule.onNodeWithTag("exerciseCard:reB", useUnmergedTree = true).performScrollTo()
+        val card = rule.onNodeWithTag("exerciseCard:reB", useUnmergedTree = true).fetchSemanticsNode()
+        rule.onNodeWithTag("exerciseCard:reB", useUnmergedTree = true).performTouchInput {
             click(
                 position = Offset(
                     card.size.width * 0.9f,
@@ -299,8 +301,16 @@ class Workout013InteractionTest {
             assertFalse(vm.uiState.value.isPaused)
             assertTrue(vm.uiState.value.elapsedSec >= 2)
 
-            // Criterio 5: Pausar congela.
+            // Criterio 5: Pausar congela. El pause es asíncrono (repo): se
+            // espera a que el estado derivado lo refleje antes de leer el
+            // valor congelado (si no, el tick de 1 s puede sumar antes de
+            // que el pause aterrice en DB).
             vm.onPauseToggle()
+            val deadlinePause = System.currentTimeMillis() + 10_000
+            while (vm.uiState.value.isPaused != true && System.currentTimeMillis() < deadlinePause) {
+                Thread.sleep(100)
+            }
+            assertTrue(vm.uiState.value.isPaused)
             val frozen = vm.uiState.value.elapsedSec
             Thread.sleep(1_500)
             assertTrue(vm.uiState.value.isPaused)

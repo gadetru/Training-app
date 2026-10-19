@@ -13,8 +13,10 @@ import com.mytrainingplan.app.data.mapper.toDomain
 import com.mytrainingplan.app.data.mapper.toEntity
 import com.mytrainingplan.app.domain.model.HistoryCalcs
 import com.mytrainingplan.app.domain.model.PlannedSet
+import com.mytrainingplan.app.domain.model.RoutineDurationRules
 import com.mytrainingplan.app.domain.model.SetEntry
 import com.mytrainingplan.app.domain.model.WorkoutSession
+import com.mytrainingplan.app.domain.model.timerElapsedSec
 import java.time.ZoneId
 import java.util.UUID
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -320,12 +322,22 @@ class RoomWorkoutRepository(
             Log.w(TAG, "finishSession: sesión inexistente sessionId=$sessionId")
             return
         }
-        sessions.upsert(cur.copy(endedAt = System.currentTimeMillis()).toEntity())
+        val now = System.currentTimeMillis()
+        val elapsed = cur.timerElapsedSec(now)
+        db.withTransaction {
+            sessions.upsert(cur.copy(endedAt = now).toEntity(now))
+            // Spec 023: si la rutina es AUTO, adopta el tiempo real medido (mín. 1).
+            val routine = routines.getById(cur.routineId)?.toDomain()
+            if (routine != null && !routine.durationManual) {
+                val realMin = RoutineDurationRules.fromRealSeconds(elapsed)
+                routines.upsert(routine.copy(durationMin = realMin).toEntity())
+            }
+        }
         // Spec 016 paso 6: lo hecho manda sobre lo apuntado. El apunte del
         // día (fecha local del inicio, como el spec 015) pasa a ser la rutina
         // realizada; `setScheduled` sustituye en la misma fila, sin duplicar.
         schedule.setScheduled(HistoryCalcs.dateKeyOf(cur.startedAt, zone), cur.routineId)
-        Log.i(TAG, "finishSession: sessionId=$sessionId")
+        Log.i(TAG, "finishSession: sessionId=$sessionId elapsedSec=$elapsed")
     }
 
     override suspend fun discardSession(sessionId: String) {
