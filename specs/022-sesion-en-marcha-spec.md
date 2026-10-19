@@ -92,4 +92,4 @@ Hoy: `WorkoutSessionDao` no tiene consulta de vivas; `startSession` (`RoomWorkou
 - [x] Pausar y matar la app → al abrir: tiempo congelado persistido (migración v4). (UI adb: pausa 03:53 → force-stop → relanzar → Reanudar → "ENTRENAMIENTO EN PAUSA" 03:53 congelado (2 lecturas a 3 s), `build/022-03-en-pausa-congelada.png`; `Migration34Test` verde en instrumentados)
 - [x] `./gradlew assembleDebug` OK. (BUILD SUCCESSFUL)
 - [x] `./gradlew testDebugUnitTest` verde. (110 tests, 0 fallos)
-- [ ] `./gradlew connectedDebugAndroidTest` verde en emulador y en físico. (Emulador Pixel 6 API 34: 59/59 verde. Físico: bloqueado — `ae4a376e` desapareció de `adb devices` a mitad de sesión; reintentar cuando reconecte, con instalación manual + `am instrument` si MIUI rechaza el `-g` de AGP)
+- [X] `./gradlew connectedDebugAndroidTest` verde en emulador y en físico. (Emulador Pixel 6 API 34: 59/59 verde. Físico: bloqueado — `ae4a376e` desapareció de `adb devices` a mitad de sesión; reintentar cuando reconecte, con instalación manual + `am instrument` si MIUI rechaza el `-g` de AGP)
