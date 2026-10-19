@@ -2,21 +2,15 @@
 
 App Android para planificar rutinas y registrar entrenos de fuerza. Funciona sin conexión, no lleva anuncios y está pensada para controlar al detalle cada serie.
 
-> **Estado:** Fase A hecha (5/5 vistas UI-first en memoria) + Fase B Room local (v2) mergeada en `main`
-> (PR #7) + catálogo (PR #8, fork `gadetru` tag `v1.1.0`), rutinas-feed (PR #9), sesión persistida (PR #10),
-> detalle-ejercicio con `instructions` + `MIGRATION_1_2` (PR #13), blindaje visual + tests espejo + autofix
-> (PR #14/#15/#16: botes con nombre en `ui/theme/`, tests espejo JVM + DAO/migración, fotos Roborazzi Home y
-> tarjeta, puerta CI `blindaje.yml` con `setup-android@v4`), buscador-GIF (PR #17: buscador escribible + filtro
-> ES + `coil-gif` lote D + hero animado en ficha), sesión-vivo-fixes (PR #18: modal numérico + Comenzar/Pausar/Reanudar
-> + tap único), perfil-enfoque-crear-rutina (PR #19: chips legibles + preview→`routineEdit` nuevo),
-> reparación-bugs (PR #20, sin spec: retoques `HomeScreen` + `RoutineEditScreen`, ver apéndice abajo) y
-> calendario-progreso (rama `015-calendario-progreso`, verificado 13/13, pendiente merge: mes + progreso
-> reales, `scheduled_days`, DB v3 + `MIGRATION_2_3`, `PlaceholderTabs` borrado, 36/36 instrumentados en
-> emulador y en físico).
-> sesión-colapsada con avance automático (spec 019, rama `019-sesion-colapsado`, verificado 8/8: todos los
-> ejercicios colapsados al abrir, colapso al cerrar el descanso y avance al siguiente pendiente, tap manual
-> re-expande, `assembleDebug` + `testDebugUnitTest` + `connectedDebugAndroidTest` verde en emulador y físico,
-> pendiente merge).
+> **Estado:** Fase A hecha (5/5 vistas UI-first en memoria) + Fase B Room local (PR #7) mergeada en `main`,
+> catálogo (PR #8, fork `gadetru` tag `v1.1.0`) y specs `007` a `022` todos mergeados. Historial: rutinas-feed
+> (#9), sesión persistida (#10), detalle-ejercicio + `MIGRATION_1_2` (#13), blindaje visual + tests espejo +
+> autofix (#14/#15/#16, puerta CI `blindaje.yml` con `setup-android@v4`), buscador-GIF + `coil-gif` (#17),
+> sesión-vivo-fixes (#18), perfil-enfoque (#19), calendario-progreso DB v3 (PR #22), edición en sesión (PR #23),
+> picker a alto completo (PR #24), barra auto-oculta (PR #25), sesión colapsada (PR #26), ceros numéricos
+> (PR #27), sustituir ejercicio (PR #28) y sesión en marcha DB v4 (PR #30).
+> En rama `023-duracion-rutina`, verificado y **pendiente de merge**: duración vacía/aproximada/real,
+> DB v5 + `MIGRATION_4_5`. Siguiente spec: `024-logo-launcher` (Borrador).
 > Puerta de merge: `assembleDebug` + `testDebugUnitTest` en cada PR/push a `main`.
 > Este README y `docs/` fijan las decisiones de partida; `specs/` recoge lo ya implementado.
 
@@ -73,7 +67,7 @@ App Android para planificar rutinas y registrar entrenos de fuerza. Funciona sin
 - Git y GitHub.
 - Gradle Wrapper (`gradlew`), que fija la versión de Gradle del proyecto.
 
-## Estado actual (Fases A + B, 007–014 mergeados + 015 en rama)
+## Estado actual (Fases A + B, 007–022 mergeados, 023 pendiente de merge)
 
 Fase A: cada pantalla es `Screen` (stateful + stateless) + `ViewModel` con `StateFlow` + repositorio fake
 con la misma firma que el real. Fase B (mergeada): los fakes conviven con repositorios Room con la misma
@@ -96,8 +90,15 @@ firma; Retrofit solo rellena la DB. La UI solo ve `domain/model`. Spec 011: toda
 | Buscador escribible + filtro ES + GIF animado en ficha (hero, thumbs quietos, `coil-gif` lote D, test JVM del filtro) | Hecha y mergeada (PR #17, `specs/012-buscador-gifs-spec.md`) |
 | Sesión-vivo-fixes (modal numérico KG/REPS/PAUSA + cronómetro detenido con Comenzar/Pausar/Reanudar + tap único para expandir) | Hecha y mergeada (PR #18, `specs/013-sesion-vivo-fixes-spec.md`) |
 | Perfil-enfoque-crear-rutina (chips legibles a 360dp + preview que navega a `routineEdit` nuevo) | Hecha y mergeada (PR #19, `specs/014-perfil-enfoque-crear-rutina-spec.md`) |
-| Calendario-progreso (mes + progreso reales, `scheduled_days`, DB v3 + `MIGRATION_2_3`, `PlaceholderTabs` borrado) | En rama `015-calendario-progreso`, verificado 13/13, pendiente merge (`specs/015-calendario-progreso-spec.md`; 36/36 instrumentados en emulador y en físico) |
-| Sesión colapsada + avance automático (`feature/workout`, `WorkoutViewModel` + `WorkoutExpandRules`) | En rama `019-sesion-colapsado`, verificado 8/8, pendiente merge (`specs/019-sesion-colapsado-spec.md`) |
+| Calendario-progreso (mes + progreso reales, `scheduled_days` + DAO, DB v3 + `MIGRATION_2_3`, `PlaceholderTabs` borrado) | Hecha y mergeada (PR #22, `specs/015`; 36/36 instrumentados en emulador y físico) |
+| Sesión: edición en vivo (⋮ "Editar rutina"/"Salir del entrenamiento", "+ Añadir serie" con doble escritura transaccional, swipe solo en pendientes, auto-reemplazo del apunte tras finalizar) | Hecha y mergeada (PR #23, `specs/016`) |
+| Picker a alto completo (`fillMaxHeight(0.88f)` → `1f` en `ExercisePickerSheet`) | Hecha y mergeada (PR #24, `specs/017`) |
+| Guardar rutina con barra auto-oculta (pie se oculta al bajar y reaparece al subir) | Hecha y mergeada (PR #25, `specs/018`) |
+| Sesión colapsada + avance automático (`WorkoutViewModel` + `WorkoutExpandRules`; colapso al cerrar descanso, tap manual re-expande) | Hecha y mergeada (PR #26, `specs/019`) |
+| Ceros numéricos ("012" → "12" mientras se teclea, regla única en modal, constructor y perfil) | Hecha y mergeada (PR #27, `specs/020`) |
+| Sustituir ejercicio en sesión (swipe en colapsado → picker; queda guardado en la rutina de forma permanente) | Hecha y mergeada (PR #28, `specs/021`) |
+| Sesión en marcha (cronómetro persistente, card EN MARCHA en Home con Reanudar/Terminar/Descartar, guardia anti-doble sesión, DB v4 + `MIGRATION_3_4`) | Hecha y mergeada (PR #30, `specs/022`; verificación completa en `docs/estado.md`) |
+| Duración de rutina (vacía `—` / aproximada AUTO / real MANUAL-aplicada, DB v5 + `MIGRATION_4_5`) | En rama `023-duracion-rutina`, verificado, **pendiente de merge** (`specs/023`) |
 
 Desviación conocida: `material-icons-core` solo trae 49 iconos, así que el dock usa fallbacks
 (`List`/`DateRange`/`Star`/`Person`); la fidelidad exacta a los iconos del diseño exigiría `material-icons-extended`.
@@ -143,8 +144,8 @@ Requisitos: Android Studio, Android SDK y **emulador Pixel 6 API 34** (`emulator
 El SDK se apunta en `local.properties` con `sdk.dir` (no se versiona).
 
 - Compilar: `./gradlew assembleDebug`
-- Tests: `./gradlew testDebugUnitTest` (botes `AppColors/AppDimens` + `CatalogMappingTest` 5/5 en `data/mapper` + reglas `RoutineRules/WorkoutPrefill` + filtro ES en `data/repository` + fotos Roborazzi Home y tarjeta + `ExampleUnitTest` de plantilla)
-- Tests vistas (emulador encendido): `./gradlew connectedDebugAndroidTest` (DAO `ExerciseDaoTest` + `Migration12Test` + `ScheduledDayDaoTest` + `Migration23Test` + smokes `feature/home|routines|workout|history` en su espejo, con `testTag`; en físico Xiaomi activar "Instalar vía USB" y usar `adb install` + `am instrument` si AGP falla con `-g`)
+- Tests: `./gradlew testDebugUnitTest` (actualmente 110/110: botes `AppColors/AppDimens` + `CatalogMappingTest` + reglas `RoutineRules/WorkoutPrefill` con falsos + timer/`HomeLive`/`StartSessionGuard` del 022 + reglas y flujo de duración del 023 + filtro ES del catálogo + fotos Roborazzi Home y tarjeta. Debe quedar todo en verde)
+- Tests vistas (emulador encendido): `./gradlew connectedDebugAndroidTest` (DAO + migraciones `12/23/34/45` + smokes `feature/home|routines|workout|history` + sesiones `Workout013/016/019/021/022` + `PickerSearchTest` + `RoutineEdit023DurationTest`, con `testTag` en raíces/CTAs; en físico Xiaomi activar "Instalar vía USB" y usar `adb install` + `am instrument` si AGP falla con `-g`)
 - CI (puerta de merge `.github/workflows/blindaje.yml`, `setup-android@v4`): `assembleDebug` + `testDebugUnitTest` en cada PR/push a `main`; exigir el check en Settings > Branches > main
 - Fotos de referencia: solo Home y tarjeta (`docs/fotos-referencia.md`); regenerar con `./gradlew recordRoborazziDebug` solo ante cambio visual legal
 - Verificación: **emulador Pixel 6 API 34 + móvil físico, de forma automática** (`adb` + `mobile-mcp`).
@@ -194,8 +195,8 @@ Para que una versión actualice a la anterior (y no borre datos):
 
 ### P1 — MVP bloqueantes
 - [x] Detalle ejercicio (MVP-2): hecho y mergeado (PR #13, `specs/010-detalle-ejercicio-spec.md`): tap fila → GIF grande + instrucciones + secundarios, `instructions` rescatadas (`DTO→Entity→dominio`, DB v2 + `MIGRATION_1_2`) + ruta detalle. Animación del hero + buscador ES van en PR #17 (spec 012).
-- [ ] Ejercicios propios CUSTOM (MVP-3, siguiente tras mergear 015): crear/editar desde app (`insert` en `ExerciseRepository` + UI formulario); `CatalogSync` ya protege `CUSTOM`.
-- [x] Historial + `home-post-sesion` (MVP-7, spec `015-calendario-progreso-spec.md`, checklist 13/13 en rama `015-calendario-progreso`, pendiente merge): tabs `calendar`/`progress` reales, lista de hechos por día, `lastDoneLabel`/racha/progreso reales; `Ver mes` cableado.
+- [ ] Ejercicios propios CUSTOM (MVP-3, siguiente tras 024): crear/editar desde app (`insert` en `ExerciseRepository` + UI formulario); `CatalogSync` ya protege `CUSTOM`.
+- [x] Historial + `home-post-sesion` (MVP-7, `specs/015`, hecho y mergeado en PR #22): tabs `calendar`/`progress` reales, lista de hechos por día, `lastDoneLabel`/racha/progreso reales; `Ver mes` cableado.
 
 ### P2 — Sesión en vivo
 - [x] Modal numérico KG/REPS/PAUSA + cronómetro detenido con Comenzar/Pausar/Reanudar + tap único para expandir (PR #18, spec 013).
@@ -203,7 +204,7 @@ Para que una versión actualice a la anterior (y no borre datos):
 - [ ] `Añadir Ejercicio/Serie en vivo` (picker `003` reutilizado).
 - [ ] Notas/`loadNote` + RPE/DROP en vivo (modelo `Workout.kt:45` lo tiene, UI no).
 - [ ] Descanso avanzado: sonido/vibración, presets (hoy bloqueante + `±10s`).
-- [ ] Minimizar-background real (hoy solo visual, timer en RAM).
+- [x] Minimizar-background: cronómetro persistente en DB (`timerBaseSec`/`runningSince`, sync kill-safe cada 15 s; verificado force-stop → relanzar en 022).
 
 ### P3 — Deuda UX/técnica
 - [ ] Avatar picker + Coil (`PickVisualMedia` + URI persistente; hoy placeholder `ProfileScreen.kt:212`).
