@@ -63,7 +63,7 @@ Entidades + DAOs con `@Upsert`, `exportSchema=true`, repositorios Room con la mi
 
 ## Siguiente
 
-`024-logo-launcher` (Borrador en `specs/`, pendiente de aprobación). Más tarde: CUSTOM (MVP-3) y Fase D Spring/MySQL.
+Pendiente de definir por el usuario (no hay spec aprobado en curso). Más tarde: CUSTOM (MVP-3) y Fase D Spring/MySQL.
 
 ## Deuda y desviaciones conocidas
 

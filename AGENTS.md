@@ -3,8 +3,8 @@
 ## Estado (resumen)
 
 - Hechas: Fase A (UI-first, 5/5 vistas), Fase B (Room local) y specs `007` a `022`, todos mergeados en `main` (último: 022 en PR #30). DB Room versión **5**.
-- Estado intermedio: `023-duracion-rutina` implementado y verificado, **pendiente de merge**; `024-logo-launcher` creado (Borrador).
-- Siguiente: `024-logo-launcher` implementado, pendiente de merge (pruebas en dispositivo `bloqueado: sin dispositivo`). Más tarde: CUSTOM (MVP-3) y Fase D Spring/MySQL.
+- Estado intermedio: `023-duracion-rutina`, `024-logo-launcher` y `025-rutinas-series-duracion` implementados y verificados, **pendientes de merge**.
+- Siguiente: pendiente de definir por el usuario (no hay spec aprobado en curso). Más tarde: CUSTOM (MVP-3) y Fase D Spring/MySQL.
 - Detalle por spec, deuda, desviaciones y puntos de control: `docs/estado.md`. Léelo solo si la tarea lo necesita. Lo mantiene `/spec-impl` al cerrar cada spec (entradas "implementado, pendiente de merge"; el usuario las pasa a "mergeado"). Si trabajas fuera de un spec, actualízalo tú al terminar.
 - `docs/`, `specs/` y `references/` son guía de objetivo/diseño, no código hecho. Antes de editar, comprueba con `Glob`/`Grep` que el fichero existe: los specs pueden citar rutas futuras.
 - Deuda: los `Fake*Repository` de Fase A ya no se inyectan (Hilt usa los Room). No borrarlos sin confirmar.
@@ -79,3 +79,16 @@ La app usa `enableEdgeToEdge()` (`MainActivity.kt`): el contenido dibuja por deb
 - Prohibido compensar con dp fijos extra que imiten la altura de las barras.
 - Excepciones que ya gestionan insets solas (no tocar): `ModalBottomSheet` y diálogos de Material3; contenido centrado sin elementos pegados a los bordes.
 - Checklist para futuras vistas: probar en emulador Pixel 6 API 34 **y en físico, de forma automática**, con navegación por gestos y (si se puede) con 3 botones. Arriba nada bajo hora/cobertura/batería, abajo nada bajo la barra del sistema.
+
+## Regla de pausa obligatoria entre pasos de spec (skill spec-impl)
+
+Esta regla es vinculante en todas las sesiones futuras. Al ejecutar un spec aprobado mediante `spec-impl` (`@specs/<NNN>-<nombre>-spec.md`):
+
+1. Implementa **un solo paso** del plan de tareas (§7 del spec) a la vez.
+2. Verifica ese paso (`:app:compileDebugKotlin`, `testDebugUnitTest` o `assembleDebug` según toque, siguiendo la sección "Ejecución de Gradle" de este mismo fichero).
+3. Informa del diff del paso (`fichero:línea`) y del resultado de la verificación (`OK`, `FALLO` o `bloqueado: <motivo>`), más cualquier `Desviación vs spec`.
+4. **Detente y espera respuesta en texto libre** del usuario: `seguir`, `corregir` o `parar`. No uses la herramienta `question`, no ofrezcas opciones, no auto-avances.
+5. **No ejecutes varios pasos seguidos.** No auto-commitees (el usuario hace `git add`/`git commit` a mano). No auto-marcarás los checks de la sección §11 del spec (el usuario los marca a mano tras verificar, incluido móvil físico).
+6. Si una firma/API del spec no existe o no compila, no la reinventes: intenta una alternativa mínima, si no encaja anótalo en `Desviaciones vs spec` y sigue con el siguiente paso solo tras señal del usuario.
+
+Esta regla se lee al inicio de cada sesión junto al resto de `AGENTS.md`. Su incumplimiento anula el propósito de la skill.
