@@ -38,8 +38,9 @@ app/src/main/java/<paquete>/
 ├── TrainingApp.kt              # @HiltAndroidApp
 ├── MainActivity.kt             # @AndroidEntryPoint
 ├── core/
-│   ├── di/                     # Módulos de Hilt
+│   ├── di/                     # Módulos de Hilt (Database, Network, repositorios)
 │   ├── network/                # Retrofit, URL base y tag del catálogo
+│   ├── datastore/              # Ajustes (DataStore), p. ej. el tag del catálogo
 │   └── ui/                     # Tema y componentes Compose reutilizables
 ├── data/
 │   ├── local/
@@ -55,10 +56,12 @@ app/src/main/java/<paquete>/
 ├── domain/
 │   └── model/                  # Exercise, Routine, PlannedSet, WorkoutSession...
 └── feature/
+    ├── profile/                # Perfil de atleta
+    ├── home/                   # Mis rutinas y sesión en marcha
     ├── exercises/              # Listado, filtros, detalle, ejercicios propios
     ├── routines/               # Crear y editar rutinas y series planificadas
     ├── workout/                # Registrar una sesión en vivo + cronómetro
-    └── history/                # Sesiones pasadas
+    └── history/                # Calendario (mes + apuntes) y progreso
 ```
 
 Cada carpeta de `feature/` contiene su `Screen` (Compose) y su `ViewModel`.
@@ -93,9 +96,10 @@ Los GIFs no se guardan en SQLite: solo su URL. Coil los cachea en disco conforme
 | Backend | Java + Spring Boot, a partir de la Fase 2 |
 | Base de datos del servidor | MySQL, a partir de la Fase 2 |
 | Desarrollo | Android Studio + emulador Pixel 6 API 34 (`emulator-5554`), verificación automática con `connectedDebugAndroidTest` |
+| ApplicationId / namespace | `com.mytrainingplan.app` (fijo, no se cambia) |
 
 ## Pendiente de decidir
 
-- Nombre definitivo de la app y `applicationId` / paquete.
+- Nombre definitivo de la app (el paquete ya está fijado).
 - Cómo repartir las versiones entre amigos (APK manual, GitHub Releases, Firebase App Distribution).
 - Fecha y forma de arrancar la Fase 2.

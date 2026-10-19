@@ -2,6 +2,8 @@
 
 Distinción clave: **lo planificado** (rutinas) y **lo realizado** (sesiones) son tablas separadas. Una rutina dice qué se quiere hacer; una sesión guarda lo que realmente se hizo.
 
+Versión de la base de datos: **5** (esquema exportado en `app/schemas/`; migraciones 12/23/34/45 en `AppDatabase`).
+
 ## Jerarquía
 
 ```
@@ -38,7 +40,7 @@ Por qué así: el descanso, el peso y las repeticiones viven en la **serie plani
 
 ### RoutineEntity
 
-`id` (UUID), `name`, `position`, `createdAt`, `updatedAt`, `deleted`
+`id` (UUID), `name`, `durationMin` (Int, default 45), `durationManual` (Boolean, `true` = fijada a mano por el usuario, `false` = AUTO recálculo; spec 023), `position`, `createdAt`, `updatedAt`, `deleted`
 
 ### RoutineExerciseEntity
 
@@ -61,7 +63,7 @@ Por qué así: el descanso, el peso y las repeticiones viven en la **serie plani
 
 ### WorkoutSessionEntity
 
-`id` (UUID), `routineId` (nullable), `startedAt`, `endedAt`, `updatedAt`, `deleted`
+`id` (UUID), `routineId` (String no-nulo, "" si huérfana), `startedAt`, `endedAt` (nullable), `pausedAccumSec` (histórico de pausas), `timerBaseSec` (segundos ya contados del cronómetro) y `runningSince` (marca de arranque en ms, `null` = parado; los dos últimos viven desde la v4 para el cronómetro persistente del spec 022), `updatedAt`, `deleted`
 
 ### SetEntryEntity
 
@@ -76,6 +78,20 @@ Por qué así: el descanso, el peso y las repeticiones viven en la **serie plani
 | `weightKg` | Double | Con signo, igual que en la planificación |
 | `loadNote` | String? | |
 | `restSeconds` | Int? | Descanso aplicado |
+| `done` | Boolean | Parte de "lo hecho" (`expanded`/`handEdited` son solo de pantalla) |
+| `updatedAt`, `deleted` | | |
+
+## Programación (apuntar rutina a un día)
+
+### ScheduledDayEntity
+
+Un apunte por día concreto (spec 015). Lo "hecho" no se guarda aquí: se deduce de sesiones finalizadas.
+
+| Campo | Tipo | Notas |
+|---|---|---|
+| `id` | UUID | |
+| `routineId` | UUID | Rutina apuntada |
+| `date` | String | `yyyy-MM-dd` local del dispositivo |
 | `updatedAt`, `deleted` | | |
 
 ## Comportamiento de las series planificadas

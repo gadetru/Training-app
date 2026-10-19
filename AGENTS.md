@@ -2,8 +2,9 @@
 
 ## Estado (resumen)
 
-- Hechas: Fase A (UI-first, 5/5 vistas), Fase B (Room local) y specs `007` a `017`, todos mergeados en `main`.
-- Siguiente: `018-guardar-rutina-scroll` (Borrador en `specs/`). Más tarde: CUSTOM (MVP-3) y Fase D Spring/MySQL.
+- Hechas: Fase A (UI-first, 5/5 vistas), Fase B (Room local) y specs `007` a `022`, todos mergeados en `main` (último: 022 en PR #30). DB Room versión **5**.
+- Estado intermedio: `023-duracion-rutina` implementado y verificado, **pendiente de merge**; `024-logo-launcher` creado (Borrador).
+- Siguiente: `024-logo-launcher` (Borrador, pendiente de aprobación). Más tarde: CUSTOM (MVP-3) y Fase D Spring/MySQL.
 - Detalle por spec, deuda, desviaciones y puntos de control: `docs/estado.md`. Léelo solo si la tarea lo necesita. Lo mantiene `/spec-impl` al cerrar cada spec (entradas "implementado, pendiente de merge"; el usuario las pasa a "mergeado"). Si trabajas fuera de un spec, actualízalo tú al terminar.
 - `docs/`, `specs/` y `references/` son guía de objetivo/diseño, no código hecho. Antes de editar, comprueba con `Glob`/`Grep` que el fichero existe: los specs pueden citar rutas futuras.
 - Deuda: los `Fake*Repository` de Fase A ya no se inyectan (Hilt usa los Room). No borrarlos sin confirmar.
@@ -40,7 +41,7 @@ El agente trabaja Kotlin en `app/src/main/`, recursos y documentación.
   Comprobación rápida por paso: `./gradlew :app:compileDebugKotlin`.
 - Tests JVM: `./gradlew testDebugUnitTest`. Cubre botes `AppColors/AppDimens`, `CatalogMappingTest`, reglas `RoutineRules/WorkoutPrefill` con fakes, filtro ES del catálogo, fotos Roborazzi (Home y tarjeta) y `WorkoutLiveEditTest`. Debe quedar todo en verde.
 - Puerta CI: `.github/workflows/blindaje.yml` (`assembleDebug` + `testDebugUnitTest` en cada PR/push a `main`; el check se exige en Settings > Branches > main).
-- Tests instrumentados: `connectedDebugAndroidTest` (DAO, migraciones, smokes `feature/home|routines|workout|history`, `Workout016LiveEditTest`, `PickerSearchTest`), con `testTag` en raíces/CTAs (`profileRoot/profileSave`, `homeRoot/homeDock/routineCard:<id>`, `routineEditRoot/routineEditAddExercise/routineEditSave`, `workoutRoot/workoutFinish/restOverlay`). Smoke de detalle pendiente.
+- Tests instrumentados: `connectedDebugAndroidTest` (DAO, migraciones `12/23/34/45`, smokes `feature/home|routines|workout|history`, tests de sesión `Workout013/016/019/021/022`, `PickerSearchTest`, `RoutineEdit023DurationTest`), con `testTag` en raíces/CTAs (`profileRoot/profileSave`, `homeRoot/homeDock/routineCard:<id>`, `routineEditRoot/routineEditAddExercise/routineEditSave`, `workoutRoot/workoutFinish/restOverlay`). Smoke de detalle pendiente.
 - Verificación: **emulador Pixel 6 API 34** (`emulator-5554`) **+ dispositivo físico, de forma automática**; se testea en ambos con `adb` + MCP `mobile-mcp` (`list_available_devices` → `list_elements` por `ref` → `click`/`screenshot`/`logs`) y `connectedDebugAndroidTest` como red de seguridad. Si un spec dice explícitamente solo uno, manda el spec y se anota.
   **Antes de lanzar nada contra dispositivo, comprueba `adb devices`.** Si no hay ninguno en estado `device`, no lances `connectedDebugAndroidTest`: anota `bloqueado: sin dispositivo` y sigue.
   En físico Xiaomi/MIUI: activar "Instalar vía USB" (si no, `INSTALL_FAILED_USER_RESTRICTED`). AGP instala el APK de test con `-g` y MIUI lo rechaza (`SecurityException`) → fallback: `adb install` manual + `am instrument`.
