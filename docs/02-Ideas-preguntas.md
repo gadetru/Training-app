@@ -23,3 +23,7 @@ una suma de todos los tiempos de descanso + 30 seg por serie y pondrá que la du
 completada la sesión de entrenamiento, éste dato se actualizará con el tiempo real realizado ese día.
 Cada día que la rutina se complete, ese valor quedará guardado como el valor final de la rutina. Mas 
 Adelante lo quiero utilizar para la estadística de progreso.
+
+# 4-Teclados:
+- A la hora de introducir numeros en las rutinas para los kg, las reps o el descanso, debemos tener 
+teclado numerico al estilo de la app. pero sin tener letras alguna, el estilo de una calculadora.

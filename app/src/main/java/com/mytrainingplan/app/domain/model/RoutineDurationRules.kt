@@ -19,8 +19,8 @@ object RoutineDurationRules {
         return (totalSec + 30) / 60
     }
 
-    /** Duración real de una sesión terminada (segundos → minutos, mínimo 1). */
+    /** Duración real de una sesión terminada (segundos → minutos, redondeo al más cercano, mínimo 1). */
     fun fromRealSeconds(sec: Int): Int {
-        return sec.coerceAtLeast(60) / 60
+        return ((sec + 30) / 60).coerceAtLeast(1)
     }
 }

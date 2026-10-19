@@ -87,17 +87,17 @@ No entra:
 ## Preguntas abiertas
 - Ninguna bloqueante. Redondeo fijado al más cercano, mínimo 1 cuando hay series o hubo sesión.
 ## 11. Checklist verificación (última, checkboxes listos para /verifier)
-- [ ] 1. Rutina nueva sin duración ("—").
-- [ ] 2. AUTO con series: "≈ X min" = redondeo((Σ descansos + 30·n)/60), mínimo 1.
-- [ ] 3. AUTO sin series: "—".
-- [ ] 4. MANUAL: editable y congelado.
-- [ ] 5. MANUAL → AUTO recalcula.
-- [ ] 6. Guardar AUTO persiste la estimación.
-- [ ] 7. Finalizar sesión AUTO → duración = tiempo real (mín. 1).
-- [ ] 8. Finalizar sesión MANUAL → duración intacta.
-- [ ] 9. Home muestra "X min" u oculta la línea si 0.
-- [ ] 10. Migración v4→v5 conserva datos (existentes = MANUAL).
-- [ ] 11. Calendario/Progreso y catálogo intactos.
-- [ ] 12. `./gradlew assembleDebug` OK.
-- [ ] 13. `./gradlew testDebugUnitTest` verde.
-- [ ] 14. Smoke en emulador Pixel 6 API 34 (+ físico si se puede).
+- [x] 1. Rutina nueva sin duración ("—"). — MCP emulador: fila "—" + resumen "0 ejercicios configurados • —"; smoke `rutina_nueva_duracion_vacia_guion` OK.
+- [x] 2. AUTO con series: "≈ X min" = redondeo((Σ descansos + 30·n)/60), mínimo 1. — MCP: 1 serie DESC 90 → "≈ 2 min" (fila+resumen+pie); smoke `auto_con_series_muestra_estimacion` OK; `RoutineDurationRulesTest` 8/8.
+- [x] 3. AUTO sin series: "—". — MCP: fila y pie "—" (fix `SaveFooter` que pintaba "≈ 0 min"); smoke OK.
+- [x] 4. MANUAL: editable y congelado. — MCP: campo editable (tecleado 0→5), pie "5 min" sin "≈"; smoke `manual_muestra_numero_escrito` OK; JVM `manual_guardar_congela_duracion`.
+- [x] 5. MANUAL → AUTO recalcula. — MCP: 5 min → "≈ 2 min" al volver a AUTO.
+- [x] 6. Guardar AUTO persiste la estimación. — MCP: guardada "Rutina 3" en Home con "2 min"; JVM `auto_guardar_persiste_estimacion_de_series`.
+- [x] 7. Finalizar sesión AUTO → duración = tiempo real (mín. 1). — MCP: sesión de 115 s → Home "2 min" (redondeo, no truncado); JVM `finalizar_auto_adopta_tiempo_real_medido` + `finalizar_sin_cronometro_auto_minimo_1`.
+- [x] 8. Finalizar sesión MANUAL → duración intacta. — MCP: "Prueba Tint" (MANUAL) tras finalizar sesión de ~184 min sigue "45 min"; JVM `finalizar_manual_no_cambia_duracion`.
+- [x] 9. Home muestra "X min" u oculta la línea si 0. — MCP: "45 min"/"2 min" visibles; ocultar si 0 por código `HomeScreen.kt:480-483`.
+- [x] 10. Migración v4→v5 conserva datos (existentes = MANUAL). — `Migration45Test` OK (instrumentado); migración EN VIVO en emulador (APK v4→v5: filas conservan "45 min"); schema `5.json` con `durationManual`.
+- [x] 11. Calendario/Progreso y catálogo intactos. — git diff sin ficheros de history/catálogo; `CatalogMappingTest` 5/5; picker "1323 DISPONIBLES" y Progreso/Calendario renderizan en emulador.
+- [x] 12. `./gradlew assembleDebug` OK. — BUILD SUCCESSFUL.
+- [x] 13. `./gradlew testDebugUnitTest` verde. — 110/110 (023: 8+3+3; `CatalogMappingTest` 5/5).
+- [x] 14. Smoke en emulador Pixel 6 API 34 (+ físico si se puede). — MCP (vía primaria) + `Migration45Test`/`RoutineEdit023DurationTest` 4/4 instrumentados en `emulator-5554`; físico no disponible (no hay dispositivo en `adb devices`) → anotado.

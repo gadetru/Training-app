@@ -1,14 +1,17 @@
 package com.mytrainingplan.app.feature.routines
 
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithText
 import com.mytrainingplan.app.domain.model.Exercise
 import com.mytrainingplan.app.domain.model.PlannedSet
 import com.mytrainingplan.app.domain.model.RoutineEditUiState
 import com.mytrainingplan.app.domain.model.RoutineExercise
 import com.mytrainingplan.app.domain.model.RoutineExerciseUi
+import org.junit.Rule
 import org.junit.Test
 
 /**
@@ -52,8 +55,10 @@ class RoutineEdit023DurationTest {
                 )
             }
         }
-        rule.onNodeWithText("—").assertIsDisplayed()
         rule.onNodeWithText("AUTO").assertIsDisplayed()
+        // "—" sale 2 veces: fila de duración y pie (SaveFooter usa el valor efectivo).
+        rule.onAllNodesWithText("—").assertCountEquals(2)
+        rule.onAllNodesWithText("—")[0].assertIsDisplayed()
     }
 
     @Test
@@ -70,7 +75,9 @@ class RoutineEdit023DurationTest {
                 )
             }
         }
-        rule.onNodeWithText("≈ 2 min").assertIsDisplayed()
+        // "≈ 2 min" sale 2 veces: fila de duración y pie (SaveFooter usa el valor efectivo).
+        rule.onAllNodesWithText("≈ 2 min").assertCountEquals(2)
+        rule.onAllNodesWithText("≈ 2 min")[0].assertIsDisplayed()
     }
 
     @Test

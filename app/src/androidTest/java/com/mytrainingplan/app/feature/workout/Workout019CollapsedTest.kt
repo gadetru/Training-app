@@ -81,8 +81,12 @@ class Workout019CollapsedTest {
             firstRe = first.routineExercise.id
             secondRe = second.routineExercise.id
         }
-        // El cronómetro debe estar activo: marcar exige no-pausa.
+        // El cronómetro debe estar activo: marcar exige no-pausa. El
+        // timerStart es asíncrono (repo): se espera a que el estado derivado
+        // lo refleje antes de devolver (si no, el primer onToggleDone del
+        // test puede llegar con el timer aún SIN_EMPEZAR y ser ignorado).
         vm.onPauseToggle()
+        await(10_000) { !vm.uiState.value.isPaused }
         return Fixture(vm, scope, routineId, firstEntryId, secondEntryId, firstRe, secondRe)
     }
 

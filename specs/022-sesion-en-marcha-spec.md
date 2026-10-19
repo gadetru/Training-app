@@ -82,14 +82,14 @@ Hoy: `WorkoutSessionDao` no tiene consulta de vivas; `startSession` (`RoomWorkou
 ## Preguntas abiertas
 - Decidido con el usuario: migración v4 sí; todos los Iniciar bloqueados con Reanudar/Terminar/Descartar en la card en marcha; Descartar con confirmación; naranja = programada hoy; deps 016+021; pruebas JVM + smoke.
 ## 11. Checklist verificación (última, checkboxes listos para /verifier)
-- [ ] Salir con ←/∨/⋮ tras marcar series: card de Home EN MARCHA con contador corriendo.
-- [ ] Reanudar conserva series hechas/pendientes y cronómetro (activo sigue, pausa congelada).
-- [ ] Los Iniciar del resto quedan deshabilitados hasta cerrar la viva.
-- [ ] Terminar desde Home finaliza la sesión (Calendario y prefill la ven) y reactiva los Iniciar.
-- [ ] Descartar desde Home pide confirmación y borra la sesión viva.
-- [ ] Un Iniciar no crea segunda sesión (guardia devuelve la viva).
-- [ ] CTA naranja solo si la rutina está programada para HOY (barrita de acento intacta).
-- [ ] Pausar y matar la app → al abrir: tiempo congelado persistido (migración v4).
-- [ ] `./gradlew assembleDebug` OK.
-- [ ] `./gradlew testDebugUnitTest` verde.
-- [ ] `./gradlew connectedDebugAndroidTest` verde en emulador y en físico.
+- [x] Salir con ←/∨/⋮ tras marcar series: card de Home EN MARCHA con contador corriendo. (UI adb: back tras marcar → "EN MARCHA 01:46"→02:38 corriendo; `build/022-01-home-en-marcha.png`)
+- [x] Reanudar conserva series hechas/pendientes y cronómetro (activo sigue, pausa congelada). (UI adb: Reanudar → ACTIVO 03:21, "100% completado", "1 de 1 series" (`build/022-02-reanudada.png`); instrumentado `Workout022ResumeTest` 2/2: doneCount=1 y reloj que crece tras reanudar)
+- [x] Los Iniciar del resto quedan deshabilitados hasta cerrar la viva. (Instrumentado: `assertCountEquals(1)` + `assertIsNotEnabled()` con r1 viva; UI adb: Rutina 2 con Iniciar atenuado/gris con viva en Rutina 1, `build/022-07-cta-colores.png`)
+- [x] Terminar desde Home finaliza la sesión (Calendario y prefill la ven) y reactiva los Iniciar. (UI adb: Terminar → "Iniciar" de vuelta + "Hoy" + racha 1, `build/022-04-terminada-iniciar.png`; instrumentado: `observeSession(sid)==null` y `startSession` crea id nuevo)
+- [x] Descartar desde Home pide confirmación y borra la sesión viva. (UI adb: diálogo "¿Descartar entrenamiento?" → Descartar → Iniciar de vuelta, `build/022-05-dialogo-descarte.png` + `build/022-06-descartada.png`)
+- [x] Un Iniciar no crea segunda sesión (guardia devuelve la viva). (JVM `StartSessionGuardTest` 2/2 dentro de 110 verdes; guardia en `RoomWorkoutRepository.kt:62-68` con `Log.w`; UI adb: doble tap en Iniciar → una sola sesión/card EN MARCHA. Nota: el `Log.w` no es disparable por UI — el 2º tap cae ya en la pantalla de sesión; cubierto por el test JVM)
+- [x] CTA naranja solo si la rutina está programada para HOY (barrita de acento intacta). (UI adb: Rutina 1 programada hoy tras Terminar → Iniciar naranja; Rutina 2 sin programar → Iniciar gris atenuado; lógica `HomeScreen.kt:619-623` `primary = id == scheduledTodayId`; `RoomWorkoutRepository.kt:339` programa al finalizar)
+- [x] Pausar y matar la app → al abrir: tiempo congelado persistido (migración v4). (UI adb: pausa 03:53 → force-stop → relanzar → Reanudar → "ENTRENAMIENTO EN PAUSA" 03:53 congelado (2 lecturas a 3 s), `build/022-03-en-pausa-congelada.png`; `Migration34Test` verde en instrumentados)
+- [x] `./gradlew assembleDebug` OK. (BUILD SUCCESSFUL)
+- [x] `./gradlew testDebugUnitTest` verde. (110 tests, 0 fallos)
+- [ ] `./gradlew connectedDebugAndroidTest` verde en emulador y en físico. (Emulador Pixel 6 API 34: 59/59 verde. Físico: bloqueado — `ae4a376e` desapareció de `adb devices` a mitad de sesión; reintentar cuando reconecte, con instalación manual + `am instrument` si MIUI rechaza el `-g` de AGP)

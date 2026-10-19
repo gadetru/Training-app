@@ -287,8 +287,6 @@ fun RoutineEditContent(
         SaveFooter(
             exerciseCount = uiState.exercises.size,
             totalSets = uiState.exercises.sumOf { it.sets.size },
-            durationMin = effectiveDuration,
-            durationManual = uiState.durationManual,
             durationDisplay = durationDisplay,
             isSaving = uiState.isSaving,
             onSave = onSave,
@@ -1257,8 +1255,6 @@ private fun CollapsedExerciseCard(
 private fun SaveFooter(
     exerciseCount: Int,
     totalSets: Int,
-    durationMin: Int,
-    durationManual: Boolean,
     durationDisplay: String,
     isSaving: Boolean,
     onSave: () -> Unit,
@@ -1288,7 +1284,8 @@ private fun SaveFooter(
                 fontSize = AppTextSizes.Body
             )
             Text(
-                if (durationManual) durationDisplay else "≈ $durationMin min",
+                // Valor efectivo ya formateado: "X min" MANUAL, "≈ X min" AUTO, "—" sin series.
+                durationDisplay,
                 color = AppColors.Volt,
                 fontSize = AppTextSizes.Body,
                 fontWeight = FontWeight.Bold
