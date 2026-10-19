@@ -1,5 +1,5 @@
 # Propagación de series + duración legible en crear/editar rutina
-Estado: aprobadogit a
+Estado: aprobado
 Depende de: specs/023-duracion-rutina-spec.md (la fila de duración AUTO/MANUAL ya existe; este spec la retoque)
 Fecha de creación: 2026-10-19
 Descripción: Dos mejoras en crear/editar rutina: (1) la propagación de pesos/repeticiones/segundos solo parte de la serie 1 y al pulsar "Añadir Serie" copia de la última; editar series intermedias no toca las demás. (2) la fila de duración deja de recortar el texto del botón AUTO/MANUAL (pasa a icono solo) y se redistribuye para que botón, valor y "min" sean legibles.
