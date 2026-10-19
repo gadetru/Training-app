@@ -1,5 +1,5 @@
 # Duración de rutina: vacía, estimada y real
-Estado: aprobado
+Estado: implementado
 Depende de: specs/020-ceros-numericos-spec.md + specs/022-sesion-en-marcha-spec.md (020 aporta el campo numérico; 022 el cronómetro y el tiempo real de la sesión)
 Fecha de creación: 2026-10-18
 Descripción: Al crear una rutina su duración sale vacía y se estima sola (descansos + 30 s por serie). Si la editas a mano se congela; al terminar una sesión pasa al tiempo real medido. Ese valor queda guardado en la rutina para usarlo más adelante en estadísticas.

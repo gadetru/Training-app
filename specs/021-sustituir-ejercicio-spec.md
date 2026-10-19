@@ -1,5 +1,5 @@
 # Sustituir ejercicio la sesión en vivo
-Estado: aprobado
+Estado: implementado
 Depende de: specs/016-sesion-edicion-spec.md (patrón de swipe en vivo) y specs/019-sesion-colapsado-spec.md (colapso por defecto, gesto diseñado sobre tarjetas colapsadas)
 Fecha de creación: 2026-10-18
 Descripción: Deslizar a la izquierda una tarjeta de ejercicio COLAPSADA revela un botón "Sustituir"; elegir un ejercicio del picker lo sustituye y queda guardado en la rutina de forma inmediata y permanente, como la edición de series. La sesión en vivo sigue sin perder series.

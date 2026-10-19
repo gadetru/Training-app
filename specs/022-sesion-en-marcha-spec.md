@@ -1,5 +1,5 @@
 # Rutina en marcha (retomar sin sesiones fantasma)
-Estado: aprobado
+Estado: implementado
 Depende de: specs/016-sesion-edicion-spec.md (el ⋮ ya trae "Salir del entrenamiento") y specs/021-sustituir-ejercicio-spec.md (misma tela repo/VM; implementar 021 antes)
 Fecha de creación: 2026-10-18
 Descripción: Salir de la sesión (∨/←/⋮ "Salir del entrenamiento") sin finalizar ni descartar deja constancia: la card de esa rutina en Home pasa a EN MARCHA con contador, Reanudar, Terminar y Descartar (con confirmación); los Iniciar del resto se deshabilitan hasta cerrar. El cronómetro sobrevive a salir, minimizar y matar la app (migración v4). Iniciar naranja solo para la rutina programada hoy.
