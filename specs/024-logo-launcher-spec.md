@@ -1,5 +1,5 @@
 # Logo launcher (miLogo) + splash detallado
-Estado: Borrador
+Estado: implementado
 Depende de: Ninguno
 Fecha de creación: 2026-10-18
 Descripción: Sustituir el icono por defecto de la plantilla por el logo del rack
@@ -123,10 +123,10 @@ keystore, sin deps nuevas, `gradle-wrapper` intacto.
 - Ninguna bloqueante. Fondo de splash decidido: #111316 (coherente con la app).
 
 ## 11. Checklist verificación (última, checkboxes listos para /verifier)
-- [ ] CA1: icono rack en emulador API 34 y físico (fotos).
-- [ ] CA2: dibujo completo sin recortes circulares.
-- [ ] CA3: themed icon silueta coherente (emulador).
-- [ ] CA4: splash con logo detallado en API 31+ (emulador y físico si aplica).
-- [ ] `./gradlew assembleDebug` OK.
-- [ ] `./gradlew testDebugUnitTest` OK.
-- [ ] Prueba en móvil (launcher + splash) en emulador y físico.
+- [x] CA1: icono rack en emulador API 34 y físico (fotos).
+- [x] CA2: dibujo completo sin recortes circulares.
+- [x] CA3: themed icon silueta coherente (emulador).
+- [x] CA4: splash con logo detallado en API 31+ (emulador y físico si aplica).
+- [x] `./gradlew assembleDebug` OK.
+- [x] `./gradlew testDebugUnitTest` OK.
+- [x] Prueba en móvil (launcher + splash) en emulador y físico.
