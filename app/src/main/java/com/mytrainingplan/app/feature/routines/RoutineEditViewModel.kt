@@ -182,20 +182,22 @@ class RoutineEditViewModel @Inject constructor(
                 loadNote = edited.loadNote,
                 rir = edited.rir
             )
-            // Solo siguientes no editadas a mano.
-            item.sets
-                .filter { it.setNumber > edited.setNumber && handKey(it.id, field) !in editedKeys }
-                .forEach { following ->
-                    repository.updateSet(
-                        routineExerciseId = routineExerciseId,
-                        setId = following.id,
-                        targetReps = newReps,
-                        weightKg = newWeight,
-                        restSeconds = newRest,
-                        loadNote = following.loadNote,
-                        rir = following.rir
-                    )
-                }
+            // Propaga solo desde la serie 1; editar N>1 toca solo esa celda.
+            if (edited.setNumber == 1) {
+                item.sets
+                    .filter { it.setNumber > edited.setNumber && handKey(it.id, field) !in editedKeys }
+                    .forEach { following ->
+                        repository.updateSet(
+                            routineExerciseId = routineExerciseId,
+                            setId = following.id,
+                            targetReps = newReps,
+                            weightKg = newWeight,
+                            restSeconds = newRest,
+                            loadNote = following.loadNote,
+                            rir = following.rir
+                        )
+                    }
+            }
         }
     }
 

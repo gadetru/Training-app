@@ -157,10 +157,10 @@ class RoomRoutineRepository(
 
     override suspend fun addSet(routineExerciseId: String) {
         val list = sets.observeByExercise(routineExerciseId).first()
-        val first = list.minByOrNull { it.setNumber }?.toDomain()
+        val last = list.maxByOrNull { it.setNumber }?.toDomain()
         val next = (list.maxOfOrNull { it.setNumber } ?: 0) + 1
         val now = System.currentTimeMillis()
-        val fresh = first?.copy(id = UUID.randomUUID().toString(), setNumber = next)
+        val fresh = last?.copy(id = UUID.randomUUID().toString(), setNumber = next)
             ?: PlannedSet(
                 id = UUID.randomUUID().toString(), routineExerciseId = routineExerciseId,
                 setNumber = next, targetReps = 0, weightKg = 0.0, restSeconds = 90

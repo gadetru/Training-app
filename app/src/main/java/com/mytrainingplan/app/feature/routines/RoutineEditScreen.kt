@@ -104,12 +104,18 @@ import com.mytrainingplan.app.domain.model.RoutineExercise
 import com.mytrainingplan.app.domain.model.RoutineExerciseUi
 import com.mytrainingplan.app.domain.model.RoutineMuscleLabels
 import com.mytrainingplan.app.feature.exercises.ExercisePickerSheet
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 // Colores y medidas desde ui/theme (spec 011): sin tokens locales.
 
 private fun formatWeight(weightKg: Double): String =
     if (weightKg % 1.0 == 0.0) weightKg.toInt().toString() else weightKg.toString()
+
+// Tras este tiempo sin teclear, el borrador de una celda se confirma al ViewModel
+// para que propagaciones / "Añadir Serie" vean el último valor aunque no se haya
+// salido de la casilla.
+private const val FIELD_DEBOUNCE_MS = 800L
 
 private fun Modifier.dashedBorder(
     color: Color,
@@ -454,7 +460,8 @@ private fun MetaCard(
         ) {
             Text("Duración", color = AppColors.TextMuted, fontSize = AppTextSizes.Body)
             Spacer(Modifier.width(AppDimens.SpaceMd))
-            // Interruptor AUTO / MANUAL (dos estados).
+            // Modo AUTO/MANUAL: Box icon-only (sin texto interno para evitar recorte).
+            // El icono varía según durationManual; el campo de valor y "min" recuperan el sobrante.
             Box(
                 modifier = Modifier
                     .size(AppDimens.TouchMin)
@@ -464,11 +471,11 @@ private fun MetaCard(
                     .clickable(onClick = { onDurationModeChange(!durationManual) }),
                 contentAlignment = Alignment.Center
             ) {
-                Text(
-                    if (durationManual) "MANUAL" else "AUTO",
-                    color = AppColors.TextPrimary,
-                    fontSize = AppTextSizes.Small,
-                    fontWeight = FontWeight.Bold
+                Icon(
+                    imageVector = if (durationManual) Icons.Filled.Edit else Icons.Filled.CheckCircle,
+                    contentDescription = if (durationManual) "Modo manual" else "Modo automático",
+                    tint = AppColors.TextPrimary,
+                    modifier = Modifier.size(AppDimens.IconMd)
                 )
             }
             Spacer(Modifier.width(AppDimens.SpaceSm))
@@ -476,7 +483,11 @@ private fun MetaCard(
                 // Campo numérico editable (modo MANUAL, congelado a lo escrito).
                 BasicTextField(
                     value = durationMin.toString(),
-                    onValueChange = { raw -> NumberInput.sanitizeInt(raw).toIntOrNull()?.let(onDurationChange) },
+                    onValueChange = { raw ->
+                        val sanitized = NumberInput.sanitizeInt(raw)
+                        if (sanitized.isBlank()) onDurationChange(0)
+                        else sanitized.toIntOrNull()?.let(onDurationChange)
+                    },
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     textStyle = TextStyle(
@@ -486,7 +497,7 @@ private fun MetaCard(
                         textAlign = TextAlign.Center
                     ),
                     modifier = Modifier
-                        .width(AppDimens.DurationWidth)
+                        .weight(1f)
                         .clip(RoundedCornerShape(AppDimens.RadiusMd))
                         .background(AppColors.CardHigh)
                         .padding(vertical = AppDimens.SpaceMd, horizontal = AppDimens.SpaceXs)
@@ -500,7 +511,7 @@ private fun MetaCard(
                     color = AppColors.TextMuted,
                     fontSize = AppTextSizes.TitleSm,
                     fontWeight = FontWeight.Bold,
-                    modifier = Modifier.width(AppDimens.DurationWidth)
+                    modifier = Modifier.weight(1f)
                 )
             }
         }
@@ -1135,6 +1146,16 @@ private fun CellInput(
     var draft by remember(value) { mutableStateOf(value) }
     val focusManager = LocalFocusManager.current
     val keyboard = LocalSoftwareKeyboardController.current
+    // Auto-confirma el borrador al ViewModel tras X ms sin teclear, para que
+    // una propagación o "Añadir Serie" vea el último valor aunque la casilla
+    // siga en edición (sin perder el foco).
+    LaunchedEffect(draft) {
+        delay(FIELD_DEBOUNCE_MS)
+        if (draft != value) {
+            if (draft.isBlank()) onValueChange("0")
+            else onValueChange(draft)
+        }
+    }
     BasicTextField(
         value = draft,
         onValueChange = { draft = when (keyboardType) {
@@ -1146,7 +1167,7 @@ private fun CellInput(
         keyboardActions = KeyboardActions(
             onDone = {
                 if (draft != value) {
-                    if (draft.isBlank()) draft = value
+                    if (draft.isBlank()) onValueChange("0")
                     else onValueChange(draft)
                 }
                 focusManager.clearFocus(force = true)
@@ -1167,7 +1188,7 @@ private fun CellInput(
                 if (it.isFocused) {
                     scope.launch { bringIntoView.bringIntoView() }
                 } else if (draft != value) {
-                    if (draft.isBlank()) draft = value
+                    if (draft.isBlank()) onValueChange("0")
                     else onValueChange(draft)
                 }
             }
