@@ -1,5 +1,5 @@
 # Logo launcher (miLogo) + splash detallado
-Estado: Borrador
+Estado: aprobado
 Depende de: Ninguno
 Fecha de creación: 2026-10-18
 Descripción: Sustituir el icono por defecto de la plantilla por el logo del rack
