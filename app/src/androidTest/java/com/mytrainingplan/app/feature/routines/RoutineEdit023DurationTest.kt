@@ -5,6 +5,7 @@ import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import com.mytrainingplan.app.domain.model.Exercise
 import com.mytrainingplan.app.domain.model.PlannedSet
@@ -55,7 +56,7 @@ class RoutineEdit023DurationTest {
                 )
             }
         }
-        rule.onNodeWithText("AUTO").assertIsDisplayed()
+        rule.onNodeWithContentDescription("Modo automático").assertIsDisplayed()
         // "—" sale 2 veces: fila de duración y pie (SaveFooter usa el valor efectivo).
         rule.onAllNodesWithText("—").assertCountEquals(2)
         rule.onAllNodesWithText("—")[0].assertIsDisplayed()

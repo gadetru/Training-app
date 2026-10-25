@@ -4,6 +4,7 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.focusable
 import androidx.compose.foundation.gestures.AnchoredDraggableDefaults
 import androidx.compose.foundation.gestures.AnchoredDraggableState
 import androidx.compose.foundation.gestures.DraggableAnchors
@@ -27,9 +28,11 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckCircle
@@ -79,7 +82,10 @@ import com.mytrainingplan.app.ui.theme.AppColors
 import com.mytrainingplan.app.ui.theme.AppDimens
 import com.mytrainingplan.app.ui.theme.AppTextSizes
 import com.mytrainingplan.app.core.ui.NumberInput
+import com.mytrainingplan.app.core.ui.BlinkingCaret
+import com.mytrainingplan.app.core.ui.NumericKeypad
 import com.mytrainingplan.app.feature.exercises.ExercisePickerSheet
+import com.mytrainingplan.app.feature.routines.SetField
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.mytrainingplan.app.domain.model.Exercise
 import com.mytrainingplan.app.domain.model.PlannedSet
@@ -1233,7 +1239,7 @@ private fun ValueCell(
 }
 
 /**
- * Spec 013 paso 1: modal de edición de serie (KG con signo, REPS entero,
+ * Spec 013 paso 1: modal de edición de serie (KG, REPS entero,
  * PAUSA en segundos) con teclado numérico y confirmación. `AlertDialog`
  * gestiona insets solo (regla edge-to-edge). Estado solo de pantalla;
  * el guardado lo hace el llamador en `onConfirm` (paso 2: rutas reales).
@@ -1248,6 +1254,21 @@ private fun SetEditDialog(
     var kgText by rememberSaveable(entry.id) { mutableStateOf(formatWeight(entry.weightKg)) }
     var repsText by rememberSaveable(entry.id) { mutableStateOf("${entry.reps}") }
     var restText by rememberSaveable(entry.id) { mutableStateOf("$restSec") }
+    // Spec 026: campo que edita el panel numérico propio dentro del modal de serie.
+    var activeField by remember { mutableStateOf<SetField?>(null) }
+    var panelDraft by remember { mutableStateOf("") }
+    // Autoguardado al cambiar de campo: vuelca el borrador como si se pulsara
+    // OK y deja listo el nuevo campo para seguir editando.
+    fun commitActiveField() {
+        when (activeField) {
+            SetField.WEIGHT_KG -> kgText = panelDraft
+            SetField.TARGET_REPS -> repsText = panelDraft
+            SetField.REST_SECONDS -> restText = panelDraft
+            null -> Unit
+        }
+        activeField = null
+        panelDraft = ""
+    }
     val kg = kgText.replace(',', '.').toDoubleOrNull()
     val reps = repsText.toIntOrNull()
     val rest = restText.toIntOrNull()
@@ -1265,28 +1286,53 @@ private fun SetEditDialog(
             )
         },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(AppDimens.SpaceXl)) {
+            Column(
+                modifier = Modifier.verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(AppDimens.SpaceXl)
+            ) {
                 SetEditField(
-                    label = "KG (con signo: + lastre, - ayuda)",
-                    value = kgText,
-                    onValue = { kgText = NumberInput.sanitizeDecimal(it) },
-                    keyboardType = KeyboardType.Decimal,
+                    label = "KG",
+                    value = if (activeField == SetField.WEIGHT_KG) panelDraft else kgText,
+                    focused = activeField == SetField.WEIGHT_KG,
+                    onClick = {
+                        commitActiveField()
+                        activeField = SetField.WEIGHT_KG
+                        panelDraft = kgText
+                    },
                     testTag = "setEditKg"
                 )
                 SetEditField(
                     label = "REPS",
-                    value = repsText,
-                    onValue = { repsText = NumberInput.sanitizeInt(it) },
-                    keyboardType = KeyboardType.Number,
+                    value = if (activeField == SetField.TARGET_REPS) panelDraft else repsText,
+                    focused = activeField == SetField.TARGET_REPS,
+                    onClick = {
+                        commitActiveField()
+                        activeField = SetField.TARGET_REPS
+                        panelDraft = repsText
+                    },
                     testTag = "setEditReps"
                 )
                 SetEditField(
                     label = "PAUSA (segundos)",
-                    value = restText,
-                    onValue = { restText = NumberInput.sanitizeInt(it) },
-                    keyboardType = KeyboardType.Number,
+                    value = if (activeField == SetField.REST_SECONDS) panelDraft else restText,
+                    focused = activeField == SetField.REST_SECONDS,
+                    onClick = {
+                        commitActiveField()
+                        activeField = SetField.REST_SECONDS
+                        panelDraft = restText
+                    },
                     testTag = "setEditRest"
                 )
+                if (activeField != null) {
+                    NumericKeypad(
+                        valor = panelDraft,
+                        admiteDecimal = activeField == SetField.WEIGHT_KG,
+                        onValueChange = { panelDraft = it },
+                        onConfirm = { commitActiveField() },
+                        aplicaNavigationBars = false,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
             }
         },
         dismissButton = {
@@ -1325,37 +1371,47 @@ private fun SetEditDialog(
 private fun SetEditField(
     label: String,
     value: String,
-    onValue: (String) -> Unit,
-    keyboardType: KeyboardType,
+    focused: Boolean = false,
+    onClick: () -> Unit,
     testTag: String
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(AppDimens.SpaceSm)) {
         Text(
             label,
-            color = AppColors.TextMuted,
+            color = if (focused) AppColors.Orange else AppColors.TextMuted,
             fontSize = AppTextSizes.Caption,
             fontWeight = FontWeight.SemiBold
         )
-        OutlinedTextField(
-            value = value,
-            onValueChange = onValue,
-            singleLine = true,
-            keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
-            textStyle = androidx.compose.ui.text.TextStyle(
-                color = AppColors.TextPrimary,
-                fontSize = AppTextSizes.TitleSm,
-                fontWeight = FontWeight.Bold
-            ),
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedContainerColor = AppColors.InputBg,
-                unfocusedContainerColor = AppColors.InputBg,
-                focusedBorderColor = AppColors.Orange,
-                unfocusedBorderColor = AppColors.BorderSubtle,
-                cursorColor = AppColors.Orange
-            ),
-            shape = RoundedCornerShape(AppDimens.RadiusMd),
-            modifier = Modifier.fillMaxWidth().testTag(testTag)
-        )
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(AppDimens.RadiusMd))
+                .background(if (focused) AppColors.InputBg else AppColors.CardHigh)
+                .border(
+                    AppDimens.BorderThin,
+                    if (focused) AppColors.Orange else AppColors.BorderSubtle,
+                    RoundedCornerShape(AppDimens.RadiusMd)
+                )
+                .clickable(onClick = onClick)
+                .padding(horizontal = AppDimens.SpaceLg, vertical = AppDimens.SpaceMd)
+                .testTag(testTag),
+            contentAlignment = Alignment.Center
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = value.ifEmpty { "0" },
+                    style = androidx.compose.ui.text.TextStyle(
+                        color = AppColors.TextPrimary,
+                        fontSize = AppTextSizes.TitleSm,
+                        fontWeight = FontWeight.Bold
+                    )
+                )
+                if (focused) {
+                    Spacer(Modifier.width(AppDimens.BorderThick))
+                    BlinkingCaret(widthDp = AppDimens.BorderThick, heightDp = AppDimens.IconInline)
+                }
+            }
+        }
     }
 }
 

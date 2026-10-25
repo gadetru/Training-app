@@ -4,6 +4,7 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -88,10 +89,13 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 import com.mytrainingplan.app.ui.theme.AppColors
 import com.mytrainingplan.app.ui.theme.AppDimens
 import com.mytrainingplan.app.ui.theme.AppTextSizes
 import com.mytrainingplan.app.core.ui.NumberInput
+import com.mytrainingplan.app.core.ui.BlinkingCaret
+import com.mytrainingplan.app.core.ui.NumericKeypad
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import coil.decode.BitmapFactoryDecoder
@@ -112,10 +116,13 @@ import kotlinx.coroutines.launch
 private fun formatWeight(weightKg: Double): String =
     if (weightKg % 1.0 == 0.0) weightKg.toInt().toString() else weightKg.toString()
 
-// Tras este tiempo sin teclear, el borrador de una celda se confirma al ViewModel
-// para que propagaciones / "Añadir Serie" vean el último valor aunque no se haya
-// salido de la casilla.
-private const val FIELD_DEBOUNCE_MS = 800L
+// Spec 026: celda de serie que edita el panel numérico propio (kg/reps/descanso).
+// No es sealed para evitar problemas de smart cast sobre la propiedad delegada de Compose.
+private data class ActiveFieldCell(
+    val exerciseId: String,
+    val setId: String,
+    val field: SetField
+)
 
 private fun Modifier.dashedBorder(
     color: Color,
@@ -212,6 +219,23 @@ fun RoutineEditContent(
     // Cabecera MetaCard colapsable: por defecto expandida; colapsada deja
     // solo el título para que el constructor respire con rutinas grandes.
     var metaExpanded by rememberSaveable { mutableStateOf(true) }
+    // Spec 026: celda activa del panel numérico propio y si se edita la duración MANUAL.
+    var activeCell by remember { mutableStateOf<ActiveFieldCell?>(null) }
+    var editingDuration by remember { mutableStateOf(false) }
+    var panelDraft by remember { mutableStateOf("") }
+    // Autoguardado al cambiar de celda/duración: equivale a pulsar OK y deja
+    // el foco en la nueva en la misma composición (el panel no parpadea).
+    fun commitActiveEdit() {
+        val cell = activeCell
+        if (cell != null) {
+            onSetFieldChange(cell.exerciseId, cell.setId, cell.field, panelDraft)
+        } else if (editingDuration) {
+            onDurationChange(panelDraft.toIntOrNull() ?: 0)
+        }
+        activeCell = null
+        editingDuration = false
+        panelDraft = ""
+    }
     // Spec 018: pie auto-oculto tipo exitAlways de M3 (Context7 ID
     // /websites/developer_android_reference_kotlin_androidx_compose_material3):
     // se conecta al scroll de la columna y desplaza el pie según la dirección.
@@ -263,9 +287,16 @@ fun RoutineEditContent(
                     onDurationChange = onDurationChange,
                     onDurationModeChange = onDurationModeChange,
                     durationDisplay = durationDisplay,
+                    durationFocused = editingDuration,
+                    durationValue = panelDraft,
                     tags = uiState.tags,
                     expanded = metaExpanded,
-                    onToggleExpanded = { metaExpanded = !metaExpanded }
+                    onToggleExpanded = { metaExpanded = !metaExpanded },
+                    onDurationActivated = {
+                        commitActiveEdit()
+                        editingDuration = true
+                        panelDraft = effectiveDuration.toString()
+                    }
                 )
                 AddExerciseButton(onClick = onAddClick)
                 uiState.exercises.forEachIndexed { index, item ->
@@ -275,6 +306,17 @@ fun RoutineEditContent(
                         onToggleExpanded = { onToggleExpanded(item.routineExercise.id) },
                         onDeleteExercise = { onDeleteExercise(item.routineExercise.id) },
                         onExerciseClick = onExerciseClick,
+                        onCellActividad = { eid, sid, field, valor ->
+                            // Cambiar de celda autoguarda el borrador anterior.
+                            commitActiveEdit()
+                            activeCell = ActiveFieldCell(eid, sid, field)
+                            panelDraft = valor
+                        },
+                        onDurationActivated = {
+                            commitActiveEdit()
+                            editingDuration = true
+                            panelDraft = uiState.durationMin.toString()
+                        },
                         onSetFieldChange = { setId, field, raw ->
                             onSetFieldChange(item.routineExercise.id, setId, field, raw)
                         },
@@ -285,30 +327,43 @@ fun RoutineEditContent(
                             onExerciseNoteChange(item.routineExercise.id, note)
                         },
                         onAddSet = { onAddSet(item.routineExercise.id) },
-                        onDeleteSet = { setId -> onDeleteSet(item.routineExercise.id, setId) }
+                        onDeleteSet = { setId -> onDeleteSet(item.routineExercise.id, setId) },
+                        activeCell = activeCell,
+                        panelDraft = panelDraft
+                    )
+                }
+                }
+                if (activeCell != null || editingDuration) {
+                    NumericKeypad(
+                        valor = panelDraft,
+                        admiteDecimal = activeCell?.field == SetField.WEIGHT_KG,
+                        onValueChange = { panelDraft = it },
+                        onConfirm = { commitActiveEdit() },
+                        modifier = Modifier.fillMaxWidth()
                     )
                 }
             }
+        if (activeCell == null && !editingDuration) {
+            SaveFooter(
+                exerciseCount = uiState.exercises.size,
+                totalSets = uiState.exercises.sumOf { it.sets.size },
+                durationDisplay = durationDisplay,
+                isSaving = uiState.isSaving,
+                onSave = onSave,
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .onSizeChanged {
+                        // El límite negativo es la altura propia: ocultar = bajarla entera.
+                        footerBehavior.state.heightOffsetLimit = -it.height.toFloat()
+                    }
+                    .graphicsLayer {
+                        // heightOffset: 0 visible → límite oculto; se aplica negado como
+                        // el BottomAppBar de M3 (el pie baja al esconderse). La animación
+                        // de snap/fling del behavior mueve el valor de forma continua.
+                        translationY = -footerBehavior.state.heightOffset
+                    }
+            )
         }
-        SaveFooter(
-            exerciseCount = uiState.exercises.size,
-            totalSets = uiState.exercises.sumOf { it.sets.size },
-            durationDisplay = durationDisplay,
-            isSaving = uiState.isSaving,
-            onSave = onSave,
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .onSizeChanged {
-                    // El límite negativo es la altura propia: ocultar = bajarla entera.
-                    footerBehavior.state.heightOffsetLimit = -it.height.toFloat()
-                }
-                .graphicsLayer {
-                    // heightOffset: 0 visible → límite oculto; se aplica negado como
-                    // el BottomAppBar de M3 (el pie baja al esconderse). La animación
-                    // de snap/fling del behavior mueve el valor de forma continua.
-                    translationY = -footerBehavior.state.heightOffset
-                }
-        )
         if (showNameDialog) {
             NameDialog(
                 currentName = uiState.name,
@@ -390,7 +445,10 @@ private fun MetaCard(
     durationDisplay: String,
     tags: List<String>,
     expanded: Boolean = true,
-    onToggleExpanded: () -> Unit = {}
+    onToggleExpanded: () -> Unit = {},
+    onDurationActivated: () -> Unit = {},
+    durationFocused: Boolean = false,
+    durationValue: String = ""
 ) {
     Column(
         modifier = Modifier
@@ -480,28 +538,50 @@ private fun MetaCard(
             }
             Spacer(Modifier.width(AppDimens.SpaceSm))
             if (durationManual) {
-                // Campo numérico editable (modo MANUAL, congelado a lo escrito).
-                BasicTextField(
-                    value = durationMin.toString(),
-                    onValueChange = { raw ->
-                        val sanitized = NumberInput.sanitizeInt(raw)
-                        if (sanitized.isBlank()) onDurationChange(0)
-                        else sanitized.toIntOrNull()?.let(onDurationChange)
-                    },
-                    singleLine = true,
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    textStyle = TextStyle(
-                        color = AppColors.TextPrimary,
-                        fontSize = AppTextSizes.TitleSm,
-                        fontWeight = FontWeight.Bold,
-                        textAlign = TextAlign.Center
-                    ),
+                // Campo numérico editable (modo MANUAL): celda pulsable que abre
+                // el panel propio (spec 026), sin teclado del sistema. Muestra el
+                // borrador del panel y un caret cuando está enfocada.
+                val scope = rememberCoroutineScope()
+                val durationBringIntoView = remember { BringIntoViewRequester() }
+                LaunchedEffect(durationFocused) {
+                    if (durationFocused) {
+                        delay(100)
+                        scope.launch { durationBringIntoView.bringIntoView() }
+                    }
+                }
+                Box(
                     modifier = Modifier
                         .weight(1f)
+                        .focusable()
+                        .bringIntoViewRequester(durationBringIntoView)
                         .clip(RoundedCornerShape(AppDimens.RadiusMd))
-                        .background(AppColors.CardHigh)
-                        .padding(vertical = AppDimens.SpaceMd, horizontal = AppDimens.SpaceXs)
-                )
+                        .background(if (durationFocused) AppColors.InputBg else AppColors.CardHigh)
+                        .border(
+                            AppDimens.BorderThin,
+                            if (durationFocused) AppColors.Orange else AppColors.BorderSubtle,
+                            RoundedCornerShape(AppDimens.RadiusMd)
+                        )
+                        .clickable(enabled = !durationFocused, onClick = onDurationActivated)
+                        .padding(vertical = AppDimens.SpaceLg, horizontal = AppDimens.SpaceXs)
+                        .testTag("routineDurationValue"),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            text = if (durationFocused) durationValue else durationMin.toString(),
+                            style = TextStyle(
+                                color = AppColors.TextPrimary,
+                                fontSize = AppTextSizes.TitleSm,
+                                fontWeight = FontWeight.Bold,
+                                textAlign = TextAlign.Center
+                            )
+                        )
+                        if (durationFocused) {
+                            Spacer(Modifier.width(AppDimens.BorderThick))
+                            BlinkingCaret(widthDp = AppDimens.BorderThick, heightDp = AppDimens.IconInline)
+                        }
+                    }
+                }
                 Spacer(Modifier.width(AppDimens.SpaceSm))
                 Text("min", color = AppColors.TextMuted, fontSize = AppTextSizes.Body)
             } else {
@@ -670,7 +750,11 @@ private fun ExerciseAccordion(
     onRirChange: (String, Int?) -> Unit,
     onExerciseNoteChange: (String) -> Unit,
     onAddSet: () -> Unit,
-    onDeleteSet: (String) -> Unit
+    onDeleteSet: (String) -> Unit,
+    onCellActividad: (String, String, SetField, String) -> Unit = { _,_,_,_ -> },
+    onDurationActivated: () -> Unit = {},
+    activeCell: ActiveFieldCell? = null,
+    panelDraft: String = ""
 ) {
     if (item.expanded) {
         ExpandedExerciseCard(
@@ -683,7 +767,11 @@ private fun ExerciseAccordion(
             onRirChange = onRirChange,
             onExerciseNoteChange = onExerciseNoteChange,
             onAddSet = onAddSet,
-            onDeleteSet = onDeleteSet
+            onDeleteSet = onDeleteSet,
+            onCellActividad = onCellActividad,
+            onDurationActivated = onDurationActivated,
+            activeCell = activeCell,
+            panelDraft = panelDraft
         )
     } else {
         CollapsedExerciseCard(
@@ -707,7 +795,11 @@ private fun ExpandedExerciseCard(
     onRirChange: (String, Int?) -> Unit,
     onExerciseNoteChange: (String) -> Unit,
     onAddSet: () -> Unit,
-    onDeleteSet: (String) -> Unit
+    onDeleteSet: (String) -> Unit,
+    onCellActividad: (String, String, SetField, String) -> Unit = { _,_,_,_ -> },
+    onDurationActivated: () -> Unit = {},
+    activeCell: ActiveFieldCell? = null,
+    panelDraft: String = ""
 ) {
     Column(
         modifier = Modifier
@@ -813,7 +905,9 @@ private fun ExpandedExerciseCard(
             SetsHeaderRow()
             Spacer(Modifier.height(AppDimens.SpaceSm))
             item.sets.forEach { set ->
+                val focusedField = if (activeCell != null && activeCell.exerciseId == item.routineExercise.id && activeCell.setId == set.id) activeCell.field else null
                 SetRow(
+                    setId = set.id,
                     setNumber = set.setNumber,
                     rir = set.rir,
                     onRirChange = { onRirChange(set.id, it) },
@@ -823,6 +917,11 @@ private fun ExpandedExerciseCard(
                     onRepsChange = { onSetFieldChange(set.id, SetField.TARGET_REPS, it) },
                     restText = set.restSeconds.toString(),
                     onRestChange = { onSetFieldChange(set.id, SetField.REST_SECONDS, it) },
+                    onCellActividad = { field, valor ->
+                        onCellActividad(item.routineExercise.id, set.id, field, valor)
+                    },
+                    focusedField = focusedField,
+                    focusedValue = if (focusedField != null) panelDraft else "",
                     onDelete = { onDeleteSet(set.id) }
                 )
                 Spacer(Modifier.height(AppDimens.SpaceMd))
@@ -983,6 +1082,7 @@ private fun RirCell(
 
 @Composable
 private fun SetRow(
+    setId: String,
     setNumber: Int,
     rir: Int?,
     onRirChange: (Int?) -> Unit,
@@ -992,7 +1092,10 @@ private fun SetRow(
     onRepsChange: (String) -> Unit,
     restText: String,
     onRestChange: (String) -> Unit,
-    onDelete: () -> Unit
+    onDelete: () -> Unit,
+    onCellActividad: (SetField, String) -> Unit = { _, _ -> },
+    focusedField: SetField? = null,
+    focusedValue: String = ""
 ) {
     val isFailure = rir == 0
     Column(
@@ -1033,24 +1136,24 @@ private fun SetRow(
             )
             Spacer(Modifier.width(AppDimens.SpaceSm))
             CellInput(
-                value = weightText,
-                onValueChange = onWeightChange,
-                keyboardType = KeyboardType.Decimal,
-                modifier = Modifier.weight(1f)
+                value = if (focusedField == SetField.WEIGHT_KG) focusedValue else weightText,
+                focused = focusedField == SetField.WEIGHT_KG,
+                onClick = { onCellActividad(SetField.WEIGHT_KG, weightText) },
+                modifier = Modifier.weight(1f).testTag("routineKg:$setId")
             )
             Spacer(Modifier.width(AppDimens.SpaceSm))
             CellInput(
-                value = repsText,
-                onValueChange = onRepsChange,
-                keyboardType = KeyboardType.Number,
-                modifier = Modifier.weight(1f)
+                value = if (focusedField == SetField.TARGET_REPS) focusedValue else repsText,
+                focused = focusedField == SetField.TARGET_REPS,
+                onClick = { onCellActividad(SetField.TARGET_REPS, repsText) },
+                modifier = Modifier.weight(1f).testTag("routineReps:$setId")
             )
             Spacer(Modifier.width(AppDimens.SpaceSm))
             CellInput(
-                value = restText,
-                onValueChange = onRestChange,
-                keyboardType = KeyboardType.Number,
-                modifier = Modifier.weight(1f)
+                value = if (focusedField == SetField.REST_SECONDS) focusedValue else restText,
+                focused = focusedField == SetField.REST_SECONDS,
+                onClick = { onCellActividad(SetField.REST_SECONDS, restText) },
+                modifier = Modifier.weight(1f).testTag("routineRest:$setId")
             )
             Box(
                 modifier = Modifier
@@ -1133,72 +1236,49 @@ private fun ExerciseNoteField(
 @Composable
 private fun CellInput(
     value: String,
-    onValueChange: (String) -> Unit,
-    keyboardType: KeyboardType,
+    focused: Boolean = false,
+    onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val bringIntoView = remember { BringIntoViewRequester() }
     val scope = rememberCoroutineScope()
-    // Borrador local (igual que la nota): el texto vive en el campo y solo
-    // se vuelca al perder el foco, para no escribir en Room por cada letra.
-    // En blanco se revierte al valor guardado (nunca es válido y el parser
-    // lo rechazaría, dejando el campo y la DB divergentes).
-    var draft by remember(value) { mutableStateOf(value) }
-    val focusManager = LocalFocusManager.current
-    val keyboard = LocalSoftwareKeyboardController.current
-    // Auto-confirma el borrador al ViewModel tras X ms sin teclear, para que
-    // una propagación o "Añadir Serie" vea el último valor aunque la casilla
-    // siga en edición (sin perder el foco).
-    LaunchedEffect(draft) {
-        delay(FIELD_DEBOUNCE_MS)
-        if (draft != value) {
-            if (draft.isBlank()) onValueChange("0")
-            else onValueChange(draft)
+    LaunchedEffect(focused) {
+        if (focused) {
+            delay(100)
+            scope.launch { bringIntoView.bringIntoView() }
         }
     }
-    BasicTextField(
-        value = draft,
-        onValueChange = { draft = when (keyboardType) {
-            KeyboardType.Decimal -> NumberInput.sanitizeDecimal(it)
-            else -> NumberInput.sanitizeInt(it)
-        } },
-        singleLine = true,
-        keyboardOptions = KeyboardOptions(keyboardType = keyboardType, imeAction = ImeAction.Done),
-        keyboardActions = KeyboardActions(
-            onDone = {
-                if (draft != value) {
-                    if (draft.isBlank()) onValueChange("0")
-                    else onValueChange(draft)
-                }
-                focusManager.clearFocus(force = true)
-                keyboard?.hide()
-            }
-        ),
-        textStyle = TextStyle(
-            color = AppColors.TextPrimary,
-            fontSize = AppTextSizes.BodyLg,
-            fontWeight = FontWeight.Bold,
-            textAlign = TextAlign.Center
-        ),
+    Box(
         modifier = modifier
-            .clip(RoundedCornerShape(AppDimens.RadiusMd))
-            .background(AppColors.CardHigh)
+            .focusable()
             .bringIntoViewRequester(bringIntoView)
-            .onFocusChanged {
-                if (it.isFocused) {
-                    scope.launch { bringIntoView.bringIntoView() }
-                } else if (draft != value) {
-                    if (draft.isBlank()) onValueChange("0")
-                    else onValueChange(draft)
-                }
-            }
+            .clip(RoundedCornerShape(AppDimens.RadiusMd))
+            .background(if (focused) AppColors.InputBg else AppColors.CardHigh)
+            .border(
+                AppDimens.BorderThin,
+                if (focused) AppColors.Orange else AppColors.BorderSubtle,
+                RoundedCornerShape(AppDimens.RadiusMd)
+            )
+            .clickable(enabled = !focused, onClick = onClick)
             .padding(vertical = AppDimens.SpaceLg, horizontal = AppDimens.SpaceXs),
-        decorationBox = { inner ->
-            Box(contentAlignment = Alignment.Center) {
-                inner()
+        contentAlignment = Alignment.Center
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                text = value.ifEmpty { "0" },
+                style = TextStyle(
+                    color = AppColors.TextPrimary,
+                    fontSize = AppTextSizes.BodyLg,
+                    fontWeight = FontWeight.Bold,
+                    textAlign = TextAlign.Center
+                )
+            )
+            if (focused) {
+                Spacer(Modifier.width(AppDimens.BorderThick))
+                BlinkingCaret(widthDp = AppDimens.BorderThick, heightDp = AppDimens.IconInline)
             }
         }
-    )
+    }
 }
 
 @Composable

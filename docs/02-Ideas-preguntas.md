@@ -27,3 +27,41 @@ Adelante lo quiero utilizar para la estadística de progreso.
 # 4-Teclados:
 - A la hora de introducir numeros en las rutinas para los kg, las reps o el descanso, debemos tener 
 teclado numerico al estilo de la app. pero sin tener letras alguna, el estilo de una calculadora.
+
+# 4.1-Colapsado inicio:
+- Las rutinas nacen colapsadas como hemos pedido en algun spec anterior. Una modificación adecuada: 
+- Al pulsar iniciar rutina, debe desplegarse el primer ejercicio donde se va a comenzar.
+
+# 4.2-Orden ejercicios:
+-Actualmente, los ejercicios a realizar, quedan en la posición en la que fueron añadidos a la rutina.
+- objetivo: A la hora de editar, o cuando se crea la rutina, mantener pulsado un ejercicio durante 
+2 segundos, creará un efecto de elevación del ejercicio ( se verá visualmente algo mas grande, un 5 %)
+y lo podremos arrastrar hacia arriba o hacia abajo, cambiando el orden de la lista, deberá poder 
+cambiarse de posición , generandose visualmente un hueco antes de soltar para tener una guia visual
+de donde vamos a dejar el ejercicio colocado ej: entre el ejercicio 1 y el 2, se genera mas espacio
+para poder soltar el ejercicio 4 entre ellos, el ejercicio 4 pasa a ser el 2 y desde el 2, pasan 
+todos los ejercicios que siguen +1 en la lista 2 -> 3 , 3 -> 4 etc.
+
+
+# 5-Editar rutina:
+- La edición de los parámetros de cada serie deben modificarse sin abrir un modal con los 3 datos 
+sino mas bien ponese el input seleccionado en parpadeo y levantar el teclado de edición para cambiar 
+el valor del mismo. Una vez pulsado ok, el valor queda modificado.
+
+# 6-Nombres en ingles:
+- Toca realizar una revision del codigo para comprobar si hay variables, funciones etc en español y
+de ser así, cambiar el nombre a ingles, sin romper nada, comprobar dónde se utiliza cada variable 
+funcion etc para que los nombres coincidan. 
+
+# 7-Reparacion codigo poco legible.
+- Toca hacer una revisión de logica de cogido y funciones, comprobar que  el codigo sea legible para 
+un aprendiz y no utilizar funciones con llamadas a variables sin sentido, ejemplo con nombre a, b, c
+porque esto dificulta seguir el codigo para un humano.Hay que utilizar nombres relacionados con lo 
+que va a crear o realizar.
+
+# Comprobar los tests.
+
+- Debemos realizar un seguimiento de los test y los checks que deben pasar en cada spec hasta ahora.
+Comprobar que no se están solapando, que no caen en contradicciones, asegurar que cada vez que hacemos
+un cambio, un spec nuevo etc, el código anterior sigue pasando los test anteriores ( si creamos un 
+boton para borrar algo, que ese botón sigue funcionando).
