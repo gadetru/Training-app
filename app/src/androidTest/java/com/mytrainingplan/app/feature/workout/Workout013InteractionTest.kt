@@ -140,7 +140,7 @@ class Workout013InteractionTest {
     )
 
     @Test
-    fun modal_kg_abre_con_valor_y_guardar_propaga_signo_reps_pausa() {
+    fun modal_kg_abre_con_valor_y_guardar_propaga_reps_pausa() {
         var captured: Triple<Double, Int, Int>? = null
         rule.setContent {
             MaterialTheme {
@@ -158,16 +158,31 @@ class Workout013InteractionTest {
         rule.onNodeWithTag("setEditReps").assertTextContains("10")
         rule.onNodeWithTag("setEditRest").assertTextContains("90")
 
-        // KG con signo + REPS + PAUSA en el mismo modal, guardado de golpe.
-        rule.onNodeWithTag("setEditKg").performTextClearance()
-        rule.onNodeWithTag("setEditKg").performTextInput("-10")
-        rule.onNodeWithTag("setEditReps").performTextClearance()
-        rule.onNodeWithTag("setEditReps").performTextInput("12")
-        rule.onNodeWithTag("setEditRest").performTextClearance()
-        rule.onNodeWithTag("setEditRest").performTextInput("75")
+        // KG + REPS + PAUSA en el mismo modal, guardado de golpe.
+        // KG: "60" -> "10" (borrar 2, "1","0", OK).
+        rule.onNodeWithTag("setEditKg").performClick()
+        repeat(2) { rule.onNodeWithTag("keypadBorrar").performClick() }
+        rule.onNodeWithTag("keypad1").performClick()
+        rule.onNodeWithTag("keypad0").performClick()
+        rule.onNodeWithTag("keypadOk").performClick()
+
+        // REPS: "10" -> "12".
+        rule.onNodeWithTag("setEditReps").performClick()
+        repeat(2) { rule.onNodeWithTag("keypadBorrar").performClick() }
+        rule.onNodeWithTag("keypad1").performClick()
+        rule.onNodeWithTag("keypad2").performClick()
+        rule.onNodeWithTag("keypadOk").performClick()
+
+        // PAUSA: "90" -> "75".
+        rule.onNodeWithTag("setEditRest").performClick()
+        repeat(2) { rule.onNodeWithTag("keypadBorrar").performClick() }
+        rule.onNodeWithTag("keypad7").performClick()
+        rule.onNodeWithTag("keypad5").performClick()
+        rule.onNodeWithTag("keypadOk").performClick()
+
         rule.onNodeWithText("Guardar").performClick()
 
-        assertEquals(Triple(-10.0, 12, 75), captured)
+        assertEquals(Triple(10.0, 12, 75), captured)
         rule.onNodeWithText("Editar serie 1").assertIsNotDisplayed()
     }
 
@@ -185,8 +200,11 @@ class Workout013InteractionTest {
 
         rule.onNodeWithTag("setReps:e1").performClick()
         rule.onNodeWithText("Editar serie 1").assertIsDisplayed()
-        rule.onNodeWithTag("setEditKg").performTextClearance()
-        rule.onNodeWithTag("setEditKg").performTextInput("99")
+        rule.onNodeWithTag("setEditKg").performClick()
+        repeat(2) { rule.onNodeWithTag("keypadBorrar").performClick() }
+        rule.onNodeWithTag("keypad9").performClick()
+        rule.onNodeWithTag("keypad9").performClick()
+        rule.onNodeWithTag("keypadOk").performClick()
         rule.onNodeWithText("Cancelar").performClick()
 
         assertEquals(null, captured)

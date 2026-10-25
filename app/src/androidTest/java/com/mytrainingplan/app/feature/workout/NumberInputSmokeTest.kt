@@ -61,14 +61,22 @@ class NumberInputSmokeTest {
         rule.onNodeWithTag("setKg:e1").performClick()
         rule.onNodeWithText("Editar serie 1").assertIsDisplayed()
 
-        // REPS: 012 -> 12
-        rule.onNodeWithTag("setEditReps").performTextClearance()
-        rule.onNodeWithTag("setEditReps").performTextInput("012")
+        // REPS: "10" -> "12" (borrar 2, "0","1","2", OK).
+        rule.onNodeWithTag("setEditReps").performClick()
+        repeat(2) { rule.onNodeWithTag("keypadBorrar").performClick() }
+        rule.onNodeWithTag("keypad0").performClick()
+        rule.onNodeWithTag("keypad1").performClick()
+        rule.onNodeWithTag("keypad2").performClick()
+        rule.onNodeWithTag("keypadOk").performClick()
         rule.onNodeWithTag("setEditReps").assertTextContains("12")
 
-        // KG: 0,5 -> 0.5
-        rule.onNodeWithTag("setEditKg").performTextClearance()
-        rule.onNodeWithTag("setEditKg").performTextInput("0,5")
+        // KG: "60" -> "0.5" (borrar 2, "0", coma, "5", OK).
+        rule.onNodeWithTag("setEditKg").performClick()
+        repeat(2) { rule.onNodeWithTag("keypadBorrar").performClick() }
+        rule.onNodeWithTag("keypad0").performClick()
+        rule.onNodeWithTag("keypadComa").performClick()
+        rule.onNodeWithTag("keypad5").performClick()
+        rule.onNodeWithTag("keypadOk").performClick()
         rule.onNodeWithTag("setEditKg").assertTextContains("0.5")
     }
 }
