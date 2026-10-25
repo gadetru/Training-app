@@ -116,11 +116,6 @@ import kotlinx.coroutines.launch
 private fun formatWeight(weightKg: Double): String =
     if (weightKg % 1.0 == 0.0) weightKg.toInt().toString() else weightKg.toString()
 
-// Tras este tiempo sin teclear, el borrador de una celda se confirma al ViewModel
-// para que propagaciones / "Añadir Serie" vean el último valor aunque no se haya
-// salido de la casilla.
-private const val FIELD_DEBOUNCE_MS = 800L
-
 // Spec 026: celda de serie que edita el panel numérico propio (kg/reps/descanso).
 // No es sealed para evitar problemas de smart cast sobre la propiedad delegada de Compose.
 private data class ActiveFieldCell(

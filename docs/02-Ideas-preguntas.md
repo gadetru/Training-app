@@ -28,6 +28,21 @@ Adelante lo quiero utilizar para la estadística de progreso.
 - A la hora de introducir numeros en las rutinas para los kg, las reps o el descanso, debemos tener 
 teclado numerico al estilo de la app. pero sin tener letras alguna, el estilo de una calculadora.
 
+# 4.1-Colapsado inicio:
+- Las rutinas nacen colapsadas como hemos pedido en algun spec anterior. Una modificación adecuada: 
+- Al pulsar iniciar rutina, debe desplegarse el primer ejercicio donde se va a comenzar.
+
+# 4.2-Orden ejercicios:
+-Actualmente, los ejercicios a realizar, quedan en la posición en la que fueron añadidos a la rutina.
+- objetivo: A la hora de editar, o cuando se crea la rutina, mantener pulsado un ejercicio durante 
+2 segundos, creará un efecto de elevación del ejercicio ( se verá visualmente algo mas grande, un 5 %)
+y lo podremos arrastrar hacia arriba o hacia abajo, cambiando el orden de la lista, deberá poder 
+cambiarse de posición , generandose visualmente un hueco antes de soltar para tener una guia visual
+de donde vamos a dejar el ejercicio colocado ej: entre el ejercicio 1 y el 2, se genera mas espacio
+para poder soltar el ejercicio 4 entre ellos, el ejercicio 4 pasa a ser el 2 y desde el 2, pasan 
+todos los ejercicios que siguen +1 en la lista 2 -> 3 , 3 -> 4 etc.
+
+
 # 5-Editar rutina:
 - La edición de los parámetros de cada serie deben modificarse sin abrir un modal con los 3 datos 
 sino mas bien ponese el input seleccionado en parpadeo y levantar el teclado de edición para cambiar 

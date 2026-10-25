@@ -3,7 +3,7 @@
 ## Estado (resumen)
 
 - Hechas: Fase A (UI-first, 5/5 vistas), Fase B (Room local) y specs `007` a `022`, todos mergeados en `main` (último: 022 en PR #30). DB Room versión **5**.
-- Estado intermedio: `023-duracion-rutina`, `024-logo-launcher` y `025-rutinas-series-duracion` implementados y verificados, **pendientes de merge**.
+- Estado intermedio: `023-duracion-rutina`, `024-logo-launcher`, `025-rutinas-series-duracion` y `026-teclado-numerico` implementados y verificados, **pendientes de merge**.
 - Siguiente: pendiente de definir por el usuario (no hay spec aprobado en curso). Más tarde: CUSTOM (MVP-3) y Fase D Spring/MySQL.
 - Detalle por spec, deuda, desviaciones y puntos de control: `docs/estado.md`. Léelo solo si la tarea lo necesita. Lo mantiene `/spec-impl` al cerrar cada spec (entradas "implementado, pendiente de merge"; el usuario las pasa a "mergeado"). Si trabajas fuera de un spec, actualízalo tú al terminar.
 - `docs/`, `specs/` y `references/` son guía de objetivo/diseño, no código hecho. Antes de editar, comprueba con `Glob`/`Grep` que el fichero existe: los specs pueden citar rutas futuras.

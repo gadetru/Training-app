@@ -3,6 +3,9 @@ package com.mytrainingplan.app.feature.routines
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.ui.Modifier
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
@@ -16,6 +19,11 @@ import org.junit.Test
  * Smoke del panel numérico propio (spec 026): abrir panel, teclear, borrar
  * y OK. Ejercita el componente compartido usado en editar rutina y en el
  * modal de serie de la sesión.
+ *
+ * `valor` es `mutableStateOf` (no un `var` plano) para que el panel
+ * stateless se recompona tras cada tecla y el siguiente `applyKey` parta
+ * del borrador actual (igual que hace `RoutineEditContent` con
+ * `panelDraft`).
  */
 class NumericKeypadSmokeTest {
 
@@ -24,7 +32,7 @@ class NumericKeypadSmokeTest {
 
     @Test
     fun panel_teclear_borrar_y_ok() {
-        var valor = ""
+        var valor by mutableStateOf("")
         rule.setContent {
             MaterialTheme {
                 NumericKeypad(
@@ -59,7 +67,7 @@ class NumericKeypadSmokeTest {
 
     @Test
     fun panel_coma_en_kg() {
-        var valor = ""
+        var valor by mutableStateOf("")
         rule.setContent {
             MaterialTheme {
                 NumericKeypad(
@@ -80,7 +88,7 @@ class NumericKeypadSmokeTest {
 
     @Test
     fun panel_coma_bloqueada_en_reps() {
-        var valor = ""
+        var valor by mutableStateOf("")
         rule.setContent {
             MaterialTheme {
                 NumericKeypad(
